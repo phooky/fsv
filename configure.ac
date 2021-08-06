@@ -10,8 +10,8 @@ AC_USE_SYSTEM_EXTENSIONS
 AM_INIT_AUTOMAKE
 AC_SUBST(RELEASE)
 
-AC_DEFINE(_GNU_SOURCE)
-AC_DEFINE(GTK_DISABLE_COMPAT_H)
+AC_DEFINE(_GNU_SOURCE, [1], GNU stuff)
+AC_DEFINE(GTK_DISABLE_COMPAT_H, [1], foo bar)
 
 # Programs
 AC_PROG_CC
@@ -32,7 +32,7 @@ AC_TYPE_MODE_T
 AC_TYPE_UID_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
-AC_CHECK_TYPE(comparison_fn_t, , AC_DEFINE_UNQUOTED(comparison_fn_t, int (*)( const void *, const void * )))
+AC_CHECK_TYPE(comparison_fn_t, , AC_DEFINE_UNQUOTED(comparison_fn_t, int (*)( const void *, const void * ), Comparison func))
 AC_STRUCT_ST_BLOCKS
 AC_STRUCT_TM
 
@@ -49,13 +49,13 @@ AC_ARG_ENABLE(debug, [  --enable-debug          turn on debugging])
 if test "$enable_debug" = "yes" ; then
 	AC_MSG_WARN([debugging enabled, CFLAGS=\"$CFLAGS\"])
 	AM_CONDITIONAL(DEBUG, true)
-	AC_DEFINE(DEBUG)
-	AC_DEFINE(G_ENABLE_DEBUG)
+	AC_DEFINE(DEBUG, [1], Enable debug)
+	AC_DEFINE(G_ENABLE_DEBUG, [1], Enable debug)
 else
 	AM_CONDITIONAL(DEBUG, false)
-	AC_DEFINE(G_DISABLE_ASSERT)
-	AC_DEFINE(G_DISABLE_CHECKS)
-	AC_DEFINE(GTK_NO_CHECK_CASTS)
+	AC_DEFINE(G_DISABLE_ASSERT, [1], Disable assert)
+	AC_DEFINE(G_DISABLE_CHECKS, [1], Disable checks)
+	AC_DEFINE(GTK_NO_CHECK_CASTS, [1], Don't check casts)
 fi
 
 # Internationalization
@@ -143,8 +143,8 @@ PKG_CHECK_MODULES([GTKGL], [gtkgl-2.0])
 # Check for 'file' command
 AC_PATH_PROG(FILE_CMD, file)
 if test -n "$FILE_CMD" ; then
-	AC_DEFINE(HAVE_FILE_COMMAND)
-	AC_DEFINE_UNQUOTED(FILE_COMMAND, "$FILE_CMD %s")
+	AC_DEFINE(HAVE_FILE_COMMAND, [1], File command found)
+	AC_DEFINE_UNQUOTED(FILE_COMMAND, "$FILE_CMD %s", File command)
 fi
 
 # That's a wrap!
