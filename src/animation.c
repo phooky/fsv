@@ -410,8 +410,8 @@ framerate_iteration( int mesg )
 
 
 /* Top-level animation loop */
-static boolean
-animation_loop( void )
+static gboolean
+animation_loop(gpointer data)
 {
 	boolean state_changed, schevents_pending = FALSE;
 
@@ -449,7 +449,7 @@ redraw( void )
 {
 	/* Ensure that animation loop is active */
 	if (!animation_active)
-		gtk_idle_add_priority( G_PRIORITY_LOW, (GtkFunction)animation_loop, NULL );
+		g_idle_add_full(G_PRIORITY_LOW, (GSourceFunc) animation_loop, NULL, NULL);
 
 	animation_active = TRUE;
 	globals.need_redraw = TRUE;
