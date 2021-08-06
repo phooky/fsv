@@ -4,7 +4,7 @@ else
 DEBUG_LIBS =
 endif
 
-INCLUDES = @GTK_CFLAGS@
+AM_CPPFLAGS = @GTK_CFLAGS@
 
 noinst_LIBRARIES = $(DEBUG_LIBS)
 

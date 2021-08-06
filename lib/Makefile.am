@@ -1,6 +1,6 @@
 noinst_LIBRARIES = libmisc.a
 
-INCLUDES = @GTK_CFLAGS@
+AM_CPPFLAGS = @GTK_CFLAGS@
 
 noinst_HEADERS = \
 	nvstore.h

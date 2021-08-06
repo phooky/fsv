@@ -1,13 +1,13 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(src/fsv.c)
+AC_INIT([fsv], [0.9])
+AC_CONFIG_SRCDIR([src/fsv.c])
+
 AM_CONFIG_HEADER(config.h)
 
-PACKAGE=fsv
-VERSION=0.9
 RELEASE=1
 
 AC_USE_SYSTEM_EXTENSIONS
-AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
+AM_INIT_AUTOMAKE
 AC_SUBST(RELEASE)
 
 AC_DEFINE(_GNU_SOURCE)
