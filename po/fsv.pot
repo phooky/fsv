@@ -1,18 +1,21 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR Free Software Foundation, Inc.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2000-01-27 19:57-0500\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-06-16 09:47+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
-"Content-Transfer-Encoding: ENCODING\n"
+"Content-Transfer-Encoding: 8bit\n"
 
 #. "Metanode"
 #: src/common.c:86
@@ -172,7 +175,7 @@ msgstr ""
 msgid "Color Setup"
 msgstr ""
 
-#: src/dialog.c:963 src/window.c:139
+#: src/dialog.c:963 src/window.c:140
 msgid "By node type"
 msgstr ""
 
@@ -240,7 +243,7 @@ msgstr ""
 msgid "Newer"
 msgstr ""
 
-#: src/dialog.c:1066 src/window.c:145
+#: src/dialog.c:1066 src/window.c:146
 msgid "By wildcards"
 msgstr ""
 
@@ -267,7 +270,8 @@ msgid "Cancel"
 msgstr ""
 
 #. Create message window to acknowledge action
-#: src/dialog.c:1127 src/window.c:164
+#. Help menu (right-justified)
+#: src/dialog.c:1127 src/window.c:165
 msgid "Help"
 msgstr ""
 
@@ -320,6 +324,9 @@ msgid "Group:"
 msgstr ""
 
 #. Total size
+#. Size
+#. Allocation
+#. Total size readout
 #: src/dialog.c:1251 src/dialog.c:1260 src/dialog.c:1268 src/dialog.c:1344
 #, c-format
 msgid "%s bytes"
@@ -452,6 +459,7 @@ msgstr ""
 
 #. Excess arguments!
 #: src/fsv.c:287
+#, c-format
 msgid "Junk in command line:"
 msgstr ""
 
@@ -472,66 +480,66 @@ msgid "%d stats/sec"
 msgstr ""
 
 #. File menu
-#: src/window.c:112
+#: src/window.c:113
 msgid "File"
 msgstr ""
 
 #. File menu items
-#: src/window.c:114
+#: src/window.c:115
 msgid "Change root..."
 msgstr ""
 
-#: src/window.c:115
+#: src/window.c:116
 msgid "^N"
 msgstr ""
 
-#: src/window.c:118
+#: src/window.c:119
 msgid "Save settings"
 msgstr ""
 
-#: src/window.c:121
+#: src/window.c:122
 msgid "Exit"
 msgstr ""
 
-#: src/window.c:122
+#: src/window.c:123
 msgid "^Q"
 msgstr ""
 
 #. Vis menu
-#: src/window.c:125
+#: src/window.c:126
 msgid "Vis"
 msgstr ""
 
-#: src/window.c:129
+#: src/window.c:130
 msgid "DiscV"
 msgstr ""
 
-#: src/window.c:132
+#: src/window.c:133
 msgid "MapV"
 msgstr ""
 
-#: src/window.c:133
+#: src/window.c:134
 msgid "TreeV"
 msgstr ""
 
 #. Color menu
-#: src/window.c:136
+#: src/window.c:137
 msgid "Colors"
 msgstr ""
 
-#: src/window.c:142
+#: src/window.c:143
 msgid "By timestamp"
 msgstr ""
 
-#: src/window.c:149
+#: src/window.c:150
 msgid "Setup..."
 msgstr ""
 
 #. Help menu items
-#: src/window.c:167
+#: src/window.c:168
 msgid "Contents..."
 msgstr ""
 
-#: src/window.c:169
+#: src/window.c:170
 msgid "About fsv..."
 msgstr ""
