@@ -437,7 +437,7 @@ Copyright &copy;1999 Daniel Richard G. <email>skunk@mit.edu</email>
 </para>
 
 <para>
-This program is free software; you can redistribute it and/or modify it under the terms of the <ulink url="http://www.gnu.org/copyleft/lesser.html">GNU Lesser General Public License</ulink> as published by the <ulink url="http://www.fsf.org/">Free Software Foundation</ulink>; either version 2 of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or modify it under the terms of the <ulink url="https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt">GNU Lesser General Public License</ulink> as published by the <ulink url="http://www.fsf.org/">Free Software Foundation</ulink>; either version 2.1 of the License, or (at your option) any later version.
 </para>
 
 <para>
@@ -445,7 +445,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 </para>
 
 <para>
-You should have received a copy of the GNU Lesser General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+You should have received a copy of the GNU Lesser General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 </para>
 
 </sect1>
