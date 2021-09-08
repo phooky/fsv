@@ -28,3 +28,11 @@ lib/*.o
 lib/*.a
 src/*.o
 src/fsv
+**/core
+
+# editor
+**/.vscode
+*~
+
+# meson
+builddir
