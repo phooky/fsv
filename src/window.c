@@ -4,6 +4,7 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * Copyright (C) 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -81,7 +82,7 @@ window_init( FsvMode fsv_mode )
 	GtkWidget *hbox_w;
 	GtkWidget *button_w;
 	GtkWidget *frame_w;
-	GtkWidget *dir_ctree_w;
+	GtkWidget *dir_tree_w;
 	GtkWidget *file_clist_w;
         GtkWidget *gl_area_w;
 	GtkWidget *x_scrollbar_w;
@@ -207,9 +208,9 @@ window_init( FsvMode fsv_mode )
 	vpaned_w = gui_vpaned_add( frame_w, window_height / 3 );
 
 	/* Directory tree goes in top pane */
-	dir_ctree_w = gui_ctree_add( NULL );
-	gtk_paned_add1( GTK_PANED(vpaned_w), dir_ctree_w->parent );
-	gtk_widget_show( dir_ctree_w->parent );
+	dir_tree_w = gui_tree_add( NULL );
+	gtk_paned_add1( GTK_PANED(vpaned_w), dir_tree_w->parent );
+	gtk_widget_show( dir_tree_w->parent );
 
 	/* File list goes in bottom pane */
 	file_clist_w = gui_clist_add( NULL, 3, NULL );
@@ -250,7 +251,7 @@ window_init( FsvMode fsv_mode )
 
 	/* Send out the widgets to their respective modules */
 	dialog_pass_main_window_widget( main_window_w );
-	dirtree_pass_widget( dir_ctree_w );
+	dirtree_pass_widget( dir_tree_w );
 	filelist_pass_widget( file_clist_w );
 	camera_pass_scrollbar_widgets( x_scrollbar_w, y_scrollbar_w );
 

@@ -26,3 +26,13 @@ Useful info and screenshots of the original SGI IRIX implementation are availabl
     - `./configure`
     - `make`
     - `sudo make install`
+
+## TODO
+
+### Update to Gtk+3
+
+1. Update code, still using gtk+2, to build cleanly with
+   make CFLAGS+="-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED"
+2. Switch to Gtk+3
+
+### Switch to meson build system

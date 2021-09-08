@@ -140,7 +140,7 @@ colexp( GNode *dnode, ColExpMesg mesg )
 		}
 #endif
 
-		/* Update ctree and determine maximum recursion depth */
+		/* Update tree and determine maximum recursion depth */
 		switch (mesg) {
 			case COLEXP_COLLAPSE_RECURSIVE:
 			dirtree_entry_collapse_recursive( dnode );

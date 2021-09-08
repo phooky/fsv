@@ -4,6 +4,7 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * Copyright (C) 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,7 +29,7 @@
 
 
 #ifdef __GTK_H__
-void dirtree_pass_widget( GtkWidget *ctree_w );
+void dirtree_pass_widget( GtkWidget *tree_w );
 #endif
 void dirtree_clear( void );
 void dirtree_entry_new( GNode *dnode );

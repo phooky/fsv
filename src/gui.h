@@ -4,6 +4,7 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * Copyright (C) 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -45,6 +46,14 @@ struct _Icon {
 	GdkBitmap *mask;
 };
 
+// For the TreeView (directory tree view)
+enum
+{
+  DIRTREE_NAME_COLUMN = 0,
+  DIRTREE_NODE_COLUMN,		// Hidden column containing GNode pointer
+  DIRTREE_NUM_COLS
+};
+
 #endif /* __GTK_H__ */
 
 
@@ -62,8 +71,8 @@ GtkWidget *gui_clist_add( GtkWidget *parent_w, int num_cols, char *col_titles[] 
 void gui_clist_moveto_row( GtkWidget *clist_w, int row, double moveto_time );
 GtkWidget *gui_colorpicker_add( GtkWidget *parent_w, RGBcolor *init_color, const char *title, void (*callback)( ), void *callback_data );
 void gui_colorpicker_set_color( GtkWidget *colorpicker_w, RGBcolor *color );
-GtkWidget *gui_ctree_add( GtkWidget *parent_w );
-GtkCTreeNode *gui_ctree_node_add( GtkWidget *ctree_w, GtkCTreeNode *parent, Icon icon_pair[2], const char *text, boolean expanded, void *data );
+GtkWidget *gui_tree_add( GtkWidget *parent_w );
+GtkTreePath *gui_tree_node_add( GtkWidget *tree_w, GtkTreePath *parent, Icon icon_pair[2], const char *text, boolean expanded, GNode *data );
 void gui_cursor( GtkWidget *widget, int glyph );
 GtkWidget *gui_dateedit_add( GtkWidget *parent_w, time_t the_time, void (*callback)( ), void *callback_data );
 time_t gui_dateedit_get_time( GtkWidget *dateedit_w );

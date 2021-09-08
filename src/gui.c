@@ -4,6 +4,7 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * Copyright (C) 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -286,7 +287,7 @@ gui_clist_add( GtkWidget *parent_w, int num_cols, char *col_titles[] )
 }
 
 
-/* Scrolls a clist (or ctree) to a given row (-1 indicates last row)
+/* Scrolls a clist (or tree) to a given row (-1 indicates last row)
  * WARNING: This implementation does not gracefully handle multiple
  * animated scrolls on the same clist! */
 void
@@ -385,46 +386,62 @@ gui_colorpicker_set_color( GtkWidget *colorbutton_w, RGBcolor *color )
 
 /* The tree widget (fitted into a scrolled window) */
 GtkWidget *
-gui_ctree_add( GtkWidget *parent_w )
+gui_tree_add( GtkWidget *parent_w )
 {
 	GtkWidget *scrollwin_w;
-	GtkWidget *ctree_w;
 
 	/* Make the scrolled window widget */
 	scrollwin_w = gtk_scrolled_window_new( NULL, NULL );
 	gtk_scrolled_window_set_policy( GTK_SCROLLED_WINDOW(scrollwin_w), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC );
         parent_child_full( parent_w, scrollwin_w, EXPAND, FILL );
 
-	/* Make the ctree widget */
-	ctree_w = gtk_ctree_new( 1, 0 );
-	gtk_clist_set_column_auto_resize( GTK_CLIST(ctree_w), 0, TRUE );
-	gtk_ctree_set_indent( GTK_CTREE(ctree_w), 16 );
-	gtk_ctree_set_line_style( GTK_CTREE(ctree_w), GTK_CTREE_LINES_DOTTED );
-	gtk_clist_set_selection_mode( GTK_CLIST(ctree_w), GTK_SELECTION_BROWSE );
-	gtk_ctree_set_spacing( GTK_CTREE(ctree_w), 2 );
-	gtk_container_add( GTK_CONTAINER(scrollwin_w), ctree_w );
-	gtk_widget_show( ctree_w );
+	/* Make the tree view widget */
+	GtkWidget *view = gtk_tree_view_new();
 
-	return ctree_w;
+	GtkTreeViewColumn *col = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(col, "Directory name");
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
+
+	GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+	gtk_tree_view_column_pack_start(col, renderer, TRUE);
+	gtk_tree_view_column_add_attribute(col, renderer, "text", DIRTREE_NAME_COLUMN);
+
+	GtkTreeStore *treestore = gtk_tree_store_new(DIRTREE_NUM_COLS, G_TYPE_STRING, G_TYPE_POINTER);
+	GtkTreeModel *model = GTK_TREE_MODEL(treestore);
+	gtk_tree_view_set_model(GTK_TREE_VIEW(view), model);
+	g_object_unref(model);
+
+	gtk_container_add( GTK_CONTAINER(scrollwin_w), view );
+	gtk_widget_show(view);
+
+	return view;
 }
 
 
-/* This adds a new GtkCTreeNode (tree item) to the given ctree.
- * GtkWidget *ctree_w: the ctree widget
- * GtkCTreeNode *parent: the parent node (NULL if creating a top-level node)
+/* This creates and adds a new (tree item) to the given tree. Returns a
+ * GtkTreePath describing the location in the tree of the new item.
+ * GtkWidget *tree_w: the tree widget
+ * GtkTreePath *parent: the parent node (NULL if creating a top-level node)
  * Icon icon_pair[2]: two icons, for collapsed ([0]) and expanded ([1]) states
  * const char *text: label for node
  * boolean expanded: initial state of node
  * void *data: arbitrary pointer to associate data with node */
-GtkCTreeNode *
-gui_ctree_node_add( GtkWidget *ctree_w, GtkCTreeNode *parent, Icon icon_pair[2], const char *text, boolean expanded, void *data )
+GtkTreePath *
+gui_tree_node_add( GtkWidget *tree_w, GtkTreePath *parent, Icon icon_pair[2], const char *text, boolean expanded, GNode *data )
 {
-	GtkCTreeNode *ctnode;
+	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(tree_w));
+	GtkTreeStore *store = GTK_TREE_STORE(model);
 
-	ctnode = gtk_ctree_insert_node( GTK_CTREE(ctree_w), parent, NULL, (char **)&text, 1, icon_pair[0].pixmap, icon_pair[0].mask, icon_pair[1].pixmap, icon_pair[1].mask, FALSE, expanded );
-	gtk_ctree_node_set_row_data( GTK_CTREE(ctree_w), ctnode, data );
+	GtkTreeIter it;
+	GtkTreeIter parent_it;
+	if (parent && gtk_tree_model_get_iter (model, &parent_it, parent))
+		gtk_tree_store_append(store, &it, &parent_it);
+	else
+		gtk_tree_store_append(store, &it, NULL);
 
-	return ctnode;
+	gtk_tree_store_set(store, &it, DIRTREE_NAME_COLUMN, text, DIRTREE_NODE_COLUMN, data, -1);
+
+	return gtk_tree_model_get_path(model, &it);
 }
 
 

@@ -4,6 +4,7 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * Copyright (C) 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -227,8 +228,8 @@ struct _DirNodeDesc {
 		int64		size;	/* Total subtree size (bytes) */
 		unsigned int	counts[NUM_NODE_TYPES]; /* Node type totals */
 	} subtree;
-	/* Following pointer should be of type GtkCTreeNode */
-	void		*ctnode;	/* Directory tree entry */
+	/* Following pointer should be of type GtkTreePath */
+	void		*tnode;	/* Directory tree entry */
 	unsigned int	a_dlist;	/* Display list A */
 	unsigned int	b_dlist;	/* Display list B */
 	unsigned int	c_dlist;	/* Display list C */

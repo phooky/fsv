@@ -341,7 +341,7 @@ scanfs( const char *dir )
 	name = g_dirname( root_dir );
 	NODE_DESC(globals.fstree)->name = g_string_chunk_insert( name_strchunk, name );
 	g_free( name );
-	DIR_NODE_DESC(globals.fstree)->ctnode = NULL; /* needed in dirtree_entry_new( ) */
+	DIR_NODE_DESC(globals.fstree)->tnode = NULL; /* needed in dirtree_entry_new( ) */
 	DIR_NODE_DESC(globals.fstree)->a_dlist = NULL_DLIST;
 	DIR_NODE_DESC(globals.fstree)->b_dlist = NULL_DLIST;
 	DIR_NODE_DESC(globals.fstree)->c_dlist = NULL_DLIST;
