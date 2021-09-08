@@ -339,8 +339,9 @@ scanfs( const char *dir )
 	/* Note: We can now use root_dnode to refer to the node just
 	 * created (it is an alias for globals.fstree->children) */
 	NODE_DESC(root_dnode)->id = node_id++;
-	name = g_basename( root_dir );
+	name = g_path_get_basename( root_dir );
 	NODE_DESC(root_dnode)->name = g_string_chunk_insert( name_strchunk, name );
+	g_free(name);
 	DIR_NODE_DESC(root_dnode)->a_dlist = NULL_DLIST;
 	DIR_NODE_DESC(root_dnode)->b_dlist = NULL_DLIST;
 	DIR_NODE_DESC(root_dnode)->c_dlist = NULL_DLIST;
