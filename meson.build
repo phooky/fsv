@@ -1,0 +1,41 @@
+project('fsv', 'c', version: '0.9')
+gtkdep = [dependency('gtk+-2.0'), dependency('gtkgl-2.0')]
+compiler = meson.get_compiler('c')
+conf = configuration_data()
+conf.set_quoted('PACKAGE', meson.project_name())
+conf.set_quoted('VERSION', meson.project_version())
+conf.set_quoted('LOCALEDIR', get_option('datadir') + '/locale')
+conf.set_quoted('DOCDIR', get_option('datadir') + '/doc/fsv')
+
+has_gettext = compiler.has_function('gettext')
+if has_gettext
+  conf.set('ENABLE_NLS', 1)
+endif
+
+has_scandir = compiler.has_function('scandir')
+if has_scandir
+  conf.set('HAVE_SCANDIR', 1)
+endif
+
+has_file = find_program('file')
+if has_file.found()
+  conf.set('HAVE_FILE_COMMAND', 1)
+  conf.set_quoted('FILE_COMMAND', has_file.path() + ' %s')
+endif
+
+if get_option('buildtype') == 'debug' or get_option('buildtype') == 'debugoptimized'
+    add_project_arguments('-DDEBUG', language: 'c')
+endif
+
+configure_file(output : 'config.h',
+               configuration : conf)
+
+libm = compiler.find_library('m')
+
+subdir('po')
+subdir('debug')
+subdir('lib')
+subdir('src')
+
+rpm = import('rpm')
+rpm.generate_spec_template()
