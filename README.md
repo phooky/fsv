@@ -17,36 +17,23 @@ Its ancestor, SGI's `fsn` (pronounced "fusion") originated on IRIX and was promi
 
 Useful info and screenshots of the original SGI IRIX implementation are available on [siliconbunny](http://www.siliconbunny.com/fsn-the-irix-3d-file-system-tool-from-jurassic-park/).
 
-### Install with meson
+### Install
 
 1. Clone the repository
-2. Run meson in repository root directory: `meson setup builddir`
+2. Install dependencies (Ubuntu): `sudo apt-get install libgtkgl2.0-dev libgl1-mesa-dev libglu1-mesa-dev`
+3. Run meson in repository root directory: `meson setup builddir`
     - Or set non-default options: `meson setup -Dbuildtype=release -Dprefix=~/.local builddir`
     - Check current options: `meson configure builddir`
     - Modify options on existing builddir: `meson configure -Doptimization=g builddir`
-3. `ninja -C builddir`
-4. `sudo ninja -C builddir install`
-
-### Install with autotools
-
-1. Clone the repository
-2. Make a configure script: `./autogen.sh`
-3. Install dependencies (Ubuntu): `sudo apt-get install libgtkgl2.0-dev libgl1-mesa-dev libglu1-mesa-dev`
-4. Do the install dance:
-    - `./configure`
-    - `make`
-    - `sudo make install`
+4. Compile: `ninja -C builddir`
+5. Install: `sudo ninja -C builddir install`
 
 ## TODO
 
 ### Update to Gtk+3
 
 1. Update code, still using gtk+2, to build cleanly with
-   make CFLAGS+="-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED"
-   With meson
-   meson configure -Dc_args="-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED" builddir
+   `meson configure -Dc_args="-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED" builddir`
 2. Switch to Gtk+3
-
-### DONE Switch to meson build system
 
 ### Setup github actions for CI
