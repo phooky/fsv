@@ -185,7 +185,7 @@ fecundity_report( int top_n_lines )
 
 		if (new_source_line) {
 			/* Create new source info record */
-			srci = malloc( sizeof(struct SourceInfo) );
+			srci = g_malloc(sizeof(struct SourceInfo));
 			srci->src_file = mbi->src_file;
 			srci->src_line = mbi->src_line;
 			srci->block_type = mbi->type;
@@ -226,7 +226,7 @@ fecundity_report( int top_n_lines )
         srci_llink = srci_list;
 	while (srci_llink != NULL) {
 		srci = (struct SourceInfo *)srci_llink->data;
-		free( srci );
+		g_free( srci );
 		srci_llink = srci_llink->next;
 	}
 	g_list_free( srci_list );
@@ -273,7 +273,7 @@ new_block_info( void *block, size_t size, const char *type, const char *src_file
 	struct MemBlockInfo *mbi;
 
 	/* Create new block info record */
-	mbi = g_new(struct MemBlockInfo, 1);
+	mbi = g_malloc(sizeof(struct MemBlockInfo));
 	mbi->block = block;
 	mbi->size = size;
 	mbi->type = type;
@@ -348,7 +348,7 @@ destroy_block_info( struct MemBlockInfo *mbi )
 	total_bytes -= mbi->size;
 	--total_blocks;
 
-	free( mbi );
+	g_free( mbi );
 }
 
 
@@ -520,7 +520,7 @@ debug_free( void *block, const char *src_file, int src_line )
 
 	destroy_block_info( mbi );
 
-	free( block );
+	g_free( block );
 }
 
 
