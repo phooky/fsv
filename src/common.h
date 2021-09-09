@@ -291,9 +291,9 @@ extern const char *node_type_plural_names[NUM_NODE_TYPES];
 /**** Prototypes for common library functions ****************/
 
 #ifndef DEBUG
-void *xmalloc( size_t size );
-void *xrealloc( void *block, size_t size );
-char *xstrdup( const char *string );
+#define xmalloc(size) g_malloc(size)
+#define xrealloc(block, size) g_realloc(block, size)
+#define xstrdup(string) g_strdup(string)
 char *xstrredup( char *old_string, const char *string );
 void xfree( void *block );
 #endif /* not DEBUG */

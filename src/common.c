@@ -98,45 +98,6 @@ const char *node_type_plural_names[NUM_NODE_TYPES] = {
 /* Alternate versions of the following functions are used in debugging */
 #ifndef DEBUG
 
-/* malloc( ) wrapper function */
-void *
-xmalloc( size_t size )
-{
-	void *block = malloc( size );
-
-	if (block == NULL)
-		quit( _("Out of memory") );
-
-	return block;
-}
-
-
-/* realloc( ) wrapper function */
-void *
-xrealloc( void *block, size_t size )
-{
-	void *new_block = realloc( block, size );
-
-	if (new_block == NULL)
-		quit( _("Out of memory") );
-
-	return new_block;
-}
-
-
-/* strdup( ) wrapper function */
-char *
-xstrdup( const char *string )
-{
-	char *new_string = strdup( string );
-
-	if (new_string == NULL)
-		quit( _("Out of memory") );
-
-	return new_string;
-}
-
-
 /* Love child of realloc( ) and strdup( ) */
 char *
 xstrredup( char *old_string, const char *string )
@@ -151,11 +112,11 @@ xstrredup( char *old_string, const char *string )
 }
 
 
-/* free( ) wrapper function */
+/* g_free() wrapper function. Must be a real func as it's address is taken. */
 void
 xfree( void *block )
 {
-	free( block );
+	g_free( block );
 }
 
 #endif /* not DEBUG */
