@@ -28,7 +28,7 @@
 
 
 /* The file list widget */
-static GtkWidget *file_clist_w;
+static GtkWidget *file_list_w;
 
 /* Directory currently listed */
 static GNode *filelist_current_dnode;
@@ -48,10 +48,10 @@ filelist_icons_init( void )
 	GdkBitmap *mask;
 	int i;
 
-	style = gtk_widget_get_style( file_clist_w );
+	style = gtk_widget_get_style( file_list_w );
 	trans_color = &style->bg[GTK_STATE_NORMAL];
-	gtk_widget_realize( file_clist_w );
-	window = file_clist_w->window;
+	gtk_widget_realize( file_list_w );
+	window = file_list_w->window;
 
 	/* Make mini node type icons */
 	for (i = 1; i < NUM_NODE_TYPES; i++) {
@@ -64,9 +64,9 @@ filelist_icons_init( void )
 
 /* Correspondence from window_init( ) */
 void
-filelist_pass_widget( GtkWidget *clist_w )
+filelist_pass_widget( GtkWidget *list_w )
 {
-	file_clist_w = clist_w;
+	file_list_w = list_w;
 	filelist_icons_init( );
 }
 
@@ -79,14 +79,14 @@ filelist_reset_access( void )
 	boolean enabled;
 
         enabled = dirtree_entry_expanded( filelist_current_dnode );
-	gtk_widget_set_sensitive( file_clist_w, enabled );
+	gtk_widget_set_sensitive( file_list_w, enabled );
 
 	/* Extra fluff for interface niceness */
 	if (enabled)
-		gui_cursor( file_clist_w, -1 );
+		gui_cursor( file_list_w, -1 );
 	else {
-		gtk_clist_unselect_all( GTK_CLIST(file_clist_w) );
-		gui_cursor( file_clist_w, GDK_X_CURSOR );
+		gtk_clist_unselect_all( GTK_CLIST(file_list_w) );
+		gui_cursor( file_list_w, GDK_X_CURSOR );
 	}
 }
 
@@ -121,21 +121,21 @@ filelist_populate( GNode *dnode )
 	G_LIST_SORT(node_list, compare_node);
 
 	/* Update file clist */
-	gtk_clist_freeze( GTK_CLIST(file_clist_w) );
-	gtk_clist_clear( GTK_CLIST(file_clist_w) );
+	gtk_clist_freeze( GTK_CLIST(file_list_w) );
+	gtk_clist_clear( GTK_CLIST(file_list_w) );
 	node_llink = node_list;
 	while (node_llink != NULL) {
 		node = (GNode *)node_llink->data;
 
-		row = gtk_clist_append( GTK_CLIST(file_clist_w), empty_row );
+		row = gtk_clist_append( GTK_CLIST(file_list_w), empty_row );
 		icon = &node_type_mini_icons[NODE_DESC(node)->type];
-		gtk_clist_set_pixtext( GTK_CLIST(file_clist_w), row, 0, NODE_DESC(node)->name, 2, icon->pixmap, icon->mask );
-		gtk_clist_set_row_data( GTK_CLIST(file_clist_w), row, node );
+		gtk_clist_set_pixtext( GTK_CLIST(file_list_w), row, 0, NODE_DESC(node)->name, 2, icon->pixmap, icon->mask );
+		gtk_clist_set_row_data( GTK_CLIST(file_list_w), row, node );
 
 		++count;
 		node_llink = node_llink->next;
 	}
-	gtk_clist_thaw( GTK_CLIST(file_clist_w) );
+	gtk_clist_thaw( GTK_CLIST(file_list_w) );
 
 	g_list_free( node_list );
 
@@ -180,18 +180,18 @@ filelist_show_entry( GNode *node )
 	}
 
 	/* Scroll file list to proper entry */
-	row = gtk_clist_find_row_from_data( GTK_CLIST(file_clist_w), node );
+	row = gtk_clist_find_row_from_data( GTK_CLIST(file_list_w), node );
 	if (row >= 0)
-		gtk_clist_select_row( GTK_CLIST(file_clist_w), row, 0 );
+		gtk_clist_select_row( GTK_CLIST(file_list_w), row, 0 );
 	else
-		gtk_clist_unselect_all( GTK_CLIST(file_clist_w) );
-	gui_clist_moveto_row( file_clist_w, MAX(0, row), FILELIST_SCROLL_TIME );
+		gtk_clist_unselect_all( GTK_CLIST(file_list_w) );
+	gui_clist_moveto_row( file_list_w, MAX(0, row), FILELIST_SCROLL_TIME );
 }
 
 
 /* Callback for a click in the file list area */
 static int
-filelist_select_cb( GtkWidget *clist_w, GdkEventButton *ev_button )
+filelist_select_cb( GtkWidget *list_w, GdkEventButton *ev_button )
 {
 	GNode *node;
 	int row;
@@ -202,11 +202,11 @@ filelist_select_cb( GtkWidget *clist_w, GdkEventButton *ev_button )
 	if (globals.fsv_mode == FSV_SPLASH)
 		return FALSE;
 
-	gtk_clist_get_selection_info( GTK_CLIST(clist_w), ev_button->x, ev_button->y, &row, NULL );
+	gtk_clist_get_selection_info( GTK_CLIST(list_w), ev_button->x, ev_button->y, &row, NULL );
 	if (row < 0)
 		return FALSE;
 
-	node = (GNode *)gtk_clist_get_row_data( GTK_CLIST(clist_w), row );
+	node = (GNode *)gtk_clist_get_row_data( GTK_CLIST(list_w), row );
 	if (node == NULL)
 		return FALSE;
 
@@ -227,7 +227,7 @@ filelist_select_cb( GtkWidget *clist_w, GdkEventButton *ev_button )
 	/* A click from button 3 selects the row, highlights the node,
 	 * shows the name, and pops up a context-sensitive menu */
 	if (ev_button->button == 3) {
-		gtk_clist_select_row( GTK_CLIST(clist_w), row, 0 );
+		gtk_clist_select_row( GTK_CLIST(list_w), row, 0 );
 		geometry_highlight_node( node, FALSE );
 		window_statusbar( SB_RIGHT, node_absname( node ) );
 		context_menu( node, ev_button );
@@ -245,10 +245,10 @@ filelist_init( void )
 	GtkWidget *parent_w;
 
 	/* Replace current clist widget with a single-column one */
-	parent_w = file_clist_w->parent->parent;
-	gtk_widget_destroy( file_clist_w->parent );
-	file_clist_w = gui_clist_add( parent_w, 1, NULL );
-	gtk_signal_connect( GTK_OBJECT(file_clist_w), "button_press_event", GTK_SIGNAL_FUNC(filelist_select_cb), NULL );
+	parent_w = file_list_w->parent->parent;
+	gtk_widget_destroy( file_list_w->parent );
+	file_list_w = gui_clist_add( parent_w, 1, NULL );
+	gtk_signal_connect( GTK_OBJECT(file_list_w), "button_press_event", GTK_SIGNAL_FUNC(filelist_select_cb), NULL );
 
 	filelist_populate( root_dnode );
 
@@ -274,20 +274,20 @@ filelist_scan_monitor_init( void )
 	col_titles[2] = _("Bytes");
 
 	/* Replace current clist widget with a 3-column one */
-	parent_w = file_clist_w->parent->parent;
-	gtk_widget_destroy( file_clist_w->parent );
-	file_clist_w = gui_clist_add( parent_w, 3, col_titles );
+	parent_w = file_list_w->parent->parent;
+	gtk_widget_destroy( file_list_w->parent );
+	file_list_w = gui_clist_add( parent_w, 3, col_titles );
 
 	/* Place icons and static text */
 	for (i = 1; i <= NUM_NODE_TYPES; i++) {
-		gtk_clist_append( GTK_CLIST(file_clist_w), empty_row );
+		gtk_clist_append( GTK_CLIST(file_list_w), empty_row );
 		if (i < NUM_NODE_TYPES) {
 			icon = &node_type_mini_icons[i];
-			gtk_clist_set_pixtext( GTK_CLIST(file_clist_w), i - 1, 0, _(node_type_plural_names[i]), 2, icon->pixmap, icon->mask );
+			gtk_clist_set_pixtext( GTK_CLIST(file_list_w), i - 1, 0, _(node_type_plural_names[i]), 2, icon->pixmap, icon->mask );
 		}
 		else
-                        gtk_clist_set_text( GTK_CLIST(file_clist_w), i - 1, 0, _("TOTAL") );
-		gtk_clist_set_selectable( GTK_CLIST(file_clist_w), i - 1, FALSE );
+                        gtk_clist_set_text( GTK_CLIST(file_list_w), i - 1, 0, _("TOTAL") );
+		gtk_clist_set_selectable( GTK_CLIST(file_list_w), i - 1, FALSE );
 	}
 }
 
@@ -301,7 +301,7 @@ filelist_scan_monitor( int *node_counts, int64 *size_counts )
 	int node_total = 0;
 	int i;
 
-	gtk_clist_freeze( GTK_CLIST(file_clist_w) );
+	gtk_clist_freeze( GTK_CLIST(file_list_w) );
 	for (i = 1; i <= NUM_NODE_TYPES; i++) {
 		/* Column 2 */
 		if (i < NUM_NODE_TYPES) {
@@ -310,7 +310,7 @@ filelist_scan_monitor( int *node_counts, int64 *size_counts )
 		}
 		else
 			str = i64toa( node_total );
-		gtk_clist_set_text( GTK_CLIST(file_clist_w), i - 1, 1, str );
+		gtk_clist_set_text( GTK_CLIST(file_list_w), i - 1, 1, str );
 
 		/* Column 3 */
 		if (i < NUM_NODE_TYPES) {
@@ -319,9 +319,9 @@ filelist_scan_monitor( int *node_counts, int64 *size_counts )
 		}
 		else
 			str = i64toa( size_total );
-		gtk_clist_set_text( GTK_CLIST(file_clist_w), i - 1, 2, str );
+		gtk_clist_set_text( GTK_CLIST(file_list_w), i - 1, 2, str );
 	}
-	gtk_clist_thaw( GTK_CLIST(file_clist_w) );
+	gtk_clist_thaw( GTK_CLIST(file_list_w) );
 }
 
 
@@ -332,7 +332,7 @@ dir_contents_list( GNode *dnode )
 {
         char *col_titles[2];
 	char *clist_row[2];
-	GtkWidget *clist_w;
+	GtkWidget *list_w;
 	Icon *icon;
 	int i;
 
@@ -343,20 +343,20 @@ dir_contents_list( GNode *dnode )
 
 	/* Don't use gui_clist_add( ) as this one shouldn't be placed
 	 * inside a scrolled window */
-        clist_w = gtk_clist_new_with_titles( 2, col_titles );
-	gtk_clist_set_selection_mode( GTK_CLIST(clist_w), GTK_SELECTION_SINGLE );
+        list_w = gtk_clist_new_with_titles( 2, col_titles );
+	gtk_clist_set_selection_mode( GTK_CLIST(list_w), GTK_SELECTION_SINGLE );
 	for (i = 0; i < 2; i++)
-		gtk_clist_set_column_auto_resize( GTK_CLIST(clist_w), i, TRUE );
+		gtk_clist_set_column_auto_resize( GTK_CLIST(list_w), i, TRUE );
 
 	clist_row[0] = NULL;
 	for (i = 1; i < NUM_NODE_TYPES; i++) {
 		clist_row[1] = (char *)i64toa( DIR_NODE_DESC(dnode)->subtree.counts[i] );
-		gtk_clist_append( GTK_CLIST(clist_w), clist_row );
+		gtk_clist_append( GTK_CLIST(list_w), clist_row );
 		icon = &node_type_mini_icons[i];
-		gtk_clist_set_pixtext( GTK_CLIST(clist_w), i - 1, 0, _(node_type_plural_names[i]), 2, icon->pixmap, icon->mask );
+		gtk_clist_set_pixtext( GTK_CLIST(list_w), i - 1, 0, _(node_type_plural_names[i]), 2, icon->pixmap, icon->mask );
 	}
 
-	return clist_w;
+	return list_w;
 }
 
 
