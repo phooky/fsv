@@ -3,6 +3,7 @@
 /* Debugging library */
 
 /* Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * Copyright (C) 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
@@ -154,7 +155,7 @@ source_fecundity_compare( const struct SourceInfo *srci1, const struct SourceInf
 static void
 fecundity_report( int top_n_lines )
 {
-        struct MemBlockInfo *mbi, *prev_mbi = NULL;
+	struct MemBlockInfo *mbi, *prev_mbi = NULL;
 	struct SourceInfo *srci = NULL;
 	GList *mbi_llink;
 	GList *srci_list = NULL, *srci_llink;
@@ -214,7 +215,9 @@ fecundity_report( int top_n_lines )
         srci_llink = srci_list;
 	for (i = 1; (i <= top_n_lines) && (srci_llink != NULL); i++) {
 		srci = (struct SourceInfo *)srci_llink->data;
-		g_message( "%d.  %s:%d    \t%d %s block(s)  (%u bytes)", i, srci->src_file, srci->src_line, srci->block_count, srci->block_type, srci->byte_count );
+		g_message( "%d.  %s:%d    \t%d %s block(s)  (%"G_GSIZE_FORMAT" bytes)",
+			 i, srci->src_file, srci->src_line, srci->block_count,
+			 srci->block_type, srci->byte_count );
 		srci_llink = srci_llink->next;
 	}
 	g_message( "=========================================" );
@@ -238,7 +241,9 @@ debug_show_mem_totals( void )
 	static int last_total_blocks = 0;
 	static size_t last_total_bytes = 0;
 
-	g_message( "Allocated: %d blocks, %u bytes (%+d, %+d)", total_blocks, total_bytes, total_blocks - last_total_blocks, (int)total_bytes - (int)last_total_bytes );
+	g_message( "Allocated: %d blocks, %"G_GSIZE_FORMAT" bytes (%+d, %+"G_GSSIZE_FORMAT")",
+		total_blocks, total_bytes, total_blocks - last_total_blocks,
+		 (gssize)total_bytes - (gssize)last_total_bytes );
 	last_total_blocks = total_blocks;
 	last_total_bytes = total_bytes;
 }
@@ -267,11 +272,11 @@ new_block_info( void *block, size_t size, const char *type, const char *src_file
 {
 	struct MemBlockInfo *mbi;
 
-        /* Create new block info record */
-	mbi = malloc( sizeof(struct MemBlockInfo) );
+	/* Create new block info record */
+	mbi = g_new(struct MemBlockInfo, 1);
 	mbi->block = block;
 	mbi->size = size;
-        mbi->type = type;
+	mbi->type = type;
 	mbi->src_file = src_file;
 	mbi->src_line = src_line;
 	mbi->alloc_time = time( NULL );
@@ -290,7 +295,7 @@ new_block_info( void *block, size_t size, const char *type, const char *src_file
 static void
 update_block_info( struct MemBlockInfo *mbi, void *block, size_t size )
 {
-        /* Adjust running byte total */
+	/* Adjust running byte total */
 	total_bytes += size;
 	total_bytes -= mbi->size;
 
@@ -385,21 +390,10 @@ check_string( const char *string, const char *src_file, int src_line, const char
 void *
 debug_malloc( size_t size, const char *src_file, int src_line )
 {
-	static const char fname[] = "debug_malloc";
 	void *block;
-	int i;
-
-	if (size == 0)
-		g_warning( "%s:%d [%s] Allocating zero-size block", src_file, src_line, fname );
 
 	/* Allocate new block */
-	block = malloc( size );
-	if (block == NULL)
-		g_error( "%s:%d [%s] malloc( %u ) returned NULL", src_file, src_line, fname, size );
-
-	/* Fill newly allocated block with random junk */
-	for (i = 0; i < size; i++)
-		((byte *)block)[i] = (byte)(rand( ) & 0xFF);
+	block = g_malloc( size );
 
 	new_block_info( block, size, BLOCK_DATA, src_file, src_line );
 
@@ -410,7 +404,7 @@ debug_malloc( size_t size, const char *src_file, int src_line )
 void *
 debug_realloc( void *block, size_t size, const char *src_file, int src_line )
 {
-        static const char fname[] = "debug_realloc";
+	static const char fname[] = "debug_realloc";
 	struct MemBlockInfo *mbi;
 	void *new_block;
 
@@ -421,14 +415,10 @@ debug_realloc( void *block, size_t size, const char *src_file, int src_line )
 	if (mbi == NULL)
 		g_error( "%s:%d [%s] Attempted to resize unknown block", src_file, src_line, fname );
 
-	if (size == 0)
-		g_warning( "%s:%d [%s] Resizing block to zero size", src_file, src_line, fname );
 	if (size == mbi->size)
 		g_message( "%s:%d [%s] Resizing block to same size", src_file, src_line, fname );
 
-	new_block = realloc( block, size );
-	if (new_block == NULL)
-		g_error( "%s:%d [%s] realloc( %p, %u ) returned NULL", src_file, src_line, fname, block, size );
+	new_block = g_realloc( block, size );
 
 	update_block_info( mbi, new_block, size );
 
@@ -445,9 +435,8 @@ debug_memdup( void *mem, size_t size, const char *src_file, int src_line )
 	if (size == 0)
 		g_warning( "%s:%d [%s] Duplicating zero-length region", src_file, src_line, fname );
 
-	block = malloc( size );
-	if (block == NULL)
-		g_error( "%s:%d [%s] malloc( %u ) returned NULL", src_file, src_line, fname, size );
+	block = g_malloc( size );
+
 	memcpy( block, mem, size );
 
 	new_block_info( block, size, BLOCK_DATA, src_file, src_line );
@@ -459,7 +448,7 @@ debug_memdup( void *mem, size_t size, const char *src_file, int src_line )
 char *
 debug_strdup( const char *string, const char *src_file, int src_line )
 {
-        static const char fname[] = "debug_strdup";
+	static const char fname[] = "debug_strdup";
 	size_t size;
 	char *new_string;
 
@@ -499,22 +488,21 @@ debug_strredup( char *old_string, const char *string, const char *src_file, int 
 
 	check_string( string, src_file, src_line, fname );
 
-        size = strlen( string ) + 1;
-	new_string = realloc( old_string, size );
-	if (new_string == NULL)
-		g_error( "%s:%d [%s] realloc( %p, %u ) returned NULL", src_file, src_line, fname, old_string, size );
-	strcpy( new_string, string );
+	size = strlen( string ) + 1;
+	new_string = g_realloc( old_string, size );
+
+	memcpy( new_string, string, size );
 
 	update_block_info( mbi, new_string, size );
 
-        return new_string;
+	return new_string;
 }
 
 
 void
 debug_free( void *block, const char *src_file, int src_line )
 {
-        static const char fname[] = "debug_free";
+	static const char fname[] = "debug_free";
 	struct MemBlockInfo *mbi;
 
 	if (block == NULL) {
@@ -532,7 +520,7 @@ debug_free( void *block, const char *src_file, int src_line )
 
 	destroy_block_info( mbi );
 
-        free( block );
+	free( block );
 }
 
 
