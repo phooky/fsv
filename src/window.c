@@ -71,7 +71,7 @@ window_init( FsvMode fsv_mode )
 	GtkWidget *button_w;
 	GtkWidget *frame_w;
 	GtkWidget *dir_tree_w;
-	GtkWidget *file_clist_w;
+	GtkWidget *file_list_w;
         GtkWidget *gl_area_w;
 	GtkWidget *x_scrollbar_w;
 	GtkWidget *y_scrollbar_w;
@@ -201,9 +201,9 @@ window_init( FsvMode fsv_mode )
 	gtk_widget_show( dir_tree_w->parent );
 
 	/* File list goes in bottom pane */
-	file_clist_w = gui_clist_add( NULL, 3, NULL );
-	gtk_paned_add2( GTK_PANED(vpaned_w), file_clist_w->parent );
-	gtk_widget_show( file_clist_w->parent );
+	file_list_w = gui_filelist_new(NULL);
+	gtk_paned_add2( GTK_PANED(vpaned_w), file_list_w->parent );
+	gtk_widget_show( file_list_w->parent );
 
 	/* Left statusbar */
 	left_statusbar_w = gui_statusbar_add( left_vbox_w );
@@ -240,7 +240,7 @@ window_init( FsvMode fsv_mode )
 	/* Send out the widgets to their respective modules */
 	dialog_pass_main_window_widget( main_window_w );
 	dirtree_pass_widget( dir_tree_w );
-	filelist_pass_widget( file_clist_w );
+	filelist_pass_widget( file_list_w );
 	camera_pass_scrollbar_widgets( x_scrollbar_w, y_scrollbar_w );
 
 	/* Showtime! */

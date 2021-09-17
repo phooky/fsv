@@ -18,6 +18,8 @@
 
 #ifdef __GTK_H__
 
+#include <gdk-pixbuf/gdk-pixbuf.h>
+
 /* For clearer gui_*_packing( ) syntax */
 #define EXPAND		TRUE
 #define NO_EXPAND	FALSE
@@ -32,6 +34,7 @@ typedef struct _Icon Icon;
 struct _Icon {
 	GdkPixmap *pixmap;
 	GdkBitmap *mask;
+	GdkPixbuf *pixbuf;
 };
 
 // For the TreeView (directory tree view)
@@ -42,6 +45,23 @@ enum
   DIRTREE_NUM_COLS
 };
 
+// For the TreeView (directory list view)
+enum
+{
+	FILELIST_ICON_COLUMN = 0,
+	FILELIST_NAME_COLUMN,
+	FILELIST_NODE_COLUMN, // Hidden column with GNode pointer
+	FILELIST_NUM_COLS
+};
+
+// For the TreeView (filelist scan progress view)
+enum
+{
+	FILELIST_SCAN_ICON_COLUMN = 0,
+	FILELIST_SCAN_FOUND_COLUMN,
+	FILELIST_SCAN_BYTES_COLUMN,
+	FILELIST_SCAN_NUM_COLS
+};
 #endif /* __GTK_H__ */
 
 
@@ -59,6 +79,8 @@ GtkWidget *gui_clist_add( GtkWidget *parent_w, int num_cols, char *col_titles[] 
 void gui_clist_moveto_row( GtkWidget *clist_w, int row, double moveto_time );
 GtkWidget *gui_colorpicker_add( GtkWidget *parent_w, RGBcolor *init_color, const char *title, void (*callback)( ), void *callback_data );
 void gui_colorpicker_set_color( GtkWidget *colorpicker_w, RGBcolor *color );
+GtkWidget *gui_filelist_new(GtkWidget *parent_w);
+GtkWidget *gui_filelist_scan_new(GtkWidget *parent_w);
 GtkWidget *gui_tree_add( GtkWidget *parent_w );
 GtkTreePath *gui_tree_node_add( GtkWidget *tree_w, GtkTreePath *parent, Icon icon_pair[2], const char *text, boolean expanded, GNode *data );
 void gui_cursor( GtkWidget *widget, int glyph );

@@ -372,6 +372,103 @@ gui_colorpicker_set_color( GtkWidget *colorbutton_w, RGBcolor *color )
 }
 
 
+/* Create filelist widget */
+GtkWidget *
+gui_filelist_new(GtkWidget *parent_w)
+{
+	GtkWidget *scrollwin_w;
+
+	/* Make the scrolled window widget */
+	scrollwin_w = gtk_scrolled_window_new( NULL, NULL );
+	gtk_scrolled_window_set_policy( GTK_SCROLLED_WINDOW(scrollwin_w), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC );
+        parent_child_full( parent_w, scrollwin_w, EXPAND, FILL );
+
+	/* Make the tree view widget */
+	GtkWidget *view = gtk_tree_view_new();
+
+	GtkTreeViewColumn *col_pb = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(col_pb, "Icon");
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col_pb);
+
+	GtkCellRenderer *renderer_pb = gtk_cell_renderer_pixbuf_new();
+	gtk_tree_view_column_pack_start(col_pb, renderer_pb, TRUE);
+	gtk_tree_view_column_add_attribute(col_pb, renderer_pb, "pixbuf",
+		FILELIST_ICON_COLUMN);
+
+	GtkTreeViewColumn *col = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(col, "File name");
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
+
+	GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+	gtk_tree_view_column_pack_start(col, renderer, TRUE);
+	gtk_tree_view_column_add_attribute(col, renderer, "text", FILELIST_NAME_COLUMN);
+
+	GtkListStore *liststore = gtk_list_store_new(FILELIST_NUM_COLS,
+		GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_POINTER);
+	GtkTreeModel *model = GTK_TREE_MODEL(liststore);
+	gtk_tree_view_set_model(GTK_TREE_VIEW(view), model);
+	g_object_unref(model);
+
+	gtk_container_add( GTK_CONTAINER(scrollwin_w), view );
+	gtk_widget_show(view);
+
+	return view;
+}
+
+
+/* Create filelist scan widget */
+GtkWidget *
+gui_filelist_scan_new(GtkWidget *parent_w)
+{
+	GtkWidget *scrollwin_w;
+
+	/* Make the scrolled window widget */
+	scrollwin_w = gtk_scrolled_window_new( NULL, NULL );
+	gtk_scrolled_window_set_policy( GTK_SCROLLED_WINDOW(scrollwin_w), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC );
+        parent_child_full( parent_w, scrollwin_w, EXPAND, FILL );
+
+	/* Make the tree view widget */
+	GtkWidget *view = gtk_tree_view_new();
+
+	GtkTreeViewColumn *col = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(col, "Icon");
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
+
+	GtkCellRenderer *renderer_pb = gtk_cell_renderer_pixbuf_new();
+	gtk_tree_view_column_pack_start(col, renderer_pb, TRUE);
+	gtk_tree_view_column_add_attribute(col, renderer_pb, "pixbuf",
+		FILELIST_SCAN_ICON_COLUMN);
+
+	GtkTreeViewColumn *col_fn = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(col_fn, "Files found");
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col_fn);
+
+	GtkCellRenderer *renderer_fn = gtk_cell_renderer_text_new();
+	gtk_tree_view_column_pack_start(col_fn, renderer_fn, TRUE);
+	gtk_tree_view_column_add_attribute(col_fn, renderer_fn, "text",
+		FILELIST_SCAN_FOUND_COLUMN);
+
+	GtkTreeViewColumn *col_sz = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(col_sz, "Files total size");
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col_sz);
+
+	GtkCellRenderer *renderer_sz = gtk_cell_renderer_text_new();
+	gtk_tree_view_column_pack_start(col_sz, renderer_sz, TRUE);
+	gtk_tree_view_column_add_attribute(col_sz, renderer_sz, "text",
+		FILELIST_SCAN_BYTES_COLUMN);
+
+	GtkListStore *liststore = gtk_list_store_new(FILELIST_SCAN_NUM_COLS,
+		GDK_TYPE_PIXBUF, G_TYPE_INT, G_TYPE_INT64);
+	GtkTreeModel *model = GTK_TREE_MODEL(liststore);
+	gtk_tree_view_set_model(GTK_TREE_VIEW(view), model);
+	g_object_unref(model);
+
+	gtk_container_add( GTK_CONTAINER(scrollwin_w), view );
+	gtk_widget_show(view);
+
+	return view;
+}
+
 /* The tree widget (fitted into a scrolled window) */
 GtkWidget *
 gui_tree_add( GtkWidget *parent_w )
