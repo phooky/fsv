@@ -323,14 +323,16 @@ gui_clist_moveto_row( GtkWidget *clist_w, int row, double moveto_time )
 
 /* Internal callback for the color picker widget */
 static void
-color_picker_cb( GtkWidget *colorpicker_w, unsigned int r, unsigned int g, unsigned int b, unsigned int unused, void *data )
+color_picker_cb(GtkColorButton *colorpicker_w, gpointer data)
 {
 	void (*user_callback)( RGBcolor *, void * );
 	RGBcolor color;
+	GdkColor gcolor;
 
-	color.r = (float)r / 65535.0;
-	color.g = (float)g / 65535.0;
-	color.b = (float)b / 65535.0;
+	gtk_color_button_get_color(colorpicker_w, &gcolor);
+	color.r = (float)gcolor.red / 65535.0;
+	color.g = (float)gcolor.green / 65535.0;
+	color.b = (float)gcolor.blue / 65535.0;
 
 	/* Call user callback */
 	user_callback = (void (*)( RGBcolor *, void * ))gtk_object_get_data( GTK_OBJECT(colorpicker_w), "user_callback" );
