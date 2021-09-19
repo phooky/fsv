@@ -1171,7 +1171,7 @@ dialog_node_properties( GNode *node )
 	GtkWidget *separator_w;
 	GtkWidget *button_w;
 	GtkWidget *vbox2_w;
-	GtkWidget *clist_w;
+	GtkWidget *list_w;
 	GtkWidget *entry_w;
 	GNode *target_node;
 	char strbuf[1024];
@@ -1321,9 +1321,9 @@ dialog_node_properties( GNode *node )
 		gui_label_add( vbox2_w, _("This directory contains:") );
 
 		/* Directory contents listing */
-		clist_w = dir_contents_list( node );
-		gtk_box_pack_start( GTK_BOX(vbox2_w), clist_w, FALSE, FALSE, 0 );
-		gtk_widget_show( clist_w );
+		list_w = dir_contents_list( node );
+		gtk_box_pack_start( GTK_BOX(vbox2_w), list_w, FALSE, FALSE, 0 );
+		gtk_widget_show( list_w );
 
 		gui_separator_add( vbox2_w );
 

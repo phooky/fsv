@@ -397,38 +397,69 @@ filelist_scan_monitor( int *node_counts, int64 *size_counts )
 }
 
 
-/* Creates the clist widget used in the "Contents" page of the Properties
+// For the TreeView (dir contents list)
+enum
+{
+	DIR_CONT_LIST_ICON_COLUMN = 0,
+	DIR_CONT_LIST_TYPE_COLUMN,
+	DIR_CONT_LIST_QUANTITY_COLUMN,
+	DIR_CONT_LIST_NUM_COLS
+};
+
+/* Creates the list widget used in the "Contents" page of the Properties
  * dialog for a directory */
 GtkWidget *
 dir_contents_list( GNode *dnode )
 {
-        char *col_titles[2];
-	char *clist_row[2];
-	GtkWidget *list_w;
-	Icon *icon;
-	int i;
+	GtkWidget *view = gtk_tree_view_new();
 
-	g_assert( NODE_IS_DIR(dnode) );
+	GtkTreeViewColumn *col_pb = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(col_pb, _("Icon"));
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col_pb);
 
-	col_titles[0] = _("Node type");
-	col_titles[1] = _("Quantity");
+	GtkCellRenderer *renderer_pb = gtk_cell_renderer_pixbuf_new();
+	gtk_tree_view_column_pack_start(col_pb, renderer_pb, TRUE);
+	gtk_tree_view_column_add_attribute(col_pb, renderer_pb, "pixbuf",
+		DIR_CONT_LIST_ICON_COLUMN);
 
-	/* Don't use gui_clist_add( ) as this one shouldn't be placed
-	 * inside a scrolled window */
-        list_w = gtk_clist_new_with_titles( 2, col_titles );
-	gtk_clist_set_selection_mode( GTK_CLIST(list_w), GTK_SELECTION_SINGLE );
-	for (i = 0; i < 2; i++)
-		gtk_clist_set_column_auto_resize( GTK_CLIST(list_w), i, TRUE );
+	GtkTreeViewColumn *col = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(col, _("Node Type"));
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
-	clist_row[0] = NULL;
-	for (i = 1; i < NUM_NODE_TYPES; i++) {
-		clist_row[1] = (char *)i64toa( DIR_NODE_DESC(dnode)->subtree.counts[i] );
-		gtk_clist_append( GTK_CLIST(list_w), clist_row );
-		icon = &node_type_mini_icons[i];
-		gtk_clist_set_pixtext( GTK_CLIST(list_w), i - 1, 0, _(node_type_plural_names[i]), 2, icon->pixmap, icon->mask );
+	GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+	gtk_tree_view_column_pack_start(col, renderer, TRUE);
+	gtk_tree_view_column_add_attribute(col, renderer, "text",
+		DIR_CONT_LIST_TYPE_COLUMN);
+
+	GtkTreeViewColumn *col_qt = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(col_qt, _("Quantity"));
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col_qt);
+
+	GtkCellRenderer *renderer_qt = gtk_cell_renderer_text_new();
+	gtk_tree_view_column_pack_start(col_qt, renderer_qt, TRUE);
+	gtk_tree_view_column_add_attribute(col_qt, renderer_qt, "text",
+		DIR_CONT_LIST_QUANTITY_COLUMN);
+
+	GtkListStore *liststore = gtk_list_store_new(DIR_CONT_LIST_NUM_COLS,
+		GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_INT);
+	GtkTreeModel *model = GTK_TREE_MODEL(liststore);
+
+	// Populate the widget
+	for (int row = 1; row < NUM_NODE_TYPES; row++) {
+		GtkTreeIter iter;
+		gtk_list_store_append(liststore, &iter);
+		Icon *icon = &node_type_mini_icons[row];
+		gtk_list_store_set(liststore, &iter,
+			DIR_CONT_LIST_ICON_COLUMN, icon->pixbuf,
+			DIR_CONT_LIST_TYPE_COLUMN, _(node_type_plural_names[row]),
+			DIR_CONT_LIST_QUANTITY_COLUMN, DIR_NODE_DESC(dnode)->subtree.counts[row],
+			-1);
 	}
 
-	return list_w;
+	gtk_tree_view_set_model(GTK_TREE_VIEW(view), model);
+	g_object_unref(model);
+
+	return view;
 }
 
 
