@@ -167,7 +167,7 @@ static struct ColorSetupDialog {
 	/* Wildcard pattern configuration page */
 	struct {
 		/* Wildcard pattern list widget */
-		GtkWidget *clist_w;
+		GtkWidget *list_w;
 
 		/* Flag: TRUE when a row in the list is being dragged */
 		boolean row_is_being_dragged;
@@ -181,7 +181,7 @@ static struct ColorSetupDialog {
 
 
 /* Forward declarations */
-static void csdialog_wpattern_clist_row_move_cb( GtkWidget *clist_w, int source_row, int dest_row );
+static void csdialog_wpattern_clist_row_move_cb( GtkWidget *list_w, int source_row, int dest_row );
 
 
 /* Callback for the node type color pickers */
@@ -349,7 +349,7 @@ csdialog_time_color_picker_cb( RGBcolor *picked_color, RGBcolor *end_color )
 /* Helper function for csdialog_wpattern_clist_populate( ). This
  * generates a GtkStyle to permit setting a cell to a solid color */
 static GtkStyle *
-solid_color_cell_style( GtkWidget *clist_w, RGBcolor *color )
+solid_color_cell_style( GtkWidget *list_w, RGBcolor *color )
 {
 	GdkColor gcolor;
 	GtkStyle *style;
@@ -357,7 +357,7 @@ solid_color_cell_style( GtkWidget *clist_w, RGBcolor *color )
 	gcolor.red = (unsigned short)(65535.0 * color->r);
 	gcolor.green = (unsigned short)(65535.0 * color->g);
 	gcolor.blue = (unsigned short)(65535.0 * color->b);
-	style = gtk_style_copy( clist_w->style );
+	style = gtk_style_copy( list_w->style );
 	style->base[GTK_STATE_NORMAL] = gcolor; /* struct assign */
 	style->bg[GTK_STATE_SELECTED] = gcolor; /* struct assign */
 
@@ -375,8 +375,8 @@ wplist_row( int row, struct WPListRowData *row_data )
 	char *clist_row[2] = { NULL, NULL };
 
 	/* If there is a row at the given index, remove it */
-	if (row < GTK_CLIST(csdialog.wpattern.clist_w)->rows)
-		gtk_clist_remove( GTK_CLIST(csdialog.wpattern.clist_w), row );
+	if (row < GTK_CLIST(csdialog.wpattern.list_w)->rows)
+		gtk_clist_remove( GTK_CLIST(csdialog.wpattern.list_w), row );
 
 	/* Determine textual content of new row */
 	switch (row_data->row_type) {
@@ -396,26 +396,26 @@ wplist_row( int row, struct WPListRowData *row_data )
 		/* Row has no text */
 		break;
 	}
-	r = gtk_clist_insert( GTK_CLIST(csdialog.wpattern.clist_w), row, clist_row );
+	r = gtk_clist_insert( GTK_CLIST(csdialog.wpattern.list_w), row, clist_row );
 	g_assert( r == row );
 
 	/* Set row properties appropriately */
 	switch (row_data->row_type) {
 		case WPLIST_HEADER_ROW:
 		case WPLIST_DEFAULT_HEADER_ROW:
-		gtk_clist_set_row_style( GTK_CLIST(csdialog.wpattern.clist_w), row, row_data->style );
-		gtk_clist_set_selectable( GTK_CLIST(csdialog.wpattern.clist_w), row, FALSE );
+		gtk_clist_set_row_style( GTK_CLIST(csdialog.wpattern.list_w), row, row_data->style );
+		gtk_clist_set_selectable( GTK_CLIST(csdialog.wpattern.list_w), row, FALSE );
 		break;
 
 		case WPLIST_WPATTERN_ROW:
 		case WPLIST_NEW_WPATTERN_ROW:
 		case WPLIST_DEFAULT_ROW:
-		gtk_clist_set_cell_style( GTK_CLIST(csdialog.wpattern.clist_w), row, 0, row_data->style );
+		gtk_clist_set_cell_style( GTK_CLIST(csdialog.wpattern.list_w), row, 0, row_data->style );
 		break;
 
 		SWITCH_FAIL
 	}
-	gtk_clist_set_row_data_full( GTK_CLIST(csdialog.wpattern.clist_w), row, row_data, _xfree );
+	gtk_clist_set_row_data_full( GTK_CLIST(csdialog.wpattern.list_w), row, row_data, _xfree );
 }
 
 
@@ -432,13 +432,13 @@ csdialog_wpattern_clist_populate( void )
 	int row_count, i;
 	char *wpattern;
 
-	gtk_clist_freeze( GTK_CLIST(csdialog.wpattern.clist_w) );
+	gtk_clist_freeze( GTK_CLIST(csdialog.wpattern.list_w) );
 
 	/* Iterate through all the wildcard pattern color groups */
 	wpgroup_llink = csdialog.color_config.by_wpattern.wpgroup_list;
 	while (wpgroup_llink != NULL) {
 		wpgroup = (struct WPatternGroup *)wpgroup_llink->data;
-		style = solid_color_cell_style( csdialog.wpattern.clist_w, &wpgroup->color );
+		style = solid_color_cell_style( csdialog.wpattern.list_w, &wpgroup->color );
 
 		/* Add header row */
 		row_data = NEW(struct WPListRowData);
@@ -477,7 +477,7 @@ csdialog_wpattern_clist_populate( void )
 	}
 
 	/* Default color */
-	style = solid_color_cell_style( csdialog.wpattern.clist_w, &csdialog.color_config.by_wpattern.default_color );
+	style = solid_color_cell_style( csdialog.wpattern.list_w, &csdialog.color_config.by_wpattern.default_color );
 
 	/* Add default-color header row */
 	row_data = NEW(struct WPListRowData);
@@ -496,13 +496,13 @@ csdialog_wpattern_clist_populate( void )
 	wplist_row( row++, row_data );
 
 	/* Remove any leftover rows */
-	row_count = GTK_CLIST(csdialog.wpattern.clist_w)->rows;
+	row_count = GTK_CLIST(csdialog.wpattern.list_w)->rows;
 	if (row_count > row) {
 		for (i = 0; i < (row_count - row); i++)
-			gtk_clist_remove( GTK_CLIST(csdialog.wpattern.clist_w), row );
+			gtk_clist_remove( GTK_CLIST(csdialog.wpattern.list_w), row );
 	}
 
-	gtk_clist_thaw( GTK_CLIST(csdialog.wpattern.clist_w) );
+	gtk_clist_thaw( GTK_CLIST(csdialog.wpattern.list_w) );
 }
 
 
@@ -524,7 +524,7 @@ csdialog_wpattern_color_selection_cb( RGBcolor *selected_color, RGBcolor *wpatte
 
 /* Callback for mouse button release in the wildcard pattern list */
 static int
-csdialog_wpattern_clist_click_cb( GtkWidget *clist_w, GdkEventButton *ev_button )
+csdialog_wpattern_clist_click_cb( GtkWidget *list_w, GdkEventButton *ev_button )
 {
 	struct WPListRowData *row_data;
         RGBcolor *color;
@@ -541,11 +541,11 @@ csdialog_wpattern_clist_click_cb( GtkWidget *clist_w, GdkEventButton *ev_button 
 	if (ev_button->button != 1)
 		return FALSE;
 
-	gtk_clist_get_selection_info( GTK_CLIST(clist_w), ev_button->x, ev_button->y, &row, &col );
+	gtk_clist_get_selection_info( GTK_CLIST(list_w), ev_button->x, ev_button->y, &row, &col );
 	if ((row < 0) || (col < 0))
 		return FALSE;
 
-	row_data = (struct WPListRowData *)gtk_clist_get_row_data( GTK_CLIST(clist_w), row );
+	row_data = (struct WPListRowData *)gtk_clist_get_row_data( GTK_CLIST(list_w), row );
 
 	switch (row_data->row_type) {
 		case WPLIST_WPATTERN_ROW:
@@ -577,7 +577,7 @@ csdialog_wpattern_clist_click_cb( GtkWidget *clist_w, GdkEventButton *ev_button 
 
 /* Callback for row selection/unselection in the wildcard pattern list */
 static void
-csdialog_wpattern_clist_select_unselect_cb( GtkWidget *clist_w, int row, int unused1, GdkEvent *unused2 )
+csdialog_wpattern_clist_select_unselect_cb( GtkWidget *list_w, int row, int unused1, GdkEvent *unused2 )
 {
 	struct WPListRowData *row_data;
 	boolean newwp_row;
@@ -588,14 +588,14 @@ csdialog_wpattern_clist_select_unselect_cb( GtkWidget *clist_w, int row, int unu
 	boolean edit_pattern_allow;
 	boolean delete_allow;
 
-	row_data = gtk_clist_get_row_data( GTK_CLIST(clist_w), row );
+	row_data = gtk_clist_get_row_data( GTK_CLIST(list_w), row );
 
 	/* Set some flags */
 	newwp_row = row_data->row_type == WPLIST_NEW_WPATTERN_ROW;
 	defcolor_row = (row_data->row_type == WPLIST_DEFAULT_ROW) || (row_data->row_type == WPLIST_DEFAULT_HEADER_ROW);
 	if (!defcolor_row)
 		empty_wpgroup = row_data->wpgroup->wp_list == NULL;
-	row_selected = GTK_CLIST(clist_w)->selection != NULL;
+	row_selected = GTK_CLIST(list_w)->selection != NULL;
 
 	/* Decide which actions are allowable */
 	new_color_allow = !row_selected || !defcolor_row;
@@ -625,21 +625,21 @@ csdialog_wpattern_clist_drag_cb( GtkWidget *unused1, GdkDragContext *unused2, in
 static void
 wplist_undo_illegal_row_move( int source_row, int dest_row )
 {
-	gtk_signal_handler_block_by_func( GTK_OBJECT(csdialog.wpattern.clist_w), GTK_SIGNAL_FUNC(csdialog_wpattern_clist_row_move_cb), NULL );
-	gtk_clist_row_move( GTK_CLIST(csdialog.wpattern.clist_w), dest_row, source_row );
-	gtk_signal_handler_unblock_by_func( GTK_OBJECT(csdialog.wpattern.clist_w), GTK_SIGNAL_FUNC(csdialog_wpattern_clist_row_move_cb), NULL );
+	gtk_signal_handler_block_by_func( GTK_OBJECT(csdialog.wpattern.list_w), GTK_SIGNAL_FUNC(csdialog_wpattern_clist_row_move_cb), NULL );
+	gtk_clist_row_move( GTK_CLIST(csdialog.wpattern.list_w), dest_row, source_row );
+	gtk_signal_handler_unblock_by_func( GTK_OBJECT(csdialog.wpattern.list_w), GTK_SIGNAL_FUNC(csdialog_wpattern_clist_row_move_cb), NULL );
 }
 
 
 /* Callback for moving a row in the wildcard pattern list. (This gets called
  * once the row has been dragged and dropped into its desired position) */
 static void
-csdialog_wpattern_clist_row_move_cb( GtkWidget *clist_w, int source_row, int dest_row )
+csdialog_wpattern_clist_row_move_cb( GtkWidget *list_w, int source_row, int dest_row )
 {
 	struct WPListRowData *source_row_data;
 	struct WPListRowData *dest_row_data;
 
-	if (dest_row == (GTK_CLIST(clist_w)->rows - 1)) {
+	if (dest_row == (GTK_CLIST(list_w)->rows - 1)) {
 		/* Cannot move a row to the very end of the list
 		 * (the default-color row goes there) */
 		wplist_undo_illegal_row_move( source_row, dest_row );
@@ -647,15 +647,15 @@ csdialog_wpattern_clist_row_move_cb( GtkWidget *clist_w, int source_row, int des
 	}
 
 	/* Get relevant row data */
-	source_row_data = gtk_clist_get_row_data( GTK_CLIST(clist_w), source_row );
+	source_row_data = gtk_clist_get_row_data( GTK_CLIST(list_w), source_row );
 	/* GtkCList is a bit odd about what it calls the "destination"
 	 * row, so here we impose the convention that it is the first row
 	 * to be pushed down by the source row, when the latter is dropped
 	 * into its new position */
 	if (dest_row < source_row)
-		dest_row_data = gtk_clist_get_row_data( GTK_CLIST(clist_w), dest_row );
+		dest_row_data = gtk_clist_get_row_data( GTK_CLIST(list_w), dest_row );
 	else
-		dest_row_data = gtk_clist_get_row_data( GTK_CLIST(clist_w), dest_row + 1 );
+		dest_row_data = gtk_clist_get_row_data( GTK_CLIST(list_w), dest_row + 1 );
 
 	/* Make sure that the row move is legal, and if so, do whatever
 	 * it implies we should do */
@@ -686,7 +686,7 @@ csdialog_wpattern_clist_row_move_cb( GtkWidget *clist_w, int source_row, int des
 		 * has just been updated, with the rows already where they
 		 * should be, the impending "real" row move must be
 		 * cancelled */
-		gtk_signal_emit_stop_by_name( GTK_OBJECT(clist_w), "row_move" );
+		gtk_signal_emit_stop_by_name( GTK_OBJECT(list_w), "row_move" );
 		break;
 
 		case WPLIST_WPATTERN_ROW:
@@ -715,7 +715,7 @@ csdialog_wpattern_clist_row_move_cb( GtkWidget *clist_w, int source_row, int des
 				 * to be updated */
 				source_row_data->wpgroup = dest_row_data->wpgroup;
 				source_row_data->style = dest_row_data->style;
-				gtk_clist_set_cell_style( GTK_CLIST(clist_w), source_row, 0, dest_row_data->style );
+				gtk_clist_set_cell_style( GTK_CLIST(list_w), source_row, 0, dest_row_data->style );
 			}
 			break;
 
@@ -755,7 +755,7 @@ csdialog_wpattern_new_color_selection_cb( RGBcolor *selected_color, struct WPLis
 	else {
 		G_LIST_APPEND(WPGROUP_LIST, wpgroup);
 		/* Scroll clist to bottom (to make new group visible) */
-		gui_clist_moveto_row( csdialog.wpattern.clist_w, -1, 0.0 );
+		gui_clist_moveto_row( csdialog.wpattern.list_w, -1, 0.0 );
 	}
 #undef WPGROUP_LIST
 
@@ -820,10 +820,10 @@ csdialog_wpattern_button_cb( GtkWidget *button_w )
 	int row = -1;
         const char *title = NULL;
 
-	if (GTK_CLIST(csdialog.wpattern.clist_w)->selection != NULL) {
+	if (GTK_CLIST(csdialog.wpattern.list_w)->selection != NULL) {
 		/* Get data for currently selected row */
-		row = GPOINTER_TO_INT(GTK_CLIST(csdialog.wpattern.clist_w)->selection->data);
-		row_data = gtk_clist_get_row_data( GTK_CLIST(csdialog.wpattern.clist_w), row );
+		row = GPOINTER_TO_INT(GTK_CLIST(csdialog.wpattern.list_w)->selection->data);
+		row_data = gtk_clist_get_row_data( GTK_CLIST(csdialog.wpattern.list_w), row );
 		g_assert( row_data != NULL );
 	}
 
@@ -861,10 +861,10 @@ csdialog_wpattern_button_cb( GtkWidget *button_w )
 			G_LIST_REMOVE(row_data->wpgroup->wp_list, row_data->wpattern);
 			xfree( row_data->wpattern );
 			/* Remove corresponding row */
-			gtk_clist_remove( GTK_CLIST(csdialog.wpattern.clist_w), row );
+			gtk_clist_remove( GTK_CLIST(csdialog.wpattern.list_w), row );
 			/* As a courtesy to the user, leave the next
 			 * row selected */
-			gtk_clist_select_row( GTK_CLIST(csdialog.wpattern.clist_w), row, 1 );
+			gtk_clist_select_row( GTK_CLIST(csdialog.wpattern.list_w), row, 1 );
 			break;
 
 			case WPLIST_NEW_WPATTERN_ROW:
@@ -874,9 +874,9 @@ csdialog_wpattern_button_cb( GtkWidget *button_w )
 			G_LIST_REMOVE(csdialog.color_config.by_wpattern.wpgroup_list, row_data->wpgroup);
 			xfree( row_data->wpgroup );
 			/* Remove corresponding rows */
-			gtk_clist_remove( GTK_CLIST(csdialog.wpattern.clist_w), row );
+			gtk_clist_remove( GTK_CLIST(csdialog.wpattern.list_w), row );
 			g_assert( row >= 1 );
-			gtk_clist_remove( GTK_CLIST(csdialog.wpattern.clist_w), row - 1 );
+			gtk_clist_remove( GTK_CLIST(csdialog.wpattern.list_w), row - 1 );
 			break;
 
 			SWITCH_FAIL
@@ -1054,13 +1054,13 @@ dialog_color_setup( void )
 	gui_notebook_page_add( csdialog.notebook_w, _("By wildcards"), hbox_w );
 
 	/* List of colors and associated wildcard patterns */
-	csdialog.wpattern.clist_w = gui_clist_add( hbox_w, 2, clist_col_titles );
-	gtk_clist_set_reorderable( GTK_CLIST(csdialog.wpattern.clist_w), TRUE );
-	gtk_signal_connect( GTK_OBJECT(csdialog.wpattern.clist_w), "button_release_event", GTK_SIGNAL_FUNC(csdialog_wpattern_clist_click_cb), NULL );
-	gtk_signal_connect( GTK_OBJECT(csdialog.wpattern.clist_w), "select_row", GTK_SIGNAL_FUNC(csdialog_wpattern_clist_select_unselect_cb), NULL );
-	gtk_signal_connect( GTK_OBJECT(csdialog.wpattern.clist_w), "unselect_row", GTK_SIGNAL_FUNC(csdialog_wpattern_clist_select_unselect_cb), NULL );
-	gtk_signal_connect( GTK_OBJECT(csdialog.wpattern.clist_w), "drag_motion", GTK_SIGNAL_FUNC(csdialog_wpattern_clist_drag_cb), NULL );
-	gtk_signal_connect( GTK_OBJECT(csdialog.wpattern.clist_w), "row_move", GTK_SIGNAL_FUNC(csdialog_wpattern_clist_row_move_cb), NULL );
+	csdialog.wpattern.list_w = gui_clist_add( hbox_w, 2, clist_col_titles );
+	gtk_clist_set_reorderable( GTK_CLIST(csdialog.wpattern.list_w), TRUE );
+	gtk_signal_connect( GTK_OBJECT(csdialog.wpattern.list_w), "button_release_event", GTK_SIGNAL_FUNC(csdialog_wpattern_clist_click_cb), NULL );
+	gtk_signal_connect( GTK_OBJECT(csdialog.wpattern.list_w), "select_row", GTK_SIGNAL_FUNC(csdialog_wpattern_clist_select_unselect_cb), NULL );
+	gtk_signal_connect( GTK_OBJECT(csdialog.wpattern.list_w), "unselect_row", GTK_SIGNAL_FUNC(csdialog_wpattern_clist_select_unselect_cb), NULL );
+	gtk_signal_connect( GTK_OBJECT(csdialog.wpattern.list_w), "drag_motion", GTK_SIGNAL_FUNC(csdialog_wpattern_clist_drag_cb), NULL );
+	gtk_signal_connect( GTK_OBJECT(csdialog.wpattern.list_w), "row_move", GTK_SIGNAL_FUNC(csdialog_wpattern_clist_row_move_cb), NULL );
 
         /* Action buttons */
 	vbox_w = gui_vbox_add( hbox_w, 0 );
