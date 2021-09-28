@@ -247,31 +247,51 @@ gui_toggle_button_add( GtkWidget *parent_w, const char *label, boolean active, v
 }
 
 
-/* The [multi-column] list widget (fitted into a scrolled window) */
+/* The wildcard color pattern list widget (fitted into a scrolled window) */
 GtkWidget *
-gui_clist_add( GtkWidget *parent_w, int num_cols, char *col_titles[] )
+gui_wpattern_list_new(GtkWidget *parent_w)
 {
-	GtkWidget *scrollwin_w;
-	GtkWidget *clist_w;
-	int i;
-
 	/* Make the scrolled window widget */
-	scrollwin_w = gtk_scrolled_window_new( NULL, NULL );
+	GtkWidget *scrollwin_w = gtk_scrolled_window_new( NULL, NULL );
 	gtk_scrolled_window_set_policy( GTK_SCROLLED_WINDOW(scrollwin_w), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC );
 	parent_child_full( parent_w, scrollwin_w, EXPAND, FILL );
 
-	/* Make the clist widget */
-	if (col_titles == NULL)
-		clist_w = gtk_clist_new( num_cols );
-	else
-		clist_w = gtk_clist_new_with_titles( num_cols, col_titles );
-	gtk_clist_set_selection_mode( GTK_CLIST(clist_w), GTK_SELECTION_SINGLE );
-	for (i = 0; i < num_cols; i++)
-		gtk_clist_set_column_auto_resize( GTK_CLIST(clist_w), i, TRUE );
-	gtk_container_add( GTK_CONTAINER(scrollwin_w), clist_w );
-	gtk_widget_show( clist_w );
+	/* Make the tree view widget */
+	GtkWidget *view = gtk_tree_view_new();
 
-	return clist_w;
+	/* The color column is used to display the color as a background specified in
+	the third (hidden) column. */
+	GtkTreeViewColumn *col_col = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(col_col, "Color");
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col_col);
+
+	GtkCellRenderer *renderer_col = gtk_cell_renderer_text_new();
+	gtk_tree_view_column_pack_start(col_col, renderer_col, TRUE);
+	gtk_tree_view_column_add_attribute(col_col, renderer_col, "background-gdk",
+		DIALOG_WPATTERN_COLOR2_COLUMN);
+
+	GtkTreeViewColumn *col_wp = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(col_wp, "Wildcard pattern");
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col_wp);
+
+	GtkCellRenderer *renderer_wp = gtk_cell_renderer_text_new();
+	gtk_tree_view_column_pack_start(col_wp, renderer_wp, TRUE);
+	gtk_tree_view_column_add_attribute(col_wp, renderer_wp, "text",
+		DIALOG_WPATTERN_WPATTERN_COLUMN);
+
+	GtkListStore *liststore = gtk_list_store_new(DIALOG_WPATTERN_NUM_COLS,
+		G_TYPE_STRING, G_TYPE_STRING, GDK_TYPE_COLOR, G_TYPE_POINTER);
+	GtkTreeModel *model = GTK_TREE_MODEL(liststore);
+
+	gtk_tree_view_set_reorderable(GTK_TREE_VIEW(view), TRUE);
+
+	gtk_tree_view_set_model(GTK_TREE_VIEW(view), model);
+	g_object_unref(model);
+
+	gtk_container_add( GTK_CONTAINER(scrollwin_w), view );
+	gtk_widget_show(view);
+
+	return view;
 }
 
 
@@ -586,7 +606,7 @@ gui_cursor( GtkWidget *widget, int glyph )
 GtkWidget *
 gui_dateedit_add( GtkWidget *parent_w, time_t the_time, void (*callback)( ), void *callback_data )
 {
-	GtkWidget *dateedit_w;
+	GtkWidget *dateedit_w = gtk_calendar_new();
 
 	/*dateedit_w = gnome_date_edit_new( the_time, TRUE, TRUE );
 	gnome_date_edit_set_popup_range( GNOME_DATE_EDIT(dateedit_w), 0, 23 );

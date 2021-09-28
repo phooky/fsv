@@ -62,6 +62,16 @@ enum
 	FILELIST_SCAN_BYTES_COLUMN,
 	FILELIST_SCAN_NUM_COLS
 };
+
+// For the TreeView (Color picker using wildcard patterns)
+enum
+{
+	DIALOG_WPATTERN_COLOR_COLUMN = 0,
+	DIALOG_WPATTERN_WPATTERN_COLUMN,
+	DIALOG_WPATTERN_COLOR2_COLUMN,  // Hidden, contains *GdkColor
+	DIALOG_WPATTERN_ROWDATA_COLUMN, // Hidden, contains WpListRowData
+	DIALOG_WPATTERN_NUM_COLS
+};
 #endif /* __GTK_H__ */
 
 
@@ -75,7 +85,7 @@ void gui_box_set_packing( GtkWidget *box_w, boolean expand, boolean fill, boolea
 GtkWidget *gui_button_add( GtkWidget *parent_w, const char *label, void (*callback)( ), void *callback_data );
 GtkWidget *gui_button_with_pixmap_xpm_add( GtkWidget *parent_w, char **xpm_data, const char *label, void (*callback)( ), void *callback_data );
 GtkWidget *gui_toggle_button_add( GtkWidget *parent_w, const char *label, boolean active, void (*callback)( ), void *callback_data );
-GtkWidget *gui_clist_add( GtkWidget *parent_w, int num_cols, char *col_titles[] );
+GtkWidget *gui_wpattern_list_new(GtkWidget *parent_w);
 void gui_clist_moveto_row( GtkWidget *clist_w, int row, double moveto_time );
 GtkWidget *gui_colorpicker_add( GtkWidget *parent_w, RGBcolor *init_color, const char *title, void (*callback)( ), void *callback_data );
 void gui_colorpicker_set_color( GtkWidget *colorpicker_w, RGBcolor *color );

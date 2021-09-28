@@ -37,3 +37,9 @@ Useful info and screenshots of the original SGI IRIX implementation are availabl
 2. Switch to Gtk+3
 
 ### Setup github actions for CI
+
+### Use Gtk calendar
+
+There exists commented out code for using gnome date edit widget
+(gnome_date_edit_new etc.). Use gtk calendar widget instead.
+https://developer-old.gnome.org/gtk2/stable/GtkCalendar.html
