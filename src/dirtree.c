@@ -263,7 +263,12 @@ dirtree_entry_new( GNode *dnode )
 void
 dirtree_no_more_entries( void )
 {
-//	gtk_clist_thaw( GTK_CLIST(dir_tree_w) );
+	// TODO: Needs to keep reference to model in dirtree_entry_new
+	// so dissociating works.
+	// GtkTreeView *view = GTK_TREE_VIEW(dir_tree_w);
+	// GtkTreeModel *model = gtk_tree_view_get_model(view);
+	// gtk_tree_view_set_model(view, model); /* Re-attach model to view */
+	// g_object_unref(model);
 }
 
 
