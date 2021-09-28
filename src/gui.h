@@ -86,7 +86,6 @@ GtkWidget *gui_button_add( GtkWidget *parent_w, const char *label, void (*callba
 GtkWidget *gui_button_with_pixmap_xpm_add( GtkWidget *parent_w, char **xpm_data, const char *label, void (*callback)( ), void *callback_data );
 GtkWidget *gui_toggle_button_add( GtkWidget *parent_w, const char *label, boolean active, void (*callback)( ), void *callback_data );
 GtkWidget *gui_wpattern_list_new(GtkWidget *parent_w);
-void gui_clist_moveto_row( GtkWidget *clist_w, int row, double moveto_time );
 GtkWidget *gui_colorpicker_add( GtkWidget *parent_w, RGBcolor *init_color, const char *title, void (*callback)( ), void *callback_data );
 void gui_colorpicker_set_color( GtkWidget *colorpicker_w, RGBcolor *color );
 GtkWidget *gui_filelist_new(GtkWidget *parent_w);

@@ -295,52 +295,6 @@ gui_wpattern_list_new(GtkWidget *parent_w)
 }
 
 
-/* Scrolls a clist (or tree) to a given row (-1 indicates last row)
- * WARNING: This implementation does not gracefully handle multiple
- * animated scrolls on the same clist! */
-void
-gui_clist_moveto_row( GtkWidget *clist_w, int row, double moveto_time )
-{
-	GtkAdjustment *clist_vadj;
-	double *anim_value_var;
-	float k, new_value;
-	int i;
-
-	if (moveto_time <= 0.0) {
-		/* Instant scroll (no animation) */
-		if (row >= 0)
-			i = row;
-		else
-			i = GTK_CLIST(clist_w)->rows - 1; /* bottom */
-		gtk_clist_moveto( GTK_CLIST(clist_w), i, 0, 0.5, 0.0 );
-		return;
-	}
-
-	if (row >= 0)
-		k = (double)row / (double)GTK_CLIST(clist_w)->rows;
-	else
-		k = 1.0; /* bottom of clist */
-	clist_vadj = gtk_clist_get_vadjustment( GTK_CLIST(clist_w) );
-	k = k * clist_vadj->upper - 0.5 * clist_vadj->page_size;
-	new_value = CLAMP(k, 0.0, clist_vadj->upper - clist_vadj->page_size);
-
-	/* Allocate an external value variable if clist adjustment doesn't
-	 * already have one */
-        anim_value_var = gtk_object_get_data( GTK_OBJECT(clist_vadj), "anim_value_var" );
-	if (anim_value_var == NULL ); {
-		anim_value_var = NEW(double);
-		gtk_object_set_data_full( GTK_OBJECT(clist_vadj), "anim_value_var", anim_value_var, _xfree );
-	}
-
-	/* If clist is already scrolling, stop it */
-	morph_break( anim_value_var );
-
-	/* Begin clist animation */
-	*anim_value_var = clist_vadj->value;
-	morph_full( anim_value_var, MORPH_SIGMOID, new_value, moveto_time, adjustment_step_cb, adjustment_step_cb, clist_vadj );
-}
-
-
 /* Internal callback for the color picker widget */
 static void
 color_picker_cb(GtkColorButton *colorpicker_w, gpointer data)
