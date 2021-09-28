@@ -233,29 +233,6 @@ dirtree_entry_new( GNode *dnode )
 	expanded = g_node_depth( dnode ) <= 2;
 
 	DIR_NODE_DESC(dnode)->tnode = gui_tree_node_add( dir_tree_w, parent_tnode, dir_colexp_mini_icons, name, expanded, dnode );
-
-#if 0
-	if (parent_tnode == NULL) {
-		/* First entry was just added. Keep directory tree frozen
-		 * most of the time while scanning, otherwise it tends to
-		 * flicker annoyingly */
-		gtk_clist_freeze( GTK_CLIST(dir_tree_w) );
-	}
-	else if (GTK_CTREE_ROW(parent_tnode)->expanded) {
-		/* Pre-update (allow ctree to register new row) */
-		gtk_clist_thaw( GTK_CLIST(dir_tree_w) );
-		gui_update( );
-		gtk_clist_freeze( GTK_CLIST(dir_tree_w) );
-		/* Select last row */
-		gtk_ctree_select( GTK_CTREE(dir_tree_w), DIR_NODE_DESC(dnode)->tnode );
-		/* Scroll directory tree down to last row */
-		gui_clist_moveto_row( dir_tree_w, -1, 0.0 );
-		/* Post-update (allow ctree to perform select/scroll) */
-		gtk_clist_thaw( GTK_CLIST(dir_tree_w) );
-		gui_update( );
-		gtk_clist_freeze( GTK_CLIST(dir_tree_w) );
-	}
-#endif
 }
 
 

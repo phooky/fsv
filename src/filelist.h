@@ -16,7 +16,7 @@
 
 
 #ifdef __GTK_H__
-void filelist_pass_widget( GtkWidget *clist_w );
+void filelist_pass_widget( GtkWidget *list_w );
 GtkWidget *dir_contents_list( GNode *dnode );
 #endif
 void filelist_reset_access( void );

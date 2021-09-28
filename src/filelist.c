@@ -127,7 +127,7 @@ filelist_populate( GNode *dnode )
 	/* Update file list */
 	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(file_list_w));
 	g_object_ref(model);
-	/* Detach model from view, similar to clist_freeze. */
+	/* Detach model from view, for performance when adding lots of rows. */
 	gtk_tree_view_set_model(GTK_TREE_VIEW(file_list_w), NULL);
 	GtkListStore *store = GTK_LIST_STORE(model);
 	gtk_list_store_clear(store);
@@ -300,7 +300,7 @@ filelist_init( void )
 {
 	GtkWidget *parent_w;
 
-	/* Replace current clist widget with a single-column one */
+	/* Replace current list widget with a single-column one */
 	parent_w = file_list_w->parent->parent;
 	gtk_widget_destroy( file_list_w->parent );
 	file_list_w = gui_filelist_new(parent_w);
@@ -327,7 +327,7 @@ filelist_scan_monitor_init( void )
 	Icon *icon;
 	int i;
 
-	/* Replace current clist widget with a 3-column one */
+	/* Replace current list widget with a 3-column one */
 	parent_w = file_list_w->parent->parent;
 	gtk_widget_destroy( file_list_w->parent );
 	file_list_w = gui_filelist_scan_new( parent_w );
