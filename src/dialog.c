@@ -181,10 +181,6 @@ static struct ColorSetupDialog {
 } csdialog;
 
 
-/* Forward declarations */
-static void csdialog_wpattern_clist_row_move_cb( GtkWidget *list_w, int source_row, int dest_row );
-
-
 /* Callback for the node type color pickers */
 static void
 csdialog_node_type_color_picker_cb( RGBcolor *picked_color, RGBcolor *node_type_color )
@@ -660,114 +656,6 @@ csdialog_wpattern_list_drag_cb( GtkWidget *unused1, GdkDragContext *unused2, int
 	/* This gets checked in csdialog_wpattern_list_click_cb( ) */
 	csdialog.wpattern.row_is_being_dragged = TRUE;
 	return FALSE;
-}
-
-
-/* Helper function for csdialog_wpattern_clist_row_move_cb( ). This
- * reverses the effects of a row drag from source_row to dest_row */
-static void
-wplist_undo_illegal_row_move( int source_row, int dest_row )
-{
-	gtk_signal_handler_block_by_func( GTK_OBJECT(csdialog.wpattern.list_w), GTK_SIGNAL_FUNC(csdialog_wpattern_clist_row_move_cb), NULL );
-	gtk_clist_row_move( GTK_CLIST(csdialog.wpattern.list_w), dest_row, source_row );
-	gtk_signal_handler_unblock_by_func( GTK_OBJECT(csdialog.wpattern.list_w), GTK_SIGNAL_FUNC(csdialog_wpattern_clist_row_move_cb), NULL );
-}
-
-
-/* Callback for moving a row in the wildcard pattern list. (This gets called
- * once the row has been dragged and dropped into its desired position) */
-static void
-csdialog_wpattern_clist_row_move_cb( GtkWidget *list_w, int source_row, int dest_row )
-{
-	struct WPListRowData *source_row_data;
-	struct WPListRowData *dest_row_data;
-
-	if (dest_row == (GTK_CLIST(list_w)->rows - 1)) {
-		/* Cannot move a row to the very end of the list
-		 * (the default-color row goes there) */
-		wplist_undo_illegal_row_move( source_row, dest_row );
-		return;
-	}
-
-	/* Get relevant row data */
-	source_row_data = gtk_clist_get_row_data( GTK_CLIST(list_w), source_row );
-	/* GtkCList is a bit odd about what it calls the "destination"
-	 * row, so here we impose the convention that it is the first row
-	 * to be pushed down by the source row, when the latter is dropped
-	 * into its new position */
-	if (dest_row < source_row)
-		dest_row_data = gtk_clist_get_row_data( GTK_CLIST(list_w), dest_row );
-	else
-		dest_row_data = gtk_clist_get_row_data( GTK_CLIST(list_w), dest_row + 1 );
-
-	/* Make sure that the row move is legal, and if so, do whatever
-	 * it implies we should do */
-	switch (source_row_data->row_type) {
-		case WPLIST_NEW_WPATTERN_ROW:
-		case WPLIST_DEFAULT_HEADER_ROW:
-		case WPLIST_DEFAULT_ROW:
-		/* None of these types of rows may be moved directly */
-		wplist_undo_illegal_row_move( source_row, dest_row );
-		return;
-
-		case WPLIST_HEADER_ROW:
-		/* A header row (along with the group beneath it) can only
-		 * be moved to a position occupied by another header row */
-		if ((dest_row_data->row_type != WPLIST_HEADER_ROW) && (dest_row_data->row_type != WPLIST_DEFAULT_HEADER_ROW)) {
-			wplist_undo_illegal_row_move( source_row, dest_row );
-			return;
-		}
-		/* Move color group to new position */
-#define WPGROUP_LIST csdialog.color_config.by_wpattern.wpgroup_list
-		G_LIST_REMOVE(WPGROUP_LIST, source_row_data->wpgroup);
-		G_LIST_INSERT_BEFORE(WPGROUP_LIST, dest_row_data->wpgroup, source_row_data->wpgroup);
-#undef WPGROUP_LIST
-		/* Update list */
-		csdialog_wpattern_list_populate( );
-		/* The clist widget still has yet to actually *move* the
-		 * dragged row into its new position. But since the list
-		 * has just been updated, with the rows already where they
-		 * should be, the impending "real" row move must be
-		 * cancelled */
-		gtk_signal_emit_stop_by_name( GTK_OBJECT(list_w), "row_move" );
-		break;
-
-		case WPLIST_WPATTERN_ROW:
-		switch (dest_row_data->row_type) {
-			case WPLIST_HEADER_ROW:
-			case WPLIST_DEFAULT_HEADER_ROW:
-			case WPLIST_DEFAULT_ROW:
-			/* A pattern row cannot take the place of any of
-			 * these types of rows */
-			wplist_undo_illegal_row_move( source_row, dest_row );
-                        return;
-
-			case WPLIST_WPATTERN_ROW:
-			case WPLIST_NEW_WPATTERN_ROW:
-			/* Row move is legal. Update official location of
-			 * wildcard pattern */
-#define S_SIBLINGS source_row_data->wpgroup->wp_list
-#define D_SIBLINGS dest_row_data->wpgroup->wp_list
-			G_LIST_REMOVE(S_SIBLINGS, source_row_data->wpattern);
-			G_LIST_INSERT_BEFORE(D_SIBLINGS, dest_row_data->wpattern, source_row_data->wpattern);
-#undef S_SIBLINGS
-#undef D_SIBLINGS
-			if (source_row_data->wpgroup != dest_row_data->wpgroup) {
-				/* Pattern has just changed group
-				 * membership, so some row properties need
-				 * to be updated */
-				source_row_data->wpgroup = dest_row_data->wpgroup;
-				source_row_data->style = dest_row_data->style;
-				gtk_clist_set_cell_style( GTK_CLIST(list_w), source_row, 0, dest_row_data->style );
-			}
-			break;
-
-			SWITCH_FAIL
-		}
-		break;
-
-		SWITCH_FAIL
-	}
 }
 
 
