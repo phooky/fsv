@@ -200,7 +200,7 @@ gui_button_add( GtkWidget *parent_w, const char *label, void (*callback)( ), voi
 	button_w = gtk_button_new( );
 	if (label != NULL)
 		gui_label_add( button_w, label );
-	gtk_signal_connect( GTK_OBJECT(button_w), "clicked", GTK_SIGNAL_FUNC(callback), callback_data );
+	g_signal_connect(G_OBJECT(button_w), "clicked", G_CALLBACK(callback), callback_data);
 	parent_child( parent_w, button_w );
 
 	return button_w;
@@ -224,7 +224,7 @@ gui_button_with_pixmap_xpm_add( GtkWidget *parent_w, char **xpm_data, const char
 		gui_vbox_add( hbox2_w, 2 ); /* spacer */
 		gui_label_add( hbox2_w, label );
 	}
-	gtk_signal_connect( GTK_OBJECT(button_w), "clicked", GTK_SIGNAL_FUNC(callback), callback_data );
+	g_signal_connect(G_OBJECT(button_w), "clicked", G_CALLBACK(callback), callback_data);
 
 	return button_w;
 }
@@ -240,7 +240,7 @@ gui_toggle_button_add( GtkWidget *parent_w, const char *label, boolean active, v
 	if (label != NULL)
 		gui_label_add( tbutton_w, label );
 	gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(tbutton_w), active );
-	gtk_signal_connect( GTK_OBJECT(tbutton_w), "toggled", GTK_SIGNAL_FUNC(callback), callback_data );
+	g_signal_connect(G_OBJECT(tbutton_w), "toggled", G_CALLBACK(callback), callback_data);
 	parent_child( parent_w, tbutton_w );
 
 	return tbutton_w;
@@ -599,7 +599,7 @@ gui_entry_add( GtkWidget *parent_w, const char *init_text, void (*callback)( ), 
         if (init_text != NULL)
 		gtk_entry_set_text( GTK_ENTRY(entry_w), init_text );
 	if (callback != NULL )
-		gtk_signal_connect( GTK_OBJECT(entry_w), "activate", GTK_SIGNAL_FUNC(callback), callback_data );
+		g_signal_connect(G_OBJECT(entry_w), "activate", G_CALLBACK(callback), callback_data);
 	parent_child_full( parent_w, entry_w, EXPAND, FILL );
 
 	return entry_w;
@@ -772,7 +772,7 @@ gui_menu_item_add( GtkWidget *menu_w, const char *label, void (*callback)( ), vo
 	menu_item_w = gtk_menu_item_new_with_label( label );
 	gtk_menu_append( GTK_MENU(menu_w), menu_item_w );
 	if (callback != NULL)
-		gtk_signal_connect( GTK_OBJECT(menu_item_w), "activate", GTK_SIGNAL_FUNC(callback), callback_data );
+		g_signal_connect(G_OBJECT(menu_item_w), "activate", G_CALLBACK(callback), callback_data);
 	gtk_widget_show( menu_item_w );
 
 	return menu_item_w;
@@ -814,7 +814,7 @@ gui_radio_menu_item_add( GtkWidget *menu_w, const char *label, void (*callback)(
 		gtk_menu_append( GTK_MENU(menu_w), radmenu_item_w );
 		if (radmenu_item_num == init_selected)
 			gtk_check_menu_item_set_active( GTK_CHECK_MENU_ITEM(radmenu_item_w), TRUE );
-		gtk_signal_connect( GTK_OBJECT(radmenu_item_w), "toggled", GTK_SIGNAL_FUNC(callback), callback_data );
+		g_signal_connect(G_OBJECT(radmenu_item_w), "toggled", G_CALLBACK(callback), callback_data);
 		gtk_widget_show( radmenu_item_w );
 		++radmenu_item_num;
 	}
@@ -860,7 +860,7 @@ gui_option_menu_item( const char *label, void (*callback)( ), void *callback_dat
 
 	menu_item_w = gtk_menu_item_new_with_label( label );
 	if (callback != NULL)
-		gtk_signal_connect( GTK_OBJECT(menu_item_w), "activate", GTK_SIGNAL_FUNC(callback), callback_data );
+		g_signal_connect(G_OBJECT(menu_item_w), "activate", G_CALLBACK(callback), callback_data);
 	gui_option_menu_add( menu_item_w, NIL );
 
 	return menu_item_w;
@@ -1024,8 +1024,8 @@ gui_preview_spectrum( GtkWidget *preview_w, RGBcolor (*spectrum_func)( double x 
 
 	if (first_time) {
 		/* Attach draw callback */
-		gtk_signal_connect( GTK_OBJECT(preview_w), "expose_event", GTK_SIGNAL_FUNC(preview_spectrum_draw_cb), "expose" );
-		gtk_signal_connect( GTK_OBJECT(preview_w), "size_allocate", GTK_SIGNAL_FUNC(preview_spectrum_draw_cb), "size" );
+		g_signal_connect(G_OBJECT(preview_w), "expose_event", G_CALLBACK(preview_spectrum_draw_cb), "expose");
+		g_signal_connect(G_OBJECT(preview_w), "size_allocate", G_CALLBACK(preview_spectrum_draw_cb), "size");
 	}
 	else
 		preview_spectrum_draw_cb( preview_w, NULL, "redraw" );
@@ -1250,9 +1250,9 @@ gui_dialog_window( const char *title, void (*close_callback)( ) )
 	gtk_window_set_policy( GTK_WINDOW(window_w), FALSE, FALSE, FALSE );
 	gtk_window_set_position( GTK_WINDOW(window_w), GTK_WIN_POS_CENTER );
 	gtk_window_set_title( GTK_WINDOW(window_w), title );
-	gtk_signal_connect( GTK_OBJECT(window_w), "delete_event", GTK_SIGNAL_FUNC(gtk_widget_destroy), NULL );
+	g_signal_connect(G_OBJECT(window_w), "delete_event", G_CALLBACK(gtk_widget_destroy), NULL);
 	if (close_callback != NULL)
-		gtk_signal_connect( GTK_OBJECT(window_w), "destroy", GTK_SIGNAL_FUNC(close_callback), NULL );
+		g_signal_connect(G_OBJECT(window_w), "destroy", G_CALLBACK(close_callback), NULL);
 	/* !gtk_widget_show( ) */
 
 	return window_w;
@@ -1411,7 +1411,7 @@ gui_window_modalize( GtkWidget *window_w, GtkWidget *parent_window_w )
 	gui_cursor( parent_window_w, GDK_X_CURSOR );
 
 	/* Restore original state once the window is destroyed */
-	gtk_signal_connect( GTK_OBJECT(window_w), "destroy", GTK_SIGNAL_FUNC(window_unmodalize), parent_window_w );
+	g_signal_connect(G_OBJECT(window_w), "destroy", G_CALLBACK(window_unmodalize), parent_window_w);
 }
 
 

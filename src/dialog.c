@@ -1037,7 +1037,7 @@ dialog_color_setup( void )
 	gtk_notebook_set_page( GTK_NOTEBOOK(csdialog.notebook_w), color_mode );
 
 	/* Some cleanup will be required once the window goes away */
-	gtk_signal_connect( GTK_OBJECT(window_w), "destroy", GTK_SIGNAL_FUNC(csdialog_destroy_cb), NULL );
+	g_signal_connect(G_OBJECT(window_w), "destroy", G_CALLBACK(csdialog_destroy_cb), NULL);
 
 	gtk_widget_show( window_w );
 }
@@ -1341,7 +1341,7 @@ dialog_node_properties( GNode *node )
 		button_w = gui_button_add( hbox_w, _("Look at target node"), look_at_target_node_cb, target_node );
 		gui_widget_packing( button_w, EXPAND, NO_FILL, AT_START );
 		gtk_widget_set_sensitive( button_w, target_node != NULL );
-		gtk_signal_connect( GTK_OBJECT(button_w), "clicked", GTK_SIGNAL_FUNC(close_cb), window_w );
+		g_signal_connect(G_OBJECT(button_w), "clicked", G_CALLBACK(close_cb), window_w);
 		break;
 
 

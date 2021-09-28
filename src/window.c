@@ -85,7 +85,7 @@ window_init( FsvMode fsv_mode )
 	window_width = 3 * gdk_screen_width( ) / 4;
 	window_height = 2584 * window_width / 4181;
 	gtk_widget_set_usize( main_window_w, window_width, window_height );
-	gtk_signal_connect( GTK_OBJECT(main_window_w), "delete_event", GTK_SIGNAL_FUNC(gtk_main_quit), NULL );
+	g_signal_connect(G_OBJECT(main_window_w), "delete_event", G_CALLBACK(gtk_main_quit), NULL);
 	gtk_quit_add_destroy( 1, GTK_OBJECT(main_window_w) );
 
 	/* Main vertical box widget */
@@ -219,7 +219,7 @@ window_init( FsvMode fsv_mode )
 
 	/* Main viewport (OpenGL area widget) */
 	gl_area_w = gui_gl_area_add( hbox_w );
-	gtk_signal_connect( GTK_OBJECT(gl_area_w), "event", GTK_SIGNAL_FUNC(viewport_cb), NULL );
+	g_signal_connect(G_OBJECT(gl_area_w), "event", G_CALLBACK(viewport_cb), NULL);
 
 	/* y-scrollbar */
 	y_scrollbar_w = gui_vscrollbar_add( hbox_w, NULL );
