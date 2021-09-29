@@ -1228,8 +1228,8 @@ gui_colorsel_window( const char *title, RGBcolor *init_color, void (*ok_callback
 	gtk_widget_hide( csd->help_button );
 	gtk_object_set_data( GTK_OBJECT(colorsel_window_w), "user_callback", (void *)ok_callback );
 	gtk_object_set_data( GTK_OBJECT(colorsel_window_w), "user_callback_data", ok_callback_data );
-	g_signal_connect_object(G_OBJECT(csd->ok_button), "clicked", G_CALLBACK(colorsel_window_cb), colorsel_window_w, 0);
-	g_signal_connect_object(G_OBJECT(csd->cancel_button), "clicked", G_CALLBACK(gtk_widget_destroy), colorsel_window_w, 0);
+	g_signal_connect_swapped(csd->ok_button, "clicked", G_CALLBACK(colorsel_window_cb), colorsel_window_w);
+	g_signal_connect_swapped(csd->cancel_button, "clicked", G_CALLBACK(gtk_widget_destroy), colorsel_window_w);
 	gtk_widget_show( colorsel_window_w );
 
 	if (gtk_grab_get_current( ) != NULL)
@@ -1318,7 +1318,7 @@ gui_entry_window( const char *title, const char *init_text, void (*ok_callback)(
 	gui_button_add( hbox_w, _("OK"), entry_window_cb, entry_window_w );
 	vbox_w = gui_vbox_add( hbox_w, 0 ); /* spacer */
 	button_w = gui_button_add( hbox_w, _("Cancel"), NULL, NULL );
-	g_signal_connect_object(G_OBJECT(button_w), "clicked", G_CALLBACK(gtk_widget_destroy), entry_window_w, 0);
+	g_signal_connect_swapped(button_w, "clicked", G_CALLBACK(gtk_widget_destroy), entry_window_w);
 
 	gtk_widget_show( entry_window_w );
 	gtk_widget_grab_focus( entry_w );
@@ -1356,17 +1356,17 @@ filesel_window_cb( GtkWidget *filesel_w )
 GtkWidget *
 gui_filesel_window( const char *title, const char *init_filename, void (*ok_callback)( ), void *ok_callback_data )
 {
-	GtkWidget *filesel_window_w;
+	GtkFileSelection *filesel_window_w;
 
-	filesel_window_w = gtk_file_selection_new( title );
+	filesel_window_w = GTK_FILE_SELECTION(gtk_file_selection_new( title ));
 	if (init_filename != NULL)
-		gtk_file_selection_set_filename( GTK_FILE_SELECTION(filesel_window_w), init_filename );
+		gtk_file_selection_set_filename(filesel_window_w, init_filename );
 	gtk_window_set_position( GTK_WINDOW(filesel_window_w), GTK_WIN_POS_CENTER );
 	gtk_object_set_data( GTK_OBJECT(filesel_window_w), "user_callback", (void *)ok_callback );
 	gtk_object_set_data( GTK_OBJECT(filesel_window_w), "user_callback_data", ok_callback_data );
-	g_signal_connect_object(G_OBJECT(GTK_FILE_SELECTION(filesel_window_w)->ok_button), "clicked", G_CALLBACK(filesel_window_cb), filesel_window_w, 0);
-	g_signal_connect_object(G_OBJECT(GTK_FILE_SELECTION(filesel_window_w)->cancel_button), "clicked", G_CALLBACK(gtk_widget_destroy), filesel_window_w, 0);
-	g_signal_connect_object(G_OBJECT(GTK_FILE_SELECTION(filesel_window_w)->cancel_button), "delete_event", G_CALLBACK(gtk_widget_destroy), filesel_window_w, 0);
+	g_signal_connect_swapped(filesel_window_w->ok_button, "clicked", G_CALLBACK(filesel_window_cb), filesel_window_w);
+	g_signal_connect_swapped(filesel_window_w->cancel_button, "clicked", G_CALLBACK(gtk_widget_destroy), filesel_window_w);
+	g_signal_connect_swapped(filesel_window_w->cancel_button, "delete_event", G_CALLBACK(gtk_widget_destroy), filesel_window_w);
         /* no gtk_widget_show( ) */
 
 	if (gtk_grab_get_current( ) != NULL)
