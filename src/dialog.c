@@ -68,19 +68,9 @@ transient_end_cb( Morph *morph )
 
 /**** File -> Change root... ****/
 
-/* Callback for the OK button */
-static void
-change_root_cb( const char *dir )
-{
-	if (globals.fsv_mode != FSV_SPLASH)
-		fsv_load( dir );
-}
-
-
 void
 dialog_change_root( void )
 {
-	GtkWidget *filesel_window_w;
 	const char *root_name;
 	char *dir;
 
@@ -96,18 +86,15 @@ dialog_change_root( void )
 	gui_cursor( main_window_w, GDK_WATCH );
 	gui_update( );
 
-	filesel_window_w = gui_filesel_window( _("Change Root Directory"), dir, change_root_cb, NULL );
+	gchar *new_root = gui_dir_choose(_("Change Root Directory"), main_window_w, dir);
 	xfree( dir );
+	if (new_root && globals.fsv_mode != FSV_SPLASH)
+		fsv_load(new_root);
+
+	g_free(new_root);
 
 	gui_cursor( main_window_w, -1 );
 	gui_update( );
-
-	gui_window_modalize( filesel_window_w, main_window_w );
-	gtk_file_selection_hide_fileop_buttons( GTK_FILE_SELECTION(filesel_window_w) );
-	/* Disable filesel's file list to make it a directory chooser */
-	gtk_widget_set_sensitive( GTK_FILE_SELECTION(filesel_window_w)->file_list, FALSE );
-
-	gtk_widget_show( filesel_window_w );
 }
 
 

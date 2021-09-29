@@ -1330,49 +1330,26 @@ gui_entry_window( const char *title, const char *init_text, void (*ok_callback)(
 }
 
 
-/* Internal callback for the file selection window, called when the
- * OK button is pressed */
-static void
-filesel_window_cb( GtkWidget *filesel_w )
-{
-	char *filename;
-	void (*user_callback)( const char *, void * );
-        void *user_callback_data;
-
-	filename = xstrdup( gtk_file_selection_get_filename( GTK_FILE_SELECTION(filesel_w) ) );
-	user_callback = (void (*)( const char *, void * ))gtk_object_get_data( GTK_OBJECT(filesel_w), "user_callback" );
-	user_callback_data = gtk_object_get_data( GTK_OBJECT(filesel_w), "user_callback_data" );
-	gtk_widget_destroy( filesel_w );
-
-	/* Call user callback */
-	(user_callback)( filename, user_callback_data );
-
-	xfree( filename );
-}
-
-
 /* Creates a file selection window, with an optional default filename.
  * OK button activates ok_callback */
-GtkWidget *
-gui_filesel_window( const char *title, const char *init_filename, void (*ok_callback)( ), void *ok_callback_data )
+gchar *
+gui_dir_choose( const char *title, GtkWidget *parent, const char *init_dir)
 {
-	GtkFileSelection *filesel_window_w;
+	GtkWidget *file_dialog = gtk_file_chooser_dialog_new(title, parent,
+		GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
+		GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+		GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+		NULL);
+	if (init_dir != NULL)
+		gtk_file_chooser_set_current_folder(file_dialog, init_dir);
 
-	filesel_window_w = GTK_FILE_SELECTION(gtk_file_selection_new( title ));
-	if (init_filename != NULL)
-		gtk_file_selection_set_filename(filesel_window_w, init_filename );
-	gtk_window_set_position( GTK_WINDOW(filesel_window_w), GTK_WIN_POS_CENTER );
-	gtk_object_set_data( GTK_OBJECT(filesel_window_w), "user_callback", (void *)ok_callback );
-	gtk_object_set_data( GTK_OBJECT(filesel_window_w), "user_callback_data", ok_callback_data );
-	g_signal_connect_swapped(filesel_window_w->ok_button, "clicked", G_CALLBACK(filesel_window_cb), filesel_window_w);
-	g_signal_connect_swapped(filesel_window_w->cancel_button, "clicked", G_CALLBACK(gtk_widget_destroy), filesel_window_w);
-	g_signal_connect_swapped(filesel_window_w->cancel_button, "delete_event", G_CALLBACK(gtk_widget_destroy), filesel_window_w);
-        /* no gtk_widget_show( ) */
+	gchar *dirname = NULL;
+	if (gtk_dialog_run(GTK_DIALOG(file_dialog)) == GTK_RESPONSE_ACCEPT) {
+		dirname = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(file_dialog));
+	}
 
-	if (gtk_grab_get_current( ) != NULL)
-		gtk_window_set_modal( GTK_WINDOW(filesel_window_w), TRUE );
-
-	return filesel_window_w;
+	gtk_widget_destroy(file_dialog);
+	return dirname;
 }
 
 
