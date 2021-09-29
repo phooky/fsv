@@ -223,12 +223,12 @@ csdialog_time_edit_cb( GtkWidget *dateedit_w )
 	}
 
 	/* Reset old and new times */
-	gtk_signal_handler_block_by_func( GTK_OBJECT(csdialog.time.old_dateedit_w), G_CALLBACK(csdialog_time_edit_cb), NULL );
-	gtk_signal_handler_block_by_func( GTK_OBJECT(csdialog.time.new_dateedit_w), G_CALLBACK(csdialog_time_edit_cb), NULL );
+	g_signal_handlers_block_by_func(G_OBJECT(csdialog.time.old_dateedit_w), G_CALLBACK(csdialog_time_edit_cb), NULL);
+	g_signal_handlers_block_by_func(G_OBJECT(csdialog.time.new_dateedit_w), G_CALLBACK(csdialog_time_edit_cb), NULL);
 	gui_dateedit_set_time( csdialog.time.old_dateedit_w, old_time );
 	gui_dateedit_set_time( csdialog.time.new_dateedit_w, new_time );
-	gtk_signal_handler_unblock_by_func( GTK_OBJECT(csdialog.time.old_dateedit_w), G_CALLBACK(csdialog_time_edit_cb), NULL );
-	gtk_signal_handler_unblock_by_func( GTK_OBJECT(csdialog.time.new_dateedit_w), G_CALLBACK(csdialog_time_edit_cb), NULL );
+	g_signal_handlers_unblock_by_func(G_OBJECT(csdialog.time.old_dateedit_w), G_CALLBACK(csdialog_time_edit_cb), NULL);
+	g_signal_handlers_unblock_by_func(G_OBJECT(csdialog.time.new_dateedit_w), G_CALLBACK(csdialog_time_edit_cb), NULL);
 
 	csdialog.color_config.by_timestamp.old_time = old_time;
 	csdialog.color_config.by_timestamp.new_time = new_time;

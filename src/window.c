@@ -271,30 +271,30 @@ void
 window_set_color_mode( ColorMode mode )
 {
 	GtkWidget *rmenu_item_w;
-	GtkSignalFunc handler;
+	GCallback handler;
 
 	switch (mode) {
 		case COLOR_BY_NODETYPE:
 		rmenu_item_w = color_by_nodetype_rmenu_item_w;
-		handler = GTK_SIGNAL_FUNC(on_color_by_nodetype_activate);
+		handler = G_CALLBACK(on_color_by_nodetype_activate);
 		break;
 
 		case COLOR_BY_TIMESTAMP:
 		rmenu_item_w = color_by_timestamp_rmenu_item_w;
-		handler = GTK_SIGNAL_FUNC(on_color_by_timestamp_activate);
+		handler = G_CALLBACK(on_color_by_timestamp_activate);
 		break;
 
 		case COLOR_BY_WPATTERN:
 		rmenu_item_w = color_by_wpattern_rmenu_item_w;
-		handler = GTK_SIGNAL_FUNC(on_color_by_wildcards_activate);
+		handler = G_CALLBACK(on_color_by_wildcards_activate);
 		break;
 
 		SWITCH_FAIL
 	}
 
-	gtk_signal_handler_block_by_func( GTK_OBJECT(rmenu_item_w), handler, NULL );
+	g_signal_handlers_block_by_func(G_OBJECT(rmenu_item_w), handler, NULL );
 	gtk_check_menu_item_set_active( GTK_CHECK_MENU_ITEM(rmenu_item_w), TRUE );
-	gtk_signal_handler_unblock_by_func( GTK_OBJECT(rmenu_item_w), handler, NULL );
+	g_signal_handlers_unblock_by_func(G_OBJECT(rmenu_item_w), handler, NULL );
 }
 
 
@@ -304,9 +304,9 @@ window_set_color_mode( ColorMode mode )
 void
 window_birdseye_view_off( void )
 {
-	gtk_signal_handler_block_by_func( GTK_OBJECT(birdseye_view_tbutton_w), GTK_SIGNAL_FUNC(on_birdseye_view_togglebutton_toggled), NULL );
+	g_signal_handlers_block_by_func(G_OBJECT(birdseye_view_tbutton_w), G_CALLBACK(on_birdseye_view_togglebutton_toggled), NULL);
 	gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(birdseye_view_tbutton_w), FALSE );
-	gtk_signal_handler_unblock_by_func( GTK_OBJECT(birdseye_view_tbutton_w), GTK_SIGNAL_FUNC(on_birdseye_view_togglebutton_toggled), NULL );
+	g_signal_handlers_unblock_by_func(G_OBJECT(birdseye_view_tbutton_w), G_CALLBACK(on_birdseye_view_togglebutton_toggled), NULL);
 }
 
 
