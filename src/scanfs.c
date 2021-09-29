@@ -4,6 +4,7 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * Copyright (C) 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * SPDX-License-Identifier:  LGPL-2.1-or-later
  */
@@ -187,7 +188,7 @@ process_dir( const char *dir, GNode *dnode )
 
 /* Dynamic scan progress readout */
 static boolean
-scan_monitor( void )
+scan_monitor(gpointer user_data)
 {
 	char strbuf[64];
 
@@ -350,7 +351,7 @@ scanfs( const char *dir )
 
 	/* GUI stuff */
 	filelist_scan_monitor_init( );
-	handler_id = gtk_timeout_add( SCAN_MONITOR_PERIOD, (GtkFunction)scan_monitor, NULL );
+	handler_id = g_timeout_add( SCAN_MONITOR_PERIOD, (GSourceFunc)scan_monitor, NULL);
 
 	/* Let the disk thrashing begin */
 	process_dir( root_dir, root_dnode );
