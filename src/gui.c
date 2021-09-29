@@ -1335,13 +1335,14 @@ gui_entry_window( const char *title, const char *init_text, void (*ok_callback)(
 gchar *
 gui_dir_choose( const char *title, GtkWidget *parent, const char *init_dir)
 {
-	GtkWidget *file_dialog = gtk_file_chooser_dialog_new(title, parent,
+	GtkWidget *file_dialog = gtk_file_chooser_dialog_new(title,
+		GTK_WINDOW(parent),
 		GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
 		GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 		GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
 		NULL);
 	if (init_dir != NULL)
-		gtk_file_chooser_set_current_folder(file_dialog, init_dir);
+		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(file_dialog), init_dir);
 
 	gchar *dirname = NULL;
 	if (gtk_dialog_run(GTK_DIALOG(file_dialog)) == GTK_RESPONSE_ACCEPT) {
