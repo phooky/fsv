@@ -56,11 +56,11 @@ gui_adjustment_widget_busy( GtkAdjustment *adj )
 
 	t_now = xgettime( );
 
-	tp = gtk_object_get_data( GTK_OBJECT(adj), "t_prev" );
+	tp = g_object_get_data(G_OBJECT(adj), "t_prev");
 	if (tp == NULL) {
 		tp = NEW(double);
 		*tp = t_now;
-		gtk_object_set_data_full( GTK_OBJECT(adj), "t_prev", tp, _xfree );
+		g_object_set_data_full(G_OBJECT(adj), "t_prev", tp, _xfree);
 		return FALSE;
 	}
 
@@ -108,7 +108,7 @@ parent_child_full( GtkWidget *parent_w, GtkWidget *child_w, boolean expand, bool
 
 	if (parent_w != NULL) {
 		if (GTK_IS_BOX(parent_w)) {
-			packing_flags = gtk_object_get_data( GTK_OBJECT(parent_w), "packing_flags" );
+			packing_flags = g_object_get_data(G_OBJECT(parent_w), "packing_flags");
 			if (packing_flags != NULL) {
                                 /* Get (non-default) box-packing flags */
 				expand = *packing_flags & GUI_PACK_EXPAND;
@@ -176,11 +176,11 @@ gui_box_set_packing( GtkWidget *box_w, boolean expand, boolean fill, boolean sta
 	/* If expand is FALSE, then fill should not be TRUE */
 	g_assert( expand || !fill );
 
-	packing_flags = gtk_object_get_data( GTK_OBJECT(box_w), data_key );
+	packing_flags = g_object_get_data(G_OBJECT(box_w), data_key);
 	if (packing_flags == NULL) {
 		/* Allocate new packing-flags variable for box */
 		packing_flags = NEW(bitfield);
-		gtk_object_set_data_full( GTK_OBJECT(box_w), data_key, packing_flags, _xfree );
+		g_object_set_data_full(G_OBJECT(box_w), data_key, packing_flags, _xfree);
 	}
 
         /* Set flags appropriately */
@@ -309,7 +309,7 @@ color_picker_cb(GtkColorButton *colorpicker_w, gpointer data)
 	color.b = (float)gcolor.blue / 65535.0;
 
 	/* Call user callback */
-	user_callback = (void (*)( RGBcolor *, void * ))gtk_object_get_data( GTK_OBJECT(colorpicker_w), "user_callback" );
+	user_callback = (void (*)( RGBcolor *, void * ))g_object_get_data(G_OBJECT(colorpicker_w), "user_callback");
 	(user_callback)( &color, data );
 }
 
@@ -515,15 +515,15 @@ gui_cursor( GtkWidget *widget, int glyph )
 	int *prev_glyph;
 
 	/* Get cursor information from widget */
-	prev_cursor = gtk_object_get_data( GTK_OBJECT(widget), "gui_cursor" );
-        prev_glyph = gtk_object_get_data( GTK_OBJECT(widget), "gui_glyph" );
+	prev_cursor = g_object_get_data(G_OBJECT(widget), "gui_cursor");
+	prev_glyph = g_object_get_data(G_OBJECT(widget), "gui_glyph");
 
 	if (prev_glyph == NULL) {
 		if (glyph < 0)
 			return; /* default cursor is already set */
                 /* First-time setup */
 		prev_glyph = NEW(int);
-		gtk_object_set_data_full( GTK_OBJECT(widget), "gui_glyph", prev_glyph, _xfree );
+		g_object_set_data_full(G_OBJECT(widget), "gui_glyph", prev_glyph, _xfree);
 	}
 	else {
 		/* Check if requested glyph is same as previous one */
@@ -544,13 +544,13 @@ gui_cursor( GtkWidget *widget, int glyph )
 
 	if (glyph >= 0) {
 		/* Save new cursor information */
-		gtk_object_set_data( GTK_OBJECT(widget), "gui_cursor", cursor );
+		g_object_set_data(G_OBJECT(widget), "gui_cursor", cursor);
 		*prev_glyph = glyph;
 	}
 	else {
 		/* Clean up after ourselves */
-		gtk_object_remove_data( GTK_OBJECT(widget), "gui_cursor" );
-		gtk_object_remove_data( GTK_OBJECT(widget), "gui_glyph" );
+		g_object_set_data(G_OBJECT(widget), "gui_cursor", NULL);
+		g_object_set_data(G_OBJECT(widget), "gui_glyph", NULL);
 	}
 }
 
@@ -985,7 +985,7 @@ preview_spectrum_draw_cb( GtkWidget *preview_w, void *unused, const char *evtype
 		return FALSE;
 
 	/* Get spectrum function */
-	spectrum_func = (RGBcolor (*)( double x ))gtk_object_get_data( GTK_OBJECT(preview_w), "spectrum_func" );
+	spectrum_func = (RGBcolor (*)( double x ))g_object_get_data(G_OBJECT(preview_w), "spectrum_func");
 
 	/* Create one row of the spectrum image */
 	rowbuf = NEW_ARRAY(unsigned char, 3 * width);
@@ -1017,10 +1017,10 @@ gui_preview_spectrum( GtkWidget *preview_w, RGBcolor (*spectrum_func)( double x 
 	boolean first_time;
 
         /* Check if this is first-time initialization */
-        first_time = gtk_object_get_data( GTK_OBJECT(preview_w), data_key ) == NULL;
+	first_time = g_object_get_data(G_OBJECT(preview_w), data_key) == NULL;
 
 	/* Attach spectrum function to preview widget */
-	gtk_object_set_data( GTK_OBJECT(preview_w), data_key, (void *)spectrum_func );
+	g_object_set_data(G_OBJECT(preview_w), data_key, (void *)spectrum_func);
 
 	if (first_time) {
 		/* Attach draw callback */
@@ -1133,7 +1133,7 @@ gui_table_add( GtkWidget *parent_w, int num_rows, int num_cols, boolean homog, i
 	table_w = gtk_table_new( num_rows, num_cols, homog );
 	cp = NEW(int);
 	*cp = cell_padding;
-        gtk_object_set_data_full( GTK_OBJECT(table_w), "cell_padding", cp, _xfree );
+	g_object_set_data_full(G_OBJECT(table_w), "cell_padding", cp, _xfree);
 	parent_child_full( parent_w, table_w, EXPAND, FILL );
 
 	return table_w;
@@ -1146,7 +1146,7 @@ gui_table_attach( GtkWidget *table_w, GtkWidget *widget, int left, int right, in
 {
 	int cp;
 
-	cp = *(int *)gtk_object_get_data( GTK_OBJECT(table_w), "cell_padding" );
+	cp = *(int *)g_object_get_data(G_OBJECT(table_w), "cell_padding");
 	gtk_table_attach( GTK_TABLE(table_w), widget, left, right, top, bottom, GTK_FILL | GTK_SHRINK, GTK_FILL | GTK_SHRINK, cp, cp );
 	gtk_widget_show( widget );
 }
@@ -1202,8 +1202,8 @@ colorsel_window_cb( GtkWidget *colorsel_window_w )
 	color.g = color_rgb[1];
 	color.b = color_rgb[2];
 
-	user_callback = (void (*)( const RGBcolor *, void * ))gtk_object_get_data( GTK_OBJECT(colorsel_window_w), "user_callback" );
-	user_callback_data = gtk_object_get_data( GTK_OBJECT(colorsel_window_w), "user_callback_data" );
+	user_callback = (void (*)( const RGBcolor *, void * ))g_object_get_data(G_OBJECT(colorsel_window_w), "user_callback");
+	user_callback_data = g_object_get_data(G_OBJECT(colorsel_window_w), "user_callback_data");
 	gtk_widget_destroy( colorsel_window_w );
 
 	/* Call user callback */
@@ -1226,8 +1226,8 @@ gui_colorsel_window( const char *title, RGBcolor *init_color, void (*ok_callback
 	color_rgb[2] = init_color->b;
 	gtk_color_selection_set_color( GTK_COLOR_SELECTION(csd->colorsel), color_rgb );
 	gtk_widget_hide( csd->help_button );
-	gtk_object_set_data( GTK_OBJECT(colorsel_window_w), "user_callback", (void *)ok_callback );
-	gtk_object_set_data( GTK_OBJECT(colorsel_window_w), "user_callback_data", ok_callback_data );
+	g_object_set_data(G_OBJECT(colorsel_window_w), "user_callback", (void *)ok_callback);
+	g_object_set_data(G_OBJECT(colorsel_window_w), "user_callback_data", ok_callback_data);
 	g_signal_connect_swapped(csd->ok_button, "clicked", G_CALLBACK(colorsel_window_cb), colorsel_window_w);
 	g_signal_connect_swapped(csd->cancel_button, "clicked", G_CALLBACK(gtk_widget_destroy), colorsel_window_w);
 	gtk_widget_show( colorsel_window_w );
@@ -1269,11 +1269,11 @@ entry_window_cb( GtkWidget *unused, GtkWidget *entry_window_w )
 	void (*user_callback)( const char *, void * );
 	void *user_callback_data;
 
-	entry_w = gtk_object_get_data( GTK_OBJECT(entry_window_w), "entry_w" );
+	entry_w = g_object_get_data(G_OBJECT(entry_window_w), "entry_w");
 	entry_text = xstrdup( gtk_entry_get_text( GTK_ENTRY(entry_w) ) );
 
-	user_callback = (void (*)( const char *, void * ))gtk_object_get_data( GTK_OBJECT(entry_window_w), "user_callback" );
-	user_callback_data = gtk_object_get_data( GTK_OBJECT(entry_window_w), "user_callback_data" );
+	user_callback = (void (*)( const char *, void * ))g_object_get_data(G_OBJECT(entry_window_w), "user_callback");
+	user_callback_data = g_object_get_data(G_OBJECT(entry_window_w), "user_callback_data");
 	gtk_widget_destroy( entry_window_w );
 
 	/* Call user callback */
@@ -1299,15 +1299,15 @@ gui_entry_window( const char *title, const char *init_text, void (*ok_callback)(
 	gtk_container_set_border_width( GTK_CONTAINER(entry_window_w), 5 );
 	width = gdk_screen_width( ) / 2;
 	gtk_widget_set_usize( entry_window_w, width, 0 );
-	gtk_object_set_data( GTK_OBJECT(entry_window_w), "user_callback", (void *)ok_callback );
-	gtk_object_set_data( GTK_OBJECT(entry_window_w), "user_callback_data", ok_callback_data );
+	g_object_set_data(G_OBJECT(entry_window_w), "user_callback", (void *)ok_callback);
+	g_object_set_data(G_OBJECT(entry_window_w), "user_callback_data", ok_callback_data);
 
 	frame_w = gui_frame_add( entry_window_w, NULL );
 	vbox_w = gui_vbox_add( frame_w, 10 );
 
         /* Text entry widget */
 	entry_w = gui_entry_add( vbox_w, init_text, entry_window_cb, entry_window_w );
-	gtk_object_set_data( GTK_OBJECT(entry_window_w), "entry_w", entry_w );
+	g_object_set_data(G_OBJECT(entry_window_w), "entry_w", entry_w);
 
 	/* Horizontal box for buttons */
 	hbox_w = gui_hbox_add( vbox_w, 0 );
