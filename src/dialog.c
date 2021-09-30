@@ -139,8 +139,8 @@ static struct ColorSetupDialog {
 		GtkWidget *modify_omenu_item_w;
 		GtkWidget *attrib_omenu_item_w;
 
-		/* Spectrum preview widget */
-		GtkWidget *spectrum_preview_w;
+		/* Spectrum widget */
+		GtkWidget *spectrum_w;
 
 		/* Menu items in spectrum type option menu */
 		GtkWidget *rainbow_omenu_item_w;
@@ -243,7 +243,7 @@ csdialog_time_timestamp_option_menu_cb( GtkWidget *omenu_item_w )
 }
 
 
-/* This is the spectrum function used to paint the preview widget */
+/* This is the spectrum function used to paint the spectrum widget */
 static RGBcolor
 csdialog_time_spectrum_func( double x )
 {
@@ -310,7 +310,7 @@ csdialog_time_spectrum_option_menu_cb( GtkWidget *omenu_item_w )
 
 	/* Set new spectrum type and draw it */
 	csdialog.color_config.by_timestamp.spectrum_type = type;
-	gui_preview_spectrum( csdialog.time.spectrum_preview_w, csdialog_time_spectrum_func );
+	gui_spectrum_fill(csdialog.time.spectrum_w, csdialog_time_spectrum_func);
 	csdialog_time_color_picker_set_access( type == SPECTRUM_GRADIENT );
 }
 
@@ -326,7 +326,7 @@ csdialog_time_color_picker_cb( RGBcolor *picked_color, RGBcolor *end_color )
 	end_color->b = picked_color->b;
 
 	/* Redraw spectrum */
-	gui_preview_spectrum( csdialog.time.spectrum_preview_w, csdialog_time_spectrum_func );
+	gui_spectrum_fill(csdialog.time.spectrum_w, csdialog_time_spectrum_func);
 }
 
 
@@ -952,8 +952,8 @@ dialog_color_setup( void )
 	/* Time spectrum */
 	frame_w = gui_frame_add( vbox_w, NULL );
 	gtk_frame_set_shadow_type( GTK_FRAME(frame_w), GTK_SHADOW_IN );
-	csdialog.time.spectrum_preview_w = gui_preview_add( frame_w );
-	gui_preview_spectrum( csdialog.time.spectrum_preview_w, csdialog_time_spectrum_func );
+	csdialog.time.spectrum_w = gui_spectrum_new( frame_w );
+	gui_spectrum_fill(csdialog.time.spectrum_w, csdialog_time_spectrum_func);
 
 	/* Horizontal box for spectrum color pickers and menu */
 	hbox_w = gui_hbox_add( vbox_w, 0 );

@@ -944,91 +944,94 @@ gui_pixmap_xpm_add( GtkWidget *parent_w, char **xpm_data )
 }
 
 
-/* The color preview widget */
+/* The color spectrum widget */
 GtkWidget *
-gui_preview_add( GtkWidget *parent_w )
+gui_spectrum_new( GtkWidget *parent_w )
 {
-	GtkWidget *preview_w;
+	GtkWidget *spectrum_w;
 
-	preview_w = gtk_preview_new( GTK_PREVIEW_COLOR );
-	parent_child_full( parent_w, preview_w, EXPAND, FILL );
+	spectrum_w = gtk_image_new();
+	parent_child_full( parent_w, spectrum_w, EXPAND, FILL );
 
-	return preview_w;
+	return spectrum_w;
 }
 
 
-/* Helper callback for gui_preview_spectrum( ) */
+// Delete pixbuf data when it's released
+static void
+delete_pixbuf(guchar *pixels, gpointer data)
+{
+	xfree(pixels);
+}
+
+/* Helper callback for gui_spectrum_fill( ) */
 /* BUG: This does not handle resizes correctly */
 static int
-preview_spectrum_draw_cb( GtkWidget *preview_w, void *unused, const char *evtype )
+spectrum_draw_cb( GtkWidget *spectrum_w, void *unused, const char *evtype )
 {
 	RGBcolor (*spectrum_func)( double x );
 	RGBcolor color;
 	int width, height;
-	int prev_width, prev_height;
 	int i;
-	unsigned char *rowbuf;
 
-	width = preview_w->allocation.width;
-	height = preview_w->allocation.height;
+	width = spectrum_w->allocation.width;
+	height = spectrum_w->allocation.height;
 
-	prev_width = GTK_PREVIEW(preview_w)->buffer_width;
-	prev_height = GTK_PREVIEW(preview_w)->buffer_height;
-
-	/* Set new preview size if allocation has changed */
-	if ((width != prev_width) || (height != prev_height))
-		gtk_preview_size( GTK_PREVIEW(preview_w), width, height );
-	else if (!strcmp( evtype, "expose" ))
+	if (!strcmp(evtype, "expose"))
 		return FALSE;
 
-	if (!GTK_WIDGET_DRAWABLE(preview_w))
+	if (!GTK_WIDGET_DRAWABLE(spectrum_w))
 		return FALSE;
 
 	/* Get spectrum function */
-	spectrum_func = (RGBcolor (*)( double x ))g_object_get_data(G_OBJECT(preview_w), "spectrum_func");
+	spectrum_func = (RGBcolor (*)( double x ))g_object_get_data(G_OBJECT(spectrum_w), "spectrum_func");
 
-	/* Create one row of the spectrum image */
-	rowbuf = NEW_ARRAY(unsigned char, 3 * width);
+	/* Create the spectrum image */
+	guchar *imgbuf = NEW_ARRAY(guchar, 3 * width * height);
+	// Iterate in column major order, with the assumption that
+	// spectrum_func() is more expensive than the cache inefficiency.
 	for (i = 0; i < width; i++) {
 		color = (spectrum_func)( (double)i / (double)(width - 1) ); /* struct assign */
-		rowbuf[3 * i] = (unsigned char)(255.0 * color.r);
-		rowbuf[3 * i + 1] = (unsigned char)(255.0 * color.g);
-		rowbuf[3 * i + 2] = (unsigned char)(255.0 * color.b);
+		for (int j = 0; j < height; j++) {
+			imgbuf[3*j*width + 3 * i] = (unsigned char)(255.0 * color.r);
+			imgbuf[3*j*width + 3 * i + 1] = (unsigned char)(255.0 * color.g);
+			imgbuf[3*j*width + 3 * i + 2] = (unsigned char)(255.0 * color.b);
+		}
 	}
 
-	/* Draw spectrum into preview widget, row by row */
-	for (i = 0; i < height; i++)
-		gtk_preview_draw_row( GTK_PREVIEW(preview_w), rowbuf, 0, i, width );
-	xfree( rowbuf );
+	/* Draw spectrum into spectrum widget, row by row */
+	GdkPixbuf *pb = gdk_pixbuf_new_from_data(imgbuf, GDK_COLORSPACE_RGB,
+						 FALSE, 8, width, height,
+						 width * 3, delete_pixbuf, NULL);
 
-	gtk_widget_draw( preview_w, NULL );
+	gtk_widget_draw(spectrum_w, NULL);
 
 	return FALSE;
 }
 
 
-/* Fills a preview widget with an arbitrary spectrum. Second argument
+/* Fills a spectrum widget with an arbitrary spectrum. Second argument
  * should be a function returning the appropriate color at a specified
  * fractional position in the spectrum */
 void
-gui_preview_spectrum( GtkWidget *preview_w, RGBcolor (*spectrum_func)( double x ) )
+gui_spectrum_fill( GtkWidget *spectrum_w, RGBcolor (*spectrum_func)( double x ) )
 {
 	static const char data_key[] = "spectrum_func";
 	boolean first_time;
 
         /* Check if this is first-time initialization */
-	first_time = g_object_get_data(G_OBJECT(preview_w), data_key) == NULL;
+	first_time = g_object_get_data(G_OBJECT(spectrum_w), data_key) == NULL;
 
-	/* Attach spectrum function to preview widget */
-	g_object_set_data(G_OBJECT(preview_w), data_key, (void *)spectrum_func);
+	/* Attach spectrum function to spectrum widget */
+	g_object_set_data(G_OBJECT(spectrum_w), data_key, (void *)spectrum_func);
 
 	if (first_time) {
 		/* Attach draw callback */
-		g_signal_connect(G_OBJECT(preview_w), "expose_event", G_CALLBACK(preview_spectrum_draw_cb), "expose");
-		g_signal_connect(G_OBJECT(preview_w), "size_allocate", G_CALLBACK(preview_spectrum_draw_cb), "size");
+		g_signal_connect(G_OBJECT(spectrum_w), "expose_event", G_CALLBACK(spectrum_draw_cb), "expose");
+		g_signal_connect(G_OBJECT(spectrum_w), "size_allocate", G_CALLBACK(spectrum_draw_cb), "size");
 	}
 	else
-		preview_spectrum_draw_cb( preview_w, NULL, "redraw" );
+		spectrum_draw_cb(spectrum_w, NULL, "redraw");
 }
 
 

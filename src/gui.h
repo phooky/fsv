@@ -115,8 +115,8 @@ void gui_notebook_page_add( GtkWidget *notebook_w, const char *tab_label, GtkWid
 GtkWidget *gui_hpaned_add( GtkWidget *parent_w, int divider_x_pos );
 GtkWidget *gui_vpaned_add( GtkWidget *parent_w, int divider_y_pos );
 GtkWidget *gui_pixmap_xpm_add( GtkWidget *parent_w, char **xpm_data );
-GtkWidget *gui_preview_add( GtkWidget *parent_w );
-void gui_preview_spectrum( GtkWidget *preview_w, RGBcolor (*spectrum_func)( double x ) );
+GtkWidget *gui_spectrum_new( GtkWidget *parent_w );
+void gui_spectrum_fill( GtkWidget *spectrum_w, RGBcolor (*spectrum_func)( double x ) );
 GtkWidget *gui_hscrollbar_add( GtkWidget *parent_w, GtkAdjustment *adjustment );
 GtkWidget *gui_vscrollbar_add( GtkWidget *parent_w, GtkAdjustment *adjustment );
 GtkWidget *gui_separator_add( GtkWidget *parent_w );
