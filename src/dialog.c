@@ -668,9 +668,10 @@ csdialog_wpattern_new_color_selection_cb( RGBcolor *selected_color, struct WPLis
 			place_before_existing_group = TRUE;
 
 #define WPGROUP_LIST csdialog.color_config.by_wpattern.wpgroup_list
-	if (place_before_existing_group)
-		G_LIST_INSERT_BEFORE(WPGROUP_LIST, row_data->wpgroup, wpgroup);
-	else {
+	if (place_before_existing_group) {
+		GList *pos = g_list_find(WPGROUP_LIST, row_data->wpgroup);
+		G_LIST_INSERT_BEFORE(WPGROUP_LIST, pos, wpgroup);
+	} else {
 		G_LIST_APPEND(WPGROUP_LIST, wpgroup);
 		/* Scroll list to bottom (to make new group visible) */
 		GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(csdialog.wpattern.list_w));
