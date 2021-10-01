@@ -540,7 +540,7 @@ gui_cursor( GtkWidget *widget, int glyph )
 
 	/* Don't need the old cursor anymore */
 	if (prev_cursor != NULL)
-		gdk_cursor_destroy( prev_cursor );
+		gdk_cursor_unref(prev_cursor);
 
 	if (glyph >= 0) {
 		/* Save new cursor information */
