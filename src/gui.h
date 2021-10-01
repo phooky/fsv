@@ -98,8 +98,6 @@ time_t gui_dateedit_get_time( GtkWidget *dateedit_w );
 void gui_dateedit_set_time( GtkWidget *dateedit_w, time_t the_time );
 GtkWidget *gui_entry_add( GtkWidget *parent_w, const char *init_text, void (*callback)( ), void *callback_data );
 void gui_entry_set_text( GtkWidget *entry_w, const char *entry_text );
-char *gui_entry_get_text( GtkWidget *entry_w );
-void gui_entry_highlight( GtkWidget *entry_w );
 GtkWidget *gui_frame_add( GtkWidget *parent_w, const char *title );
 GtkWidget *gui_gl_area_add( GtkWidget *parent_w );
 void gui_keybind( GtkWidget *widget, char *keystroke );

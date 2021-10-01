@@ -614,22 +614,6 @@ gui_entry_set_text( GtkWidget *entry_w, const char *entry_text )
 }
 
 
-/* Returns the text currently in an entry */
-char *
-gui_entry_get_text( GtkWidget *entry_w )
-{
-	return gtk_entry_get_text( GTK_ENTRY(entry_w) );
-}
-
-
-/* Highlights the text in an entry */
-void
-gui_entry_highlight( GtkWidget *entry_w )
-{
-	gtk_entry_select_region( GTK_ENTRY(entry_w), 0, GTK_ENTRY(entry_w)->text_length );
-}
-
-
 /* The frame widget (with optional title) */
 GtkWidget *
 gui_frame_add( GtkWidget *parent_w, const char *title )
