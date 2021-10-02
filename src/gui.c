@@ -135,6 +135,14 @@ parent_child( GtkWidget *parent_w, GtkWidget *child_w )
 }
 
 
+// Non-static wrapper for parent_child
+void
+gui_set_parent_child(GtkWidget *parent_w, GtkWidget *child_w)
+{
+	parent_child(parent_w, child_w);
+}
+
+
 /* The horizontal box widget */
 GtkWidget *
 gui_hbox_add( GtkWidget *parent_w, int spacing )
@@ -802,50 +810,6 @@ gui_radio_menu_item_add( GtkWidget *menu_w, const char *label, void (*callback)(
 	}
 
 	return radmenu_item_w;
-}
-
-
-/* The option menu widget. Options must have already been defined using
- * gui_option_menu_item( ) */
-GtkWidget *
-gui_option_menu_add( GtkWidget *parent_w, int init_selected )
-{
-	static GtkWidget *menu_w = NULL;
-	GtkWidget *optmenu_w = NULL;
-
-	if (GTK_IS_MENU_ITEM(parent_w)) {
-		/* gui_option_menu_item( ) has a menu item for us */
-		if (menu_w == NULL)
-			menu_w = gtk_menu_new( );
-		gtk_menu_shell_append(GTK_MENU_SHELL(menu_w), parent_w);
-		gtk_widget_show( parent_w );
-	}
-	else {
-		/* Make the finished option menu */
-		optmenu_w = gtk_option_menu_new( );
-		gtk_option_menu_set_menu( GTK_OPTION_MENU(optmenu_w), menu_w );
-		gtk_option_menu_set_history( GTK_OPTION_MENU(optmenu_w), init_selected );
-		parent_child( parent_w, optmenu_w );
-		menu_w = NULL;
-	}
-
-	return optmenu_w;
-}
-
-
-/* Option menu definiton. Call this once for each menu item, and then call
- * gui_option_menu_add( ) to produce the finished widget */
-GtkWidget *
-gui_option_menu_item( const char *label, void (*callback)( ), void *callback_data )
-{
-	GtkWidget *menu_item_w;
-
-	menu_item_w = gtk_menu_item_new_with_label( label );
-	if (callback != NULL)
-		g_signal_connect(G_OBJECT(menu_item_w), "activate", G_CALLBACK(callback), callback_data);
-	gui_option_menu_add( menu_item_w, NIL );
-
-	return menu_item_w;
 }
 
 

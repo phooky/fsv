@@ -79,6 +79,7 @@ void gui_update( void );
 #ifdef __GTK_H__
 boolean gui_adjustment_widget_busy( GtkAdjustment *adj );
 GtkAdjustment *gui_int_adjustment( int value, int lower, int upper );
+void gui_set_parent_child(GtkWidget *parent_w, GtkWidget *child_w);
 GtkWidget *gui_hbox_add( GtkWidget *parent_w, int spacing );
 GtkWidget *gui_vbox_add( GtkWidget *parent_w, int spacing );
 void gui_box_set_packing( GtkWidget *box_w, boolean expand, boolean fill, boolean start );
@@ -106,8 +107,6 @@ GtkWidget *gui_menu_add( GtkWidget *parent_menu_w, const char *label );
 GtkWidget *gui_menu_item_add( GtkWidget *menu_w, const char *label, void (*callback)( ), void *callback_data );
 void gui_radio_menu_begin( int init_selected );
 GtkWidget *gui_radio_menu_item_add( GtkWidget *menu_w, const char *label, void (*callback)( ), void *callback_data );
-GtkWidget *gui_option_menu_add( GtkWidget *parent_w, int init_selected );
-GtkWidget *gui_option_menu_item( const char *label, void (*callback)( ), void *callback_data );
 GtkWidget *gui_notebook_add( GtkWidget *parent_w );
 void gui_notebook_page_add( GtkWidget *notebook_w, const char *tab_label, GtkWidget *content_w );
 GtkWidget *gui_hpaned_add( GtkWidget *parent_w, int divider_x_pos );
