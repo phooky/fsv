@@ -51,7 +51,7 @@ dirtree_select_cb(GtkTreeSelection *selection, gpointer data)
 	GNode *dnode = NULL;
 	GtkTreeIter iter;
 	GtkTreeModel *model;
-	int row;
+	//int row;
 
 	/* If About presentation is up, end it */
 	about( ABOUT_END );
@@ -246,8 +246,6 @@ dirtree_no_more_entries( void )
 void
 dirtree_entry_show( GNode *dnode )
 {
-	int row;
-
 	g_assert( NODE_IS_DIR(dnode) );
 
 	/* Repopulate file list if directory is different */
