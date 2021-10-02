@@ -75,29 +75,6 @@ gui_adjustment_widget_busy( GtkAdjustment *adj )
 }
 
 
-/* Step/end callback used in animating a GtkAdjustment */
-static void
-adjustment_step_cb( Morph *morph )
-{
-	GtkAdjustment *adj;
-	double anim_value;
-
-	adj = (GtkAdjustment *)morph->data;
-	g_return_if_fail( GTK_IS_ADJUSTMENT(adj) );
-	anim_value = *(morph->var);
-	if (!gui_adjustment_widget_busy( adj ) || (ABS(morph->end_value - anim_value) < EPSILON))
-		gtk_adjustment_set_value( adj, anim_value );
-}
-
-
-/* Creates an integer-valued adjustment */
-GtkAdjustment *
-gui_int_adjustment( int value, int lower, int upper )
-{
-	return (GtkAdjustment *)gtk_adjustment_new( (float)value, (float)lower, (float)upper, 1.0, 1.0, 1.0 );
-}
-
-
 /* This places child_w into parent_w intelligently. expand and fill
  * flags are applicable only if parent_w is a box widget */
 static void

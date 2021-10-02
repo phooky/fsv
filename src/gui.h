@@ -76,7 +76,6 @@ enum
 void gui_update( void );
 #ifdef __GTK_H__
 boolean gui_adjustment_widget_busy( GtkAdjustment *adj );
-GtkAdjustment *gui_int_adjustment( int value, int lower, int upper );
 void gui_set_parent_child(GtkWidget *parent_w, GtkWidget *child_w);
 GtkWidget *gui_hbox_add( GtkWidget *parent_w, int spacing );
 GtkWidget *gui_vbox_add( GtkWidget *parent_w, int spacing );
