@@ -1,4 +1,4 @@
-project('fsv', 'c', version: '0.9')
+project('fsv', 'c', version: '2.0')
 gtkdep = [dependency('gtk+-2.0'), dependency('gtkgl-2.0'), dependency('gdk-pixbuf-2.0')]
 compiler = meson.get_compiler('c')
 conf = configuration_data()

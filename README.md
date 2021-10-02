@@ -1,10 +1,6 @@
 # FSV
 
-[![travis ci](https://travis-ci.org/mcuelenaere/fsv.svg?branch=master)](https://travis-ci.org/mcuelenaere/fsv)
-
-NOTE: this project is **not** actively maintained.
-
-This repo is a fork of [fsv](http://fsv.sourceforge.net/), with some patches on top to align it more to the current state of affairs.
+This repo is a fork of [fsv](http://fsv.sourceforge.net/), updated to current environments.
 The original author is [Daniel Richard G.](http://fox.mit.edu/skunk/), a former student of Computer Science at the MIT.
 
 ## About fsv
@@ -32,7 +28,7 @@ Useful info and screenshots of the original SGI IRIX implementation are availabl
 
 ### Update to Gtk+3
 
-1. Update code, still using gtk+2, to build cleanly with
+1. DONE Update code, still using gtk+2, to build cleanly with
    `meson configure -Dc_args="-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED" builddir`
 2. Switch to Gtk+3
 

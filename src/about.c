@@ -4,6 +4,7 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * Copyright (C) 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * SPDX-License-Identifier:  LGPL-2.1-or-later
  */
@@ -152,7 +153,7 @@ draw_text( void )
 	text_draw_straight( "Copyright (C)1999 by Daniel Richard G.", &tpos, &tdims );
 
 	tpos.y = 140.0 * q - 235.0; /* -95 */
-	text_draw_straight( "<skunk@mit.edu>", &tpos, &tdims );
+	text_draw_straight( "Copyright (C) 2021 Janne Blomqvist", &tpos, &tdims );
 
 	/* Finally, fade in the home page URL */
 	if (about_part > 0.75) {
@@ -160,8 +161,8 @@ draw_text( void )
 		p = INTERVAL_PART(about_part, 0.75, 1.0);
 		q = SQR(SQR(p));
 		glColor3f( q, q, 0.0 );
-		text_draw_straight( "http://fox.mit.edu/skunk/soft/fsv/", &tpos, &tdims );
-		text_draw_straight( "__________________________________", &tpos, &tdims );
+		text_draw_straight( "https://github.com/jabl/fsv/", &tpos, &tdims );
+		//text_draw_straight( "__________________________________", &tpos, &tdims );
 	}
 
 	text_post( );
