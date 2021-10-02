@@ -16,6 +16,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <gtk/gtk.h>
+#include <errno.h>
 
 #include "animation.h"
 #include "camera.h"
@@ -1057,7 +1058,7 @@ dialog_help( void )
 	GtkWidget *window_w;
 	GtkWidget *frame_w;
 	GtkWidget *hbox_w;
-	char location[] = "file://localhost" DOCDIR "/fsv.html";
+	char location[] = "file:///" DOCDIR "/fsv.html";
 	char cmdbuf[2048];
 
 	/* Browser may take a few seconds to start up... */
@@ -1079,13 +1080,12 @@ dialog_help( void )
 	if (xfork( )) {
 		/* Browser startup command */
 		sprintf( cmdbuf,
-		    "netscape -noraise -remote \"openURL(%s,new-window)\" > /dev/null 2>&1 || "
-		    "netscape -no-about-splash -dont-save-geometry-prefs %s > /dev/null 2>&1 || "
-		    "xterm -title \"fsv help\" -e lynx %s > /dev/null 2>&1",
-		    location, location, location );
+		    "xdg-open %s > /dev/null 2>&1", location);
 
 		/* Execute command */
-		system( cmdbuf );
+		if (system(cmdbuf) != 0)
+			g_error("Failed to launch browser cmd: %s, error message: %s\n",
+				cmdbuf, g_strerror(errno));
 
 		/* End subprocess */
 		_exit( 0 );
