@@ -107,21 +107,12 @@ void
 debug_init( void )
 {
 	static const char fname[] = "debug_init";
-	GAllocator *debug_allocator;
 
 	/* "Hi, I'm not a production executable!" */
 	g_message( "[%s] Debugging routines say hello", fname );
 
 	/* Tolerate no weirdness in Gtkland */
 	g_log_set_fatal_mask( "Gtk", G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL );
-
-	/* Set up single-unit allocators for these GLib types */
-	debug_allocator = g_allocator_new( "GSList debug allocator", 1 );
-	g_slist_push_allocator( debug_allocator );
-	debug_allocator = g_allocator_new( "GList debug allocator", 1 );
-	g_list_push_allocator( debug_allocator );
-	debug_allocator = g_allocator_new( "GNode debug allocator", 1 );
-	g_node_push_allocator( debug_allocator );
 }
 
 
