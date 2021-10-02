@@ -1173,7 +1173,7 @@ gui_dialog_window( const char *title, void (*close_callback)( ) )
 	GtkWidget *window_w;
 
 	window_w = gtk_window_new( GTK_WINDOW_TOPLEVEL );
-	gtk_window_set_policy( GTK_WINDOW(window_w), FALSE, FALSE, FALSE );
+	gtk_window_set_resizable(GTK_WINDOW(window_w), FALSE);
 	gtk_window_set_position( GTK_WINDOW(window_w), GTK_WIN_POS_CENTER );
 	gtk_window_set_title( GTK_WINDOW(window_w), title );
 	g_signal_connect(G_OBJECT(window_w), "delete_event", G_CALLBACK(gtk_widget_destroy), NULL);
@@ -1224,7 +1224,7 @@ gui_entry_window( const char *title, const char *init_text, void (*ok_callback)(
 	entry_window_w = gui_dialog_window( title, NULL );
 	gtk_container_set_border_width( GTK_CONTAINER(entry_window_w), 5 );
 	width = gdk_screen_width( ) / 2;
-	gtk_widget_set_usize( entry_window_w, width, 0 );
+	gtk_widget_set_size_request(entry_window_w, width, 0);
 	g_object_set_data(G_OBJECT(entry_window_w), "user_callback", (void *)ok_callback);
 	g_object_set_data(G_OBJECT(entry_window_w), "user_callback_data", ok_callback_data);
 
