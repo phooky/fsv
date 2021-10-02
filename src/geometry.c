@@ -440,25 +440,6 @@ discv_draw( boolean high_detail )
 }
 
 
-static void
-discv_gldraw_cursor( XYvec pos, double radius )
-{
-	pos.x = pos.x;
-	radius = radius;
-
-}
-
-
-static void
-discv_draw_cursor_between( GNode *a_node, GNode *b_node, double k )
-{
-	a_node = a_node;
-	b_node = b_node;
-	k = k;
-
-}
-
-
 /**** MAP VISUALIZATION ***************************************/
 
 
