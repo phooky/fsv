@@ -1317,7 +1317,7 @@ dialog_node_properties( GNode *node )
 		gui_label_add( vbox_w, _("This symlink points to:") );
 		hbox_w = gui_hbox_add( vbox_w, 0 );
 		entry_w = gui_entry_add( hbox_w, node_info->target, NULL, NULL );
-		gtk_entry_set_editable( GTK_ENTRY(entry_w), FALSE );
+		gtk_editable_set_editable(GTK_EDITABLE(entry_w), FALSE);
 
 		hbox_w = gui_hbox_add( vbox_w, 0 ); /* spacer */
 
@@ -1328,7 +1328,7 @@ dialog_node_properties( GNode *node )
 			entry_w = gui_entry_add( hbox_w, _("(same as above)"), NULL, NULL );
                 else
 			entry_w = gui_entry_add( hbox_w, node_info->abstarget, NULL, NULL );
-		gtk_entry_set_editable( GTK_ENTRY(entry_w), FALSE );
+		gtk_editable_set_editable(GTK_EDITABLE(entry_w), FALSE);
 
 		/* This is NULL if target isn't in the filesystem tree */
 		target_node = node_named( node_info->abstarget );
