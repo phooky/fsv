@@ -1040,7 +1040,7 @@ dialog_color_setup( void )
 	gui_button_with_pixbuf_xpm_add(hbox_w, button_cancel_xpm, _("Cancel"), close_cb, window_w);
 
 	/* Set page to current color mode */
-	gtk_notebook_set_page( GTK_NOTEBOOK(csdialog.notebook_w), color_mode );
+	gtk_notebook_set_current_page( GTK_NOTEBOOK(csdialog.notebook_w), color_mode );
 
 	/* Some cleanup will be required once the window goes away */
 	g_signal_connect(G_OBJECT(window_w), "destroy", G_CALLBACK(csdialog_destroy_cb), NULL);
