@@ -38,9 +38,7 @@ int alphasort( const void *a, const void *b );
 #define SCAN_MONITOR_PERIOD 500
 
 
-/* Node descriptors and name strings are stored here */
-static GMemChunk *ndesc_memchunk = NULL;
-static GMemChunk *dir_ndesc_memchunk = NULL;
+/* Name strings are stored here */
 static GStringChunk *name_strchunk = NULL;
 
 /* Node ID counter */
@@ -159,13 +157,13 @@ process_dir( const char *dir, GNode *dnode )
 			process_dir( node_absname( node ), node );
 
 			/* Move new descriptor into working memory */
-			andesc = g_mem_chunk_alloc( dir_ndesc_memchunk );
+			andesc = (union AnyNodeDesc *) g_slice_new(DirNodeDesc);
 			memcpy( andesc, DIR_NODE_DESC(node), sizeof(DirNodeDesc) );
 			node->data = andesc;
 		}
 		else {
 			/* Move new descriptor into working memory */
-			andesc = g_mem_chunk_alloc( ndesc_memchunk );
+			andesc = (union AnyNodeDesc *) g_slice_new(NodeDesc);
 			memcpy( andesc, NODE_DESC(node), sizeof(NodeDesc) );
 			node->data = andesc;
 		}
@@ -282,6 +280,19 @@ setup_fstree_recursive( GNode *node, GNode **node_table )
 }
 
 
+// Free data in a dir or file node. Can be used as a GNodeTraverseFunc
+static gboolean
+node_data_free(GNode *node, gpointer data)
+{
+	if (NODE_IS_DIR(node) || NODE_IS_METANODE(node)) {
+		DirNodeDesc *p = DIR_NODE_DESC(node);
+		g_slice_free(DirNodeDesc, p);
+	} else {
+		g_slice_free(NodeDesc, NODE_DESC(node));
+	}
+	return FALSE;
+}
+
 /* Top-level call to recursively scan a filesystem */
 void
 scanfs( const char *dir )
@@ -294,22 +305,12 @@ scanfs( const char *dir )
 	if (globals.fstree != NULL) {
 		/* Free existing geometry and filesystem tree */
 		geometry_free_recursive( globals.fstree );
+		g_node_traverse(globals.fstree, G_IN_ORDER, G_TRAVERSE_ALL,
+				-1, node_data_free, NULL);
 		g_node_destroy( globals.fstree );
-		/* General memory cleanup */
-		g_blow_chunks( );
 	}
 
-	/* Set up memory chunks to hold descriptor structs */
-	if (ndesc_memchunk == NULL)
-		ndesc_memchunk = g_mem_chunk_create( NodeDesc, 64, G_ALLOC_ONLY );
-	else
-		g_mem_chunk_reset( ndesc_memchunk );
-	if (dir_ndesc_memchunk == NULL)
-		dir_ndesc_memchunk = g_mem_chunk_create( DirNodeDesc, 16, G_ALLOC_ONLY );
-	else
-		g_mem_chunk_reset( dir_ndesc_memchunk );
-
-	/* ...and string chunks to hold name strings */
+	/* Setup string chunks to hold name strings */
 	if (name_strchunk != NULL)
 		g_string_chunk_free( name_strchunk );
 	name_strchunk = g_string_chunk_new( 8192 );
@@ -328,7 +329,7 @@ scanfs( const char *dir )
 	root_dir = xgetcwd( );
 
 	/* Set up fstree metanode */
-	globals.fstree = g_node_new( g_mem_chunk_alloc( dir_ndesc_memchunk ) );
+	globals.fstree = g_node_new(g_slice_new(DirNodeDesc));
 	NODE_DESC(globals.fstree)->type = NODE_METANODE;
 	NODE_DESC(globals.fstree)->id = node_id++;
 	name = g_path_get_dirname( root_dir );
@@ -340,7 +341,7 @@ scanfs( const char *dir )
 	DIR_NODE_DESC(globals.fstree)->c_dlist = NULL_DLIST;
 
 	/* Set up root directory node */
-	g_node_append_data( globals.fstree, g_mem_chunk_alloc( dir_ndesc_memchunk ) );
+	g_node_append_data(globals.fstree, g_slice_new(DirNodeDesc));
 	/* Note: We can now use root_dnode to refer to the node just
 	 * created (it is an alias for globals.fstree->children) */
 	NODE_DESC(root_dnode)->id = node_id++;
