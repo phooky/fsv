@@ -733,10 +733,8 @@ gui_menu_add( GtkWidget *parent_menu_w, const char *label )
 
 	menu_item_w = gtk_menu_item_new_with_label( label );
 	/* parent_menu can be a menu bar or a regular menu */
-	if (GTK_IS_MENU_BAR(parent_menu_w))
-		gtk_menu_bar_append( GTK_MENU_BAR(parent_menu_w), menu_item_w );
-	else
-		gtk_menu_append( GTK_MENU(parent_menu_w), menu_item_w );
+	gtk_menu_shell_append(GTK_MENU_SHELL(parent_menu_w), menu_item_w);
+
 	gtk_widget_show( menu_item_w );
 	menu_w = gtk_menu_new( );
 	gtk_menu_item_set_submenu( GTK_MENU_ITEM(menu_item_w), menu_w );
@@ -754,7 +752,7 @@ gui_menu_item_add( GtkWidget *menu_w, const char *label, void (*callback)( ), vo
 	GtkWidget *menu_item_w;
 
 	menu_item_w = gtk_menu_item_new_with_label( label );
-	gtk_menu_append( GTK_MENU(menu_w), menu_item_w );
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu_w), menu_item_w);
 	if (callback != NULL)
 		g_signal_connect(G_OBJECT(menu_item_w), "activate", G_CALLBACK(callback), callback_data);
 	gtk_widget_show( menu_item_w );
@@ -795,7 +793,7 @@ gui_radio_menu_item_add( GtkWidget *menu_w, const char *label, void (*callback)(
 	else {
 		radmenu_item_w = gtk_radio_menu_item_new_with_label( radio_group, label );
 		radio_group = gtk_radio_menu_item_group( GTK_RADIO_MENU_ITEM(radmenu_item_w) );
-		gtk_menu_append( GTK_MENU(menu_w), radmenu_item_w );
+		gtk_menu_shell_append(GTK_MENU_SHELL(menu_w), radmenu_item_w);
 		if (radmenu_item_num == init_selected)
 			gtk_check_menu_item_set_active( GTK_CHECK_MENU_ITEM(radmenu_item_w), TRUE );
 		g_signal_connect(G_OBJECT(radmenu_item_w), "toggled", G_CALLBACK(callback), callback_data);
@@ -819,7 +817,7 @@ gui_option_menu_add( GtkWidget *parent_w, int init_selected )
 		/* gui_option_menu_item( ) has a menu item for us */
 		if (menu_w == NULL)
 			menu_w = gtk_menu_new( );
-		gtk_menu_append( GTK_MENU(menu_w), parent_w );
+		gtk_menu_shell_append(GTK_MENU_SHELL(menu_w), parent_w);
 		gtk_widget_show( parent_w );
 	}
 	else {
@@ -1050,7 +1048,7 @@ gui_separator_add( GtkWidget *parent_w )
 	if (parent_w != NULL) {
 		if (GTK_IS_MENU(parent_w)) {
 			separator_w = gtk_menu_item_new( );
-			gtk_menu_append( GTK_MENU(parent_w), separator_w );
+			gtk_menu_shell_append(GTK_MENU_SHELL(parent_w), separator_w);
 		}
 		else {
 			separator_w = gtk_hseparator_new( );
