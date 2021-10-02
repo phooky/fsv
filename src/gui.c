@@ -792,7 +792,7 @@ gui_radio_menu_item_add( GtkWidget *menu_w, const char *label, void (*callback)(
 	}
 	else {
 		radmenu_item_w = gtk_radio_menu_item_new_with_label( radio_group, label );
-		radio_group = gtk_radio_menu_item_group( GTK_RADIO_MENU_ITEM(radmenu_item_w) );
+		radio_group = gtk_radio_menu_item_get_group(GTK_RADIO_MENU_ITEM(radmenu_item_w));
 		gtk_menu_shell_append(GTK_MENU_SHELL(menu_w), radmenu_item_w);
 		if (radmenu_item_num == init_selected)
 			gtk_check_menu_item_set_active( GTK_CHECK_MENU_ITEM(radmenu_item_w), TRUE );
