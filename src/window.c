@@ -81,12 +81,11 @@ window_init( FsvMode fsv_mode )
 	main_window_w = gtk_window_new( GTK_WINDOW_TOPLEVEL );
 	gtk_window_set_title( GTK_WINDOW(main_window_w), "fsv" );
 	gtk_window_set_wmclass( GTK_WINDOW(main_window_w), "main", "fsv" );
-	gtk_window_set_policy( GTK_WINDOW(main_window_w), TRUE, TRUE, TRUE );
+	gtk_window_set_resizable(GTK_WINDOW(main_window_w), TRUE);
 	window_width = 3 * gdk_screen_width( ) / 4;
 	window_height = 2584 * window_width / 4181;
-	gtk_widget_set_usize( main_window_w, window_width, window_height );
+	gtk_widget_set_size_request(main_window_w, window_width, window_height);
 	g_signal_connect(G_OBJECT(main_window_w), "delete_event", G_CALLBACK(gtk_main_quit), NULL);
-	gtk_quit_add_destroy( 1, GTK_OBJECT(main_window_w) );
 
 	/* Main vertical box widget */
 	main_vbox_w = gui_vbox_add( main_window_w, 0 );
@@ -152,7 +151,7 @@ window_init( FsvMode fsv_mode )
 
 	/* Help menu (right-justified) */
 	menu_w = gui_menu_add( menu_bar_w, _("Help") );
-	gtk_menu_item_right_justify( GTK_MENU_ITEM(GTK_MENU(menu_w)->parent_menu_item) );
+	gtk_menu_item_set_right_justified(GTK_MENU_ITEM(GTK_MENU(menu_w)->parent_menu_item), TRUE);
 	/* Help menu items */
 	gui_menu_item_add( menu_w, _("Contents..."), on_help_contents_activate, NULL );
 	gui_separator_add( menu_w );
