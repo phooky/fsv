@@ -1119,14 +1119,14 @@ static void
 colorsel_window_cb( GtkWidget *colorsel_window_w )
 {
         RGBcolor color;
-	double color_rgb[4];
+	GdkColor gcolor;
 	void (*user_callback)( const RGBcolor *, void * );
 	void *user_callback_data;
 
-	gtk_color_selection_get_color( GTK_COLOR_SELECTION(GTK_COLOR_SELECTION_DIALOG(colorsel_window_w)->colorsel), color_rgb );
-	color.r = color_rgb[0];
-	color.g = color_rgb[1];
-	color.b = color_rgb[2];
+	gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(GTK_COLOR_SELECTION_DIALOG(colorsel_window_w)->colorsel), &gcolor);
+	color.r = (float) gcolor.red / G_MAXUINT16;
+	color.g = (float) gcolor.green / G_MAXUINT16;
+	color.b = (float) gcolor.blue / G_MAXUINT16;
 
 	user_callback = (void (*)( const RGBcolor *, void * ))g_object_get_data(G_OBJECT(colorsel_window_w), "user_callback");
 	user_callback_data = g_object_get_data(G_OBJECT(colorsel_window_w), "user_callback_data");
@@ -1143,14 +1143,14 @@ gui_colorsel_window( const char *title, RGBcolor *init_color, void (*ok_callback
 {
 	GtkWidget *colorsel_window_w;
 	GtkColorSelectionDialog *csd;
-	double color_rgb[3];
+	GdkColor gcolor;
 
 	colorsel_window_w = gtk_color_selection_dialog_new( title );
 	csd = GTK_COLOR_SELECTION_DIALOG(colorsel_window_w);
-	color_rgb[0] = init_color->r;
-	color_rgb[1] = init_color->g;
-	color_rgb[2] = init_color->b;
-	gtk_color_selection_set_color( GTK_COLOR_SELECTION(csd->colorsel), color_rgb );
+	gcolor.red = init_color->r * G_MAXUINT16;
+	gcolor.green = init_color->g * G_MAXUINT16;
+	gcolor.blue = init_color->b * G_MAXUINT16;
+	gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(csd->colorsel), &gcolor);
 	gtk_widget_hide( csd->help_button );
 	g_object_set_data(G_OBJECT(colorsel_window_w), "user_callback", (void *)ok_callback);
 	g_object_set_data(G_OBJECT(colorsel_window_w), "user_callback_data", ok_callback_data);
