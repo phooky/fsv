@@ -1,5 +1,5 @@
 /* XPM */
-static char * birdseye_view_xpm[] = {
+static const char * birdseye_view_xpm[] = {
 "24 24 64 1",
 " 	c None",
 ".	c #110A05",

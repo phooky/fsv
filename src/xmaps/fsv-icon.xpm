@@ -1,5 +1,5 @@
 /* XPM */
-static char * fsv_icon_xpm[] = {
+static const char * fsv_icon_xpm[] = {
 "64 64 64 1",
 " 	c None",
 ".	c #030207",

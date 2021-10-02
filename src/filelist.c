@@ -42,23 +42,12 @@ static Icon node_type_mini_icons[NUM_NODE_TYPES];
 static void
 filelist_icons_init( void )
 {
-	GtkStyle *style;
-	GdkColor *trans_color;
-	GdkWindow *window;
-	GdkPixmap *pixmap;
-	GdkBitmap *mask;
 	int i;
 
-	style = gtk_widget_get_style( file_list_w );
-	trans_color = &style->bg[GTK_STATE_NORMAL];
 	gtk_widget_realize( file_list_w );
-	window = file_list_w->window;
 
 	/* Make mini node type icons */
 	for (i = 1; i < NUM_NODE_TYPES; i++) {
-		pixmap = gdk_pixmap_create_from_xpm_d( window, &mask, trans_color, node_type_mini_xpms[i] );
-		node_type_mini_icons[i].pixmap = pixmap;
-		node_type_mini_icons[i].mask = mask;
 		GdkPixbuf *pixbuf = gdk_pixbuf_new_from_xpm_data(node_type_mini_xpms[i]);
 		node_type_mini_icons[i].pixbuf = pixbuf;
 	}

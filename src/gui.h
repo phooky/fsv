@@ -32,8 +32,6 @@
 /* Icon container */
 typedef struct _Icon Icon;
 struct _Icon {
-	GdkPixmap *pixmap;
-	GdkBitmap *mask;
 	GdkPixbuf *pixbuf;
 };
 
@@ -84,7 +82,7 @@ GtkWidget *gui_hbox_add( GtkWidget *parent_w, int spacing );
 GtkWidget *gui_vbox_add( GtkWidget *parent_w, int spacing );
 void gui_box_set_packing( GtkWidget *box_w, boolean expand, boolean fill, boolean start );
 GtkWidget *gui_button_add( GtkWidget *parent_w, const char *label, void (*callback)( ), void *callback_data );
-GtkWidget *gui_button_with_pixmap_xpm_add( GtkWidget *parent_w, char **xpm_data, const char *label, void (*callback)( ), void *callback_data );
+GtkWidget *gui_button_with_pixbuf_xpm_add(GtkWidget *parent_w, const char **xpm_data, const char *label, void (*callback)( ), void *callback_data);
 GtkWidget *gui_toggle_button_add( GtkWidget *parent_w, const char *label, boolean active, void (*callback)( ), void *callback_data );
 GtkWidget *gui_wpattern_list_new(GtkWidget *parent_w);
 GtkWidget *gui_colorpicker_add( GtkWidget *parent_w, RGBcolor *init_color, const char *title, void (*callback)( ), void *callback_data );
@@ -111,7 +109,7 @@ GtkWidget *gui_notebook_add( GtkWidget *parent_w );
 void gui_notebook_page_add( GtkWidget *notebook_w, const char *tab_label, GtkWidget *content_w );
 GtkWidget *gui_hpaned_add( GtkWidget *parent_w, int divider_x_pos );
 GtkWidget *gui_vpaned_add( GtkWidget *parent_w, int divider_y_pos );
-GtkWidget *gui_pixmap_xpm_add( GtkWidget *parent_w, char **xpm_data );
+GtkWidget *gui_pixbuf_xpm_add(GtkWidget *parent_w, const char **xpm_data);
 GtkWidget *gui_spectrum_new( GtkWidget *parent_w );
 void gui_spectrum_fill( GtkWidget *spectrum_w, RGBcolor (*spectrum_func)( double x ) );
 GtkWidget *gui_hscrollbar_add( GtkWidget *parent_w, GtkAdjustment *adjustment );
@@ -127,7 +125,7 @@ GtkWidget *gui_colorsel_window( const char *title, RGBcolor *init_color, void (*
 GtkWidget *gui_dialog_window( const char *title, void (*close_callback )( ) );
 GtkWidget *gui_entry_window( const char *title, const char *init_text, void (*ok_callback)( ), void *ok_callback_data );
 gchar *gui_dir_choose(const char *title, GtkWidget *parent, const char *init_dir);
-void gui_window_icon_xpm( GtkWidget *window_w, char **xpm_data );
+void gui_window_icon_xpm(GtkWidget *window_w, const char **xpm_data);
 void gui_window_modalize( GtkWidget *window_w, GtkWidget *parent_window_w );
 #endif /* __GTK_H__ */
 

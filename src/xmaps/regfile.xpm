@@ -1,5 +1,5 @@
 /* XPM */
-static char * regfile_xpm[] = {
+static const char * regfile_xpm[] = {
 "32 32 69 1",
 " 	c None",
 ".	c #020204",

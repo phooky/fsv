@@ -163,27 +163,18 @@ dirtree_expand_cb(GtkTreeView *tree, GtkTreeIter *iter, GtkTreePath *path, gpoin
 static void
 dirtree_icons_init( void )
 {
-	static char **dir_colexp_mini_xpms[] = {
+	static const char **dir_colexp_mini_xpms[] = {
 		mini_folder_closed_xpm,
 		mini_folder_open_xpm
 	};
-	GtkStyle *style;
-	GdkColor *trans_color;
-	GdkWindow *window;
-	GdkPixmap *pixmap;
-	GdkBitmap *mask;
 	int i;
 
-	style = gtk_widget_get_style( dir_tree_w );
-	trans_color = &style->bg[GTK_STATE_NORMAL];
 	gtk_widget_realize( dir_tree_w );
-	window = dir_tree_w->window;
 
 	/* Make icons for collapsed and expanded directories */
 	for (i = 0; i < 2; i++) {
-		pixmap = gdk_pixmap_create_from_xpm_d( window, &mask, trans_color, dir_colexp_mini_xpms[i] );
-		dir_colexp_mini_icons[i].pixmap = pixmap;
-		dir_colexp_mini_icons[i].mask = mask;
+		GdkPixbuf *pb = gdk_pixbuf_new_from_xpm_data(dir_colexp_mini_xpms[i]);
+		dir_colexp_mini_icons[i].pixbuf = pb;
 	}
 }
 

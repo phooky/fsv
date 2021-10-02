@@ -173,19 +173,19 @@ window_init( FsvMode fsv_mode )
 
 	/* "back" button */
 	button_w = gui_button_add( hbox_w, NULL, on_back_button_clicked, NULL );
-	gui_pixmap_xpm_add( button_w, back_xpm );
+	gui_pixbuf_xpm_add(button_w, back_xpm);
 	G_LIST_APPEND(sw_widget_list, button_w);
 	/* "cd /" button */
 	button_w = gui_button_add( hbox_w, NULL, on_cd_root_button_clicked, NULL );
-	gui_pixmap_xpm_add( button_w, cd_root_xpm );
+	gui_pixbuf_xpm_add(button_w, cd_root_xpm);
 	G_LIST_APPEND(sw_widget_list, button_w);
 	/* "cd .." button */
 	button_w = gui_button_add( hbox_w, NULL, on_cd_up_button_clicked, NULL );
-	gui_pixmap_xpm_add( button_w, cd_up_xpm );
+	gui_pixbuf_xpm_add(button_w, cd_up_xpm);
 	G_LIST_APPEND(sw_widget_list, button_w);
 	/* "bird's-eye view" toggle button */
 	button_w = gui_toggle_button_add( hbox_w, NULL, FALSE, on_birdseye_view_togglebutton_toggled, NULL );
-	gui_pixmap_xpm_add( button_w, birdseye_view_xpm );
+	gui_pixbuf_xpm_add(button_w, birdseye_view_xpm);
 	G_LIST_APPEND(sw_widget_list, button_w);
 	birdseye_view_tbutton_w = button_w;
 

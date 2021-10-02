@@ -215,9 +215,9 @@ gui_button_add( GtkWidget *parent_w, const char *label, void (*callback)( ), voi
 }
 
 
-/* Creates a button with a pixmap prepended to the label */
+/* Creates a button with a pixbuf prepended to the label */
 GtkWidget *
-gui_button_with_pixmap_xpm_add( GtkWidget *parent_w, char **xpm_data, const char *label, void (*callback)( ), void *callback_data )
+gui_button_with_pixbuf_xpm_add(GtkWidget *parent_w, const char **xpm_data, const char *label, void (*callback)( ), void *callback_data)
 {
 	GtkWidget *button_w;
 	GtkWidget *hbox_w, *hbox2_w;
@@ -227,7 +227,7 @@ gui_button_with_pixmap_xpm_add( GtkWidget *parent_w, char **xpm_data, const char
 	hbox_w = gui_hbox_add( button_w, 0 );
 	hbox2_w = gui_hbox_add( hbox_w, 0 );
 	gui_widget_packing( hbox2_w, EXPAND, NO_FILL, AT_START );
-	gui_pixmap_xpm_add( hbox2_w, xpm_data );
+	gui_pixbuf_xpm_add(hbox2_w, xpm_data);
 	if (label != NULL) {
 		gui_vbox_add( hbox2_w, 2 ); /* spacer */
 		gui_label_add( hbox2_w, label );
@@ -868,25 +868,18 @@ gui_vpaned_add( GtkWidget *parent_w, int divider_y_pos )
 }
 
 
-/* The pixmap widget (created from XPM data) */
+/* The pixbuf widget (created from XPM data) */
 GtkWidget *
-gui_pixmap_xpm_add( GtkWidget *parent_w, char **xpm_data )
+gui_pixbuf_xpm_add(GtkWidget *parent_w, const char **xpm_data)
 {
-	GtkWidget *pixmap_w;
-	GtkStyle *style;
-	GdkPixmap *pixmap;
-	GdkBitmap *mask;
-
 	/* Realize parent widget to prevent "NULL window" error */
 	gtk_widget_realize( parent_w );
-	style = gtk_widget_get_style( parent_w );
-	pixmap = gdk_pixmap_create_from_xpm_d( parent_w->window, &mask, &style->bg[GTK_STATE_NORMAL], xpm_data );
-	pixmap_w = gtk_pixmap_new( pixmap, mask );
-	gdk_pixmap_unref( pixmap );
-	gdk_bitmap_unref( mask );
-	parent_child( parent_w, pixmap_w );
+	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_xpm_data(xpm_data);
+	GtkWidget *pixbuf_w = gtk_image_new();
+	gtk_image_set_from_pixbuf(GTK_IMAGE(pixbuf_w), pixbuf);
+	parent_child( parent_w, pixbuf_w );
 
-	return pixmap_w;
+	return pixbuf_w;
 }
 
 
@@ -1289,16 +1282,10 @@ gui_dir_choose( const char *title, GtkWidget *parent, const char *init_dir)
 
 /* Associates an icon (created from XPM data) to a window */
 void
-gui_window_icon_xpm( GtkWidget *window_w, char **xpm_data )
+gui_window_icon_xpm(GtkWidget *window_w, const char **xpm_data)
 {
-	GtkStyle *style;
-	GdkPixmap *icon_pixmap;
-	GdkBitmap *mask;
-
-	gtk_widget_realize( window_w );
-	style = gtk_widget_get_style( window_w );
-	icon_pixmap = gdk_pixmap_create_from_xpm_d( window_w->window, &mask, &style->bg[GTK_STATE_NORMAL], xpm_data );
-	gdk_window_set_icon( window_w->window, NULL, icon_pixmap, mask );
+	GdkPixbuf *pb = gdk_pixbuf_new_from_xpm_data(xpm_data);
+	gtk_window_set_icon(window_w, pb);
 }
 
 

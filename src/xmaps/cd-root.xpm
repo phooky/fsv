@@ -1,5 +1,5 @@
 /* XPM */
-static char * cd_root_xpm[] = {
+static const char * cd_root_xpm[] = {
 "24 24 6 1",
 " 	c None",
 ".	c #808080",

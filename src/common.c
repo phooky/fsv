@@ -43,7 +43,7 @@
 struct Globals globals;
 
 /* Node type icon XPM table */
-char **node_type_xpms[NUM_NODE_TYPES] = {
+const char **node_type_xpms[NUM_NODE_TYPES] = {
 	NULL,
 	folder_xpm,
 	regfile_xpm,
@@ -56,7 +56,7 @@ char **node_type_xpms[NUM_NODE_TYPES] = {
 };
 
 /* Mini node type icon XPM table */
-char **node_type_mini_xpms[NUM_NODE_TYPES] = {
+const char **node_type_mini_xpms[NUM_NODE_TYPES] = {
 	NULL,
 	mini_folder_xpm,
 	mini_regfile_xpm,
