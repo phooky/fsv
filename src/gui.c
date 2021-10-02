@@ -1285,7 +1285,7 @@ void
 gui_window_icon_xpm(GtkWidget *window_w, const char **xpm_data)
 {
 	GdkPixbuf *pb = gdk_pixbuf_new_from_xpm_data(xpm_data);
-	gtk_window_set_icon(window_w, pb);
+	gtk_window_set_icon(GTK_WINDOW(window_w), pb);
 }
 
 
