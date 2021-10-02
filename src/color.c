@@ -49,12 +49,12 @@ static const int default_timestamp_timestamp_type = TIMESTAMP_MODIFY;
 static const int default_timestamp_period = 7 * 24 * 60 * 60; /* 1 week */
 static const char default_timestamp_old_color[] = "#0000FF";
 static const char default_timestamp_new_color[] = "#FF0000";
-static const char *default_wpattern_groups[] = {
-	"#FF3333", "*.arj", "*.gz", "*.lzh", "*.tar", "*.tgz", "*.z", "*.zip", "*.Z", NULL,
-	"#FF33FF", "*.gif", "*.jpg", "*.png", "*.ppm", "*.tga", "*.tif", "*.xpm", NULL,
-	"#FFFFFF", "*.au", "*.mov", "*.mp3", "*.mpg", "*.wav", NULL,
-	NULL
-};
+// static const char *default_wpattern_groups[] = {
+// 	"#FF3333", "*.arj", "*.gz", "*.lzh", "*.tar", "*.tgz", "*.z", "*.zip", "*.Z", NULL,
+// 	"#FF33FF", "*.gif", "*.jpg", "*.png", "*.ppm", "*.tga", "*.tif", "*.xpm", NULL,
+// 	"#FFFFFF", "*.au", "*.mov", "*.mp3", "*.mpg", "*.wav", NULL,
+// 	NULL
+// };
 static const char default_wpattern_default_color[] = "#FFFFA0";
 
 /* For configuration file: key and token strings */
