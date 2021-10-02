@@ -240,7 +240,7 @@ i64toa( int64 number )
 	char strbuf0[256];
 	char d;
 
-	sprintf( strbuf0, "%lld", number );
+	sprintf( strbuf0, "%"G_GINT64_FORMAT, number );
 	len = strlen( strbuf0 );
 	for (i = len - 1; i >= 0; i--) {
 		d = strbuf0[i];
@@ -663,7 +663,7 @@ get_node_info( GNode *node )
 		cstr = _("/. (root)");
 	ninfo.name = xstrredup( ninfo.name, cstr );
 	/* Prefix */
-	str = g_dirname( absname );
+	str = g_path_get_dirname( absname );
 	if (!strcmp( str, "/" )) {
 		g_free( str );
 		str = g_strdup( _("/. (root)") );
@@ -720,7 +720,7 @@ get_node_info( GNode *node )
 	/* For symbolic links: target name(s) */
 	if (NODE_DESC(node)->type == NODE_SYMLINK) {
 		ninfo.target = read_symlink( absname );
-		str = g_dirname( absname );
+		str = g_path_get_dirname( absname );
 		ninfo.abstarget = absname_merge( str, ninfo.target );
 		g_free( str );
 	}

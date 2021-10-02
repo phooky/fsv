@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <gtk/gtk.h>
+#include <errno.h>
 
 #include "dirtree.h"
 #include "filelist.h"
@@ -320,14 +321,17 @@ scanfs( const char *dir )
 	node_id = 0;
 
 	/* Get absolute path of desired root (top-level) directory */
-	chdir( dir );
+	if (chdir(dir) != 0) {
+		g_error("Failed to change dir to %s, error msg: %s\n", dir, g_strerror(errno));
+		return;
+	}
 	root_dir = xgetcwd( );
 
 	/* Set up fstree metanode */
 	globals.fstree = g_node_new( g_mem_chunk_alloc( dir_ndesc_memchunk ) );
 	NODE_DESC(globals.fstree)->type = NODE_METANODE;
 	NODE_DESC(globals.fstree)->id = node_id++;
-	name = g_dirname( root_dir );
+	name = g_path_get_dirname( root_dir );
 	NODE_DESC(globals.fstree)->name = g_string_chunk_insert( name_strchunk, name );
 	g_free( name );
 	DIR_NODE_DESC(globals.fstree)->tnode = NULL; /* needed in dirtree_entry_new( ) */
@@ -357,7 +361,7 @@ scanfs( const char *dir )
 	process_dir( root_dir, root_dnode );
 
 	/* GUI stuff again */
-	gtk_timeout_remove( handler_id );
+	g_source_remove( handler_id );
 	window_statusbar( SB_RIGHT, "" );
 	dirtree_no_more_entries( );
 	gui_update( );
