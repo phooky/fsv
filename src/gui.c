@@ -935,6 +935,7 @@ gui_spectrum_new( GtkWidget *parent_w )
 	GtkWidget *spectrum_w;
 
 	spectrum_w = gtk_image_new();
+	gtk_widget_set_size_request(spectrum_w, -1, 40);
 	parent_child_full( parent_w, spectrum_w, EXPAND, FILL );
 
 	return spectrum_w;
@@ -948,10 +949,9 @@ delete_pixbuf(guchar *pixels, gpointer data)
 	xfree(pixels);
 }
 
-/* Helper callback for gui_spectrum_fill( ) */
-/* BUG: This does not handle resizes correctly */
-static int
-spectrum_draw_cb( GtkWidget *spectrum_w, void *unused, const char *evtype )
+/* Helper function for gui_spectrum_fill( ) */
+static void
+spectrum_draw(GtkWidget *spectrum_w)
 {
 	RGBcolor (*spectrum_func)( double x );
 	RGBcolor color;
@@ -961,11 +961,8 @@ spectrum_draw_cb( GtkWidget *spectrum_w, void *unused, const char *evtype )
 	width = spectrum_w->allocation.width;
 	height = spectrum_w->allocation.height;
 
-	if (!strcmp(evtype, "expose"))
-		return FALSE;
-
-	if (!GTK_WIDGET_DRAWABLE(spectrum_w))
-		return FALSE;
+	if (!gtk_widget_is_drawable(spectrum_w))
+		return;
 
 	/* Get spectrum function */
 	spectrum_func = (RGBcolor (*)( double x ))g_object_get_data(G_OBJECT(spectrum_w), "spectrum_func");
@@ -987,10 +984,7 @@ spectrum_draw_cb( GtkWidget *spectrum_w, void *unused, const char *evtype )
 	GdkPixbuf *pb = gdk_pixbuf_new_from_data(imgbuf, GDK_COLORSPACE_RGB,
 						 FALSE, 8, width, height,
 						 width * 3, delete_pixbuf, NULL);
-
-	gtk_widget_draw(spectrum_w, NULL);
-
-	return FALSE;
+	gtk_image_set_from_pixbuf(GTK_IMAGE(spectrum_w), pb);
 }
 
 
@@ -1001,21 +995,11 @@ void
 gui_spectrum_fill( GtkWidget *spectrum_w, RGBcolor (*spectrum_func)( double x ) )
 {
 	static const char data_key[] = "spectrum_func";
-	boolean first_time;
-
-        /* Check if this is first-time initialization */
-	first_time = g_object_get_data(G_OBJECT(spectrum_w), data_key) == NULL;
 
 	/* Attach spectrum function to spectrum widget */
 	g_object_set_data(G_OBJECT(spectrum_w), data_key, (void *)spectrum_func);
 
-	if (first_time) {
-		/* Attach draw callback */
-		g_signal_connect(G_OBJECT(spectrum_w), "expose_event", G_CALLBACK(spectrum_draw_cb), "expose");
-		g_signal_connect(G_OBJECT(spectrum_w), "size_allocate", G_CALLBACK(spectrum_draw_cb), "size");
-	}
-	else
-		spectrum_draw_cb(spectrum_w, NULL, "redraw");
+	spectrum_draw(spectrum_w);
 }
 
 
