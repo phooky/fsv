@@ -852,7 +852,7 @@ csdialog_ok_button_cb( GtkWidget *unused, GtkWidget *window_w )
 
 /* Callback for dialog window destruction */
 static void
-csdialog_destroy_cb( GtkObject *unused )
+csdialog_destroy_cb(GtkWidget *unused, gpointer data_unused)
 {
 	/* We'd leak memory like crazy if we didn't do this */
 	color_config_destroy( &csdialog.color_config );
