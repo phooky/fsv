@@ -723,8 +723,6 @@ gui_menu_add( GtkWidget *parent_menu_w, const char *label )
 	gtk_widget_show( menu_item_w );
 	menu_w = gtk_menu_new( );
 	gtk_menu_item_set_submenu( GTK_MENU_ITEM(menu_item_w), menu_w );
-	/* Bug in GTK+? Following pointer shouldn't be NULL */
-	GTK_MENU(menu_w)->parent_menu_item = menu_item_w;
 
 	return menu_w;
 }
@@ -1083,7 +1081,7 @@ gui_widget_packing( GtkWidget *widget, boolean expand, boolean fill, boolean sta
 {
 	GtkWidget *parent_box_w;
 
-	parent_box_w = widget->parent;
+	parent_box_w = gtk_widget_get_parent(widget);
 	g_assert( GTK_IS_BOX(parent_box_w) );
 
 	gtk_box_set_child_packing( GTK_BOX(parent_box_w), widget, expand, fill, 0, start ? GTK_PACK_START : GTK_PACK_END );

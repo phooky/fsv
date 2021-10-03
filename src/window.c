@@ -151,7 +151,6 @@ window_init( FsvMode fsv_mode )
 
 	/* Help menu (right-justified) */
 	menu_w = gui_menu_add( menu_bar_w, _("Help") );
-	gtk_menu_item_set_right_justified(GTK_MENU_ITEM(GTK_MENU(menu_w)->parent_menu_item), TRUE);
 	/* Help menu items */
 	gui_menu_item_add( menu_w, _("Contents..."), on_help_contents_activate, NULL );
 	gui_separator_add( menu_w );
@@ -196,13 +195,13 @@ window_init( FsvMode fsv_mode )
 
 	/* Directory tree goes in top pane */
 	dir_tree_w = gui_tree_add( NULL );
-	gtk_paned_add1( GTK_PANED(vpaned_w), dir_tree_w->parent );
-	gtk_widget_show( dir_tree_w->parent );
+	gtk_paned_add1(GTK_PANED(vpaned_w), gtk_widget_get_parent(dir_tree_w));
+	gtk_widget_show(gtk_widget_get_parent(dir_tree_w));
 
 	/* File list goes in bottom pane */
 	file_list_w = gui_filelist_new(NULL);
-	gtk_paned_add2( GTK_PANED(vpaned_w), file_list_w->parent );
-	gtk_widget_show( file_list_w->parent );
+	gtk_paned_add2(GTK_PANED(vpaned_w), gtk_widget_get_parent(file_list_w));
+	gtk_widget_show(gtk_widget_get_parent(file_list_w));
 
 	/* Left statusbar */
 	left_statusbar_w = gui_statusbar_add( left_vbox_w );
