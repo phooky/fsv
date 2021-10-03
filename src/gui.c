@@ -1090,32 +1090,8 @@ gui_widget_packing( GtkWidget *widget, boolean expand, boolean fill, boolean sta
 }
 
 
-/* Internal callback for the color selection window, called when the
- * OK button is pressed */
-static void
-colorsel_window_cb( GtkWidget *colorsel_window_w )
-{
-        RGBcolor color;
-	GdkColor gcolor;
-	void (*user_callback)( const RGBcolor *, void * );
-	void *user_callback_data;
-
-	gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(GTK_COLOR_SELECTION_DIALOG(colorsel_window_w)->colorsel), &gcolor);
-	color.r = (float) gcolor.red / G_MAXUINT16;
-	color.g = (float) gcolor.green / G_MAXUINT16;
-	color.b = (float) gcolor.blue / G_MAXUINT16;
-
-	user_callback = (void (*)( const RGBcolor *, void * ))g_object_get_data(G_OBJECT(colorsel_window_w), "user_callback");
-	user_callback_data = g_object_get_data(G_OBJECT(colorsel_window_w), "user_callback_data");
-	gtk_widget_destroy( colorsel_window_w );
-
-	/* Call user callback */
-	(user_callback)( &color, user_callback_data );
-}
-
-
 /* Creates a color selection window. OK button activates ok_callback */
-GtkWidget *
+void
 gui_colorsel_window( const char *title, RGBcolor *init_color, void (*ok_callback)( ), void *ok_callback_data )
 {
 	GtkWidget *colorsel_window_w;
@@ -1127,18 +1103,20 @@ gui_colorsel_window( const char *title, RGBcolor *init_color, void (*ok_callback
 	gcolor.red = init_color->r * G_MAXUINT16;
 	gcolor.green = init_color->g * G_MAXUINT16;
 	gcolor.blue = init_color->b * G_MAXUINT16;
-	gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(csd->colorsel), &gcolor);
-	gtk_widget_hide( csd->help_button );
-	g_object_set_data(G_OBJECT(colorsel_window_w), "user_callback", (void *)ok_callback);
-	g_object_set_data(G_OBJECT(colorsel_window_w), "user_callback_data", ok_callback_data);
-	g_signal_connect_swapped(csd->ok_button, "clicked", G_CALLBACK(colorsel_window_cb), colorsel_window_w);
-	g_signal_connect_swapped(csd->cancel_button, "clicked", G_CALLBACK(gtk_widget_destroy), colorsel_window_w);
-	gtk_widget_show( colorsel_window_w );
+	gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(gtk_color_selection_dialog_get_color_selection(csd)), &gcolor);
 
-	if (gtk_grab_get_current( ) != NULL)
-		gtk_window_set_modal( GTK_WINDOW(colorsel_window_w), TRUE );
+	if (gtk_dialog_run(GTK_DIALOG(csd)) == GTK_RESPONSE_OK) {
+		GtkWidget *colorsel = gtk_color_selection_dialog_get_color_selection(csd);
+		gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(colorsel), &gcolor);
+		RGBcolor color;
+		color.r = (float) gcolor.red / G_MAXUINT16;
+		color.g = (float) gcolor.green / G_MAXUINT16;
+		color.b = (float) gcolor.blue / G_MAXUINT16;
+		/* Call user callback */
+		(ok_callback)(&color, ok_callback_data);
+        }
 
-	return colorsel_window_w;
+	gtk_widget_destroy(colorsel_window_w);
 }
 
 
@@ -1269,8 +1247,9 @@ gui_window_icon_xpm(GtkWidget *window_w, const char **xpm_data)
 /* Helper function for gui_window_modalize( ), called upon the destruction
  * of the modal window */
 static void
-window_unmodalize( GtkObject *unused, GtkWidget *parent_window_w )
+window_unmodalize(GtkWidget *self, gpointer data)
 {
+	GtkWidget *parent_window_w = GTK_WIDGET(data);
 	gtk_widget_set_sensitive( parent_window_w, TRUE );
 	gui_cursor( parent_window_w, -1 );
 }

@@ -120,7 +120,7 @@ GtkWidget *gui_table_add( GtkWidget *parent_w, int num_rows, int num_cols, boole
 void gui_table_attach( GtkWidget *table_w, GtkWidget *widget, int left, int right, int top, int bottom );
 GtkWidget *gui_text_area_add( GtkWidget *parent_w, const char *init_text );
 void gui_widget_packing( GtkWidget *widget, boolean expand, boolean fill, boolean start );
-GtkWidget *gui_colorsel_window( const char *title, RGBcolor *init_color, void (*ok_callback)( ), void *ok_callback_data );
+void gui_colorsel_window( const char *title, RGBcolor *init_color, void (*ok_callback)( ), void *ok_callback_data );
 GtkWidget *gui_dialog_window( const char *title, void (*close_callback )( ) );
 GtkWidget *gui_entry_window( const char *title, const char *init_text, void (*ok_callback)( ), void *ok_callback_data );
 gchar *gui_dir_choose(const char *title, GtkWidget *parent, const char *init_dir);
