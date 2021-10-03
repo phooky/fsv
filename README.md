@@ -35,6 +35,7 @@ Useful info and screenshots of the original SGI IRIX implementation are availabl
 3. Update to 'modern' OpenGL 2.1. GtkGLArea in Gtk+3 supports only core
    profile, so modernize the OpenGL code as much as possible before switching to
    Gtk+3 and the OpenGL core profile.
+    1. Switch from GL_QUADS to GL_TRIANGLES
 4. Switch to Gtk+3
 
 ### Setup github actions for CI

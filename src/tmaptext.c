@@ -4,6 +4,7 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * SPDX-FileCopyrightText: 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * SPDX-License-Identifier:  LGPL-2.1-or-later
  */
@@ -207,10 +208,11 @@ text_draw_straight( const char *text, const XYZvec *text_pos, const XYvec *text_
 	c1.x = c0.x + cdims.x;
 	c1.y = c0.y + cdims.y;
 
-	glBegin( GL_QUADS );
+	glBegin(GL_TRIANGLES);
 	for (i = 0; i < len; i++) {
 		get_char_tex_coords( text[i], &t_c0, &t_c1 );
 
+		// Render each char as two triangles.
 		/* Lower left */
 		glTexCoord2d( t_c0.x, t_c0.y );
 		glVertex3d( c0.x, c0.y, text_pos->z );
@@ -220,9 +222,17 @@ text_draw_straight( const char *text, const XYZvec *text_pos, const XYvec *text_
 		/* Upper right */
 		glTexCoord2d( t_c1.x, t_c1.y );
 		glVertex3d( c1.x, c1.y, text_pos->z );
+
+		// Second triangle
+		/* Upper right */
+		glTexCoord2d( t_c1.x, t_c1.y );
+		glVertex3d( c1.x, c1.y, text_pos->z );
 		/* Upper left */
 		glTexCoord2d( t_c0.x, t_c1.y );
 		glVertex3d( c0.x, c1.y, text_pos->z );
+		/* Lower left */
+		glTexCoord2d( t_c0.x, t_c0.y );
+		glVertex3d( c0.x, c0.y, text_pos->z );
 
 		c0.x = c1.x;
 		c1.x += cdims.x;
@@ -262,10 +272,11 @@ text_draw_straight_rotated( const char *text, const RTZvec *text_pos, const XYve
 	c1.x = c0.x + hdelta.x + vdelta.x;
 	c1.y = c0.y + hdelta.y + vdelta.y;
 
-	glBegin( GL_QUADS );
+	glBegin(GL_TRIANGLES);
 	for (i = 0; i < len; i++) {
 		get_char_tex_coords( text[i], &t_c0, &t_c1 );
 
+		// Render each char as two triangles. First triangle:
 		/* Lower left */
 		glTexCoord2d( t_c0.x, t_c0.y );
 		glVertex3d( c0.x, c0.y, text_pos->z );
@@ -275,9 +286,17 @@ text_draw_straight_rotated( const char *text, const RTZvec *text_pos, const XYve
 		/* Upper right */
 		glTexCoord2d( t_c1.x, t_c1.y );
 		glVertex3d( c1.x, c1.y, text_pos->z );
+
+		// Second triangle
+		/* Upper right */
+		glTexCoord2d( t_c1.x, t_c1.y );
+		glVertex3d( c1.x, c1.y, text_pos->z );
 		/* Upper left */
 		glTexCoord2d( t_c0.x, t_c1.y );
 		glVertex3d( c1.x - hdelta.x, c1.y - hdelta.y, text_pos->z );
+		/* Lower left */
+		glTexCoord2d( t_c0.x, t_c0.y );
+		glVertex3d( c0.x, c0.y, text_pos->z );
 
 		c0.x += hdelta.x;
 		c0.y += hdelta.y;
@@ -315,7 +334,7 @@ text_draw_curved( const char *text, const RTZvec *text_pos, const RTvec *text_ma
 	char_arc_width = (180.0 / PI) * cdims.x / text_r;
 
 	theta = text_pos->theta + 0.5 * (double)(len - 1) * char_arc_width;
-	glBegin( GL_QUADS );
+	glBegin(GL_TRIANGLES);
 	for (i = 0; i < len; i++) {
 		sin_theta = sin( RAD(theta) );
 		cos_theta = cos( RAD(theta) );
@@ -331,6 +350,7 @@ text_draw_curved( const char *text, const RTZvec *text_pos, const RTvec *text_ma
 
 		get_char_tex_coords( text[i], &t_c0, &t_c1 );
 
+		// Render each char as two triangles. First:
 		/* Lower left */
 		glTexCoord2d( t_c0.x, t_c0.y );
 		glVertex3d( char_pos.x - fwsl.x, char_pos.y - fwsl.y, text_pos->z );
@@ -340,9 +360,17 @@ text_draw_curved( const char *text, const RTZvec *text_pos, const RTvec *text_ma
 		/* Upper right */
 		glTexCoord2d( t_c1.x, t_c1.y );
 		glVertex3d( char_pos.x + fwsl.x, char_pos.y + fwsl.y, text_pos->z );
+
+		// Second triangle:
+		/* Upper right */
+		glTexCoord2d( t_c1.x, t_c1.y );
+		glVertex3d( char_pos.x + fwsl.x, char_pos.y + fwsl.y, text_pos->z );
 		/* Upper left */
 		glTexCoord2d( t_c0.x, t_c1.y );
 		glVertex3d( char_pos.x - bwsl.x, char_pos.y - bwsl.y, text_pos->z );
+		/* Lower left */
+		glTexCoord2d( t_c0.x, t_c0.y );
+		glVertex3d( char_pos.x - fwsl.x, char_pos.y - fwsl.y, text_pos->z );
 
 		theta -= char_arc_width;
 	}
