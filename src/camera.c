@@ -4,6 +4,7 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * Copyright (C) 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * SPDX-License-Identifier:  LGPL-2.1-or-later
  */
@@ -51,8 +52,8 @@ static GtkAdjustment *x_scrollbar_adj;
 static GtkAdjustment *y_scrollbar_adj;
 
 /* Scrollbar adjustments at outset of a camera pan */
-static GtkAdjustment prev_x_scrollbar_adj;
-static GtkAdjustment prev_y_scrollbar_adj;
+static GtkAdjustment *prev_x_scrollbar_adj;
+static GtkAdjustment *prev_y_scrollbar_adj;
 
 /* Strings for message passing */
 static char x_axis_mesg[] = "x_axis";
@@ -300,7 +301,7 @@ camera_scrollbar_move_cb( GtkAdjustment *adj, const char *mesg )
 	int axis;
 
 	/* Get value at center of scrollbar slider */
-	value = adj->value + 0.5 * adj->page_size;
+	value = gtk_adjustment_get_value(adj) + 0.5 * gtk_adjustment_get_page_size(adj);
 
 	if (!strcmp( mesg, x_axis_mesg ))
                 axis = X_AXIS;
@@ -339,8 +340,8 @@ void
 camera_pass_scrollbar_widgets( GtkWidget *x_scrollbar_w, GtkWidget *y_scrollbar_w )
 {
 	/* Get the adjustments */
-	x_scrollbar_adj = GTK_RANGE(x_scrollbar_w)->adjustment;
-	y_scrollbar_adj = GTK_RANGE(y_scrollbar_w)->adjustment;
+	x_scrollbar_adj = gtk_range_get_adjustment(GTK_RANGE(x_scrollbar_w));
+	y_scrollbar_adj = gtk_range_get_adjustment(GTK_RANGE(y_scrollbar_w));
 
 	/* Connect signal handlers */
 	g_signal_connect( x_scrollbar_adj, "value_changed", G_CALLBACK (camera_scrollbar_move_cb), x_axis_mesg );
@@ -352,12 +353,12 @@ camera_pass_scrollbar_widgets( GtkWidget *x_scrollbar_w, GtkWidget *y_scrollbar_
 static void
 null_get_scrollbar_states( GtkAdjustment *x_adj, GtkAdjustment *y_adj )
 {
-	x_adj->lower = 0.0;
-	x_adj->upper = 100.0;
-	x_adj->value = 0.0;
-	x_adj->step_increment = 0.0;
-	x_adj->page_increment = 0.0;
-	x_adj->page_size = 100.0;
+	gtk_adjustment_set_lower(x_adj, 0.0);
+	gtk_adjustment_set_upper(x_adj, 100.0);
+	gtk_adjustment_set_value(x_adj, 0.0);
+	gtk_adjustment_set_step_increment(x_adj, 0.0);
+	gtk_adjustment_set_page_increment(x_adj, 0.0);
+	gtk_adjustment_set_page_size(x_adj, 100.0);
         *y_adj = *x_adj; /* struct assign */
 }
 
@@ -420,22 +421,22 @@ mapv_get_scrollbar_states( GtkAdjustment *x_adj, GtkAdjustment *y_adj )
 	cofs = 0.5 * diameter;
 
 	/* x-scrollbar state */
-	x_adj->lower = c0.x - cofs;
-	x_adj->upper = c1.x + cofs;
-	x_adj->value = MAPV_CAMERA(camera)->target.x - cofs;
-	x_adj->step_increment = dims.x / 256.0;
-	x_adj->page_increment = dims.x / 16.0;
-	x_adj->page_size = diameter;
+	gtk_adjustment_set_lower(x_adj, c0.x - cofs);
+	gtk_adjustment_set_upper(x_adj, c1.x + cofs);
+	gtk_adjustment_set_value(x_adj, MAPV_CAMERA(camera)->target.x - cofs);
+	gtk_adjustment_set_step_increment(x_adj, dims.x / 256.0);
+	gtk_adjustment_set_page_increment(x_adj, dims.x / 16.0);
+	gtk_adjustment_set_page_size(x_adj, diameter);
 
 	/* y-scrollbar state
 	 * Note: lower, upper, and value have signs reversed to correct for
 	 * canonical scrollbar increment direction (wrong for our needs) */
-	y_adj->lower = - c1.y - cofs;
-	y_adj->upper = - c0.y + cofs;
-	y_adj->value = - MAPV_CAMERA(camera)->target.y - cofs;
-	y_adj->step_increment = dims.y / 256.0;
-	y_adj->page_increment = dims.y / 16.0;
-	y_adj->page_size = diameter;
+	gtk_adjustment_set_lower(y_adj, - c1.y - cofs);
+	gtk_adjustment_set_upper(y_adj, - c0.y + cofs);
+	gtk_adjustment_set_value(y_adj, - MAPV_CAMERA(camera)->target.y - cofs);
+	gtk_adjustment_set_step_increment(y_adj, dims.y / 256.0);
+	gtk_adjustment_set_page_increment(y_adj, dims.y / 16.0);
+	gtk_adjustment_set_page_size(y_adj, diameter);
 }
 
 
@@ -500,21 +501,21 @@ treev_get_scrollbar_states( GtkAdjustment *x_adj, GtkAdjustment *y_adj )
 
 	/* x-scrollbar state (signs reversed) */
 	cofs = 0.5 * vis_range.theta;
-	x_adj->lower = - c1.theta - cofs;
-	x_adj->upper = - c0.theta + cofs;
-	x_adj->value = - TREEV_CAMERA(camera)->target.theta - cofs;
-	x_adj->step_increment = area_dims.theta / 256.0;
-	x_adj->page_increment = area_dims.theta / 16.0;
-	x_adj->page_size = vis_range.theta;
+	gtk_adjustment_set_lower(x_adj, - c1.theta - cofs);
+	gtk_adjustment_set_upper(x_adj, - c0.theta + cofs);
+	gtk_adjustment_set_value(x_adj, - TREEV_CAMERA(camera)->target.theta - cofs);
+	gtk_adjustment_set_step_increment(x_adj, area_dims.theta / 256.0);
+	gtk_adjustment_set_page_increment(x_adj, area_dims.theta / 16.0);
+	gtk_adjustment_set_page_size(x_adj, vis_range.theta);
 
 	/* y-scrollbar state (signs reversed) */
 	cofs = 0.5 * vis_range.r;
-	y_adj->lower = - c1.r - cofs;
-	y_adj->upper = - c0.r + cofs;
-	y_adj->value = - TREEV_CAMERA(camera)->target.r - cofs;
-	y_adj->step_increment = area_dims.r / 256.0;
-	y_adj->page_increment = area_dims.r / 16.0;
-	y_adj->page_size = vis_range.r;
+	gtk_adjustment_set_lower(y_adj, - c1.r - cofs);
+	gtk_adjustment_set_upper(y_adj, - c0.r + cofs);
+	gtk_adjustment_set_value(y_adj, - TREEV_CAMERA(camera)->target.r - cofs);
+	gtk_adjustment_set_step_increment(y_adj, area_dims.r / 256.0);
+	gtk_adjustment_set_page_increment(y_adj, area_dims.r / 16.0);
+	gtk_adjustment_set_page_size(y_adj, vis_range.r);
 }
 
 
@@ -523,12 +524,12 @@ treev_get_scrollbar_states( GtkAdjustment *x_adj, GtkAdjustment *y_adj )
 static void
 adj_copy( GtkAdjustment *to_adj, GtkAdjustment *from_adj )
 {
-	to_adj->lower = from_adj->lower;
-	to_adj->upper = from_adj->upper;
-	to_adj->value = from_adj->value;
-	to_adj->step_increment = from_adj->step_increment;
-	to_adj->page_increment = from_adj->page_increment;
-	to_adj->page_size = from_adj->page_size;
+	gtk_adjustment_set_lower(to_adj, gtk_adjustment_get_lower(from_adj));
+	gtk_adjustment_set_upper(to_adj, gtk_adjustment_get_upper(from_adj));
+	gtk_adjustment_set_value(to_adj, gtk_adjustment_get_value(from_adj));
+	gtk_adjustment_set_step_increment(to_adj, gtk_adjustment_get_step_increment(from_adj));
+	gtk_adjustment_set_page_increment(to_adj, gtk_adjustment_get_page_increment(from_adj));
+	gtk_adjustment_set_page_size(to_adj, gtk_adjustment_get_page_size(from_adj));
 }
 
 
@@ -539,12 +540,24 @@ adj_copy( GtkAdjustment *to_adj, GtkAdjustment *from_adj )
 static void
 adj_interpolate( GtkAdjustment *adj, double k, GtkAdjustment *a_adj, GtkAdjustment *b_adj )
 {
-	adj->lower = a_adj->lower + k * (b_adj->lower - a_adj->lower);
-	adj->upper = a_adj->upper + k * (b_adj->upper - a_adj->upper);
-	adj->value = a_adj->value + k * (b_adj->value - a_adj->value);
-	adj->step_increment = a_adj->step_increment + k * (b_adj->step_increment - a_adj->step_increment);
-	adj->page_increment = a_adj->page_increment + k * (b_adj->page_increment - a_adj->page_increment);
-	adj->page_size = a_adj->page_size + k * (b_adj->page_size - a_adj->page_size);
+	double a_lower = gtk_adjustment_get_lower(a_adj);
+	double b_lower = gtk_adjustment_get_lower(b_adj);
+	double a_upper = gtk_adjustment_get_upper(a_adj);
+	double b_upper = gtk_adjustment_get_upper(b_adj);
+	double a_value = gtk_adjustment_get_value(a_adj);
+	double b_value = gtk_adjustment_get_value(b_adj);
+	double a_step_increment = gtk_adjustment_get_step_increment(a_adj);
+	double b_step_increment = gtk_adjustment_get_step_increment(b_adj);
+	double a_page_increment = gtk_adjustment_get_page_increment(a_adj);
+	double b_page_increment = gtk_adjustment_get_page_increment(b_adj);
+	double a_page_size = gtk_adjustment_get_page_size(a_adj);
+	double b_page_size = gtk_adjustment_get_page_size(b_adj);
+	gtk_adjustment_set_lower(adj, a_lower + k * (b_lower - a_lower));
+	gtk_adjustment_set_upper(adj, a_upper + k * (b_upper - a_upper));
+	gtk_adjustment_set_value(adj, a_value + k * (b_value - a_value));
+	gtk_adjustment_set_step_increment(adj, a_step_increment + k * (b_step_increment - a_step_increment));
+	gtk_adjustment_set_page_increment(adj, a_page_increment + k * (b_page_increment - a_page_increment));
+	gtk_adjustment_set_page_size(adj, a_page_size + k * (b_page_size - a_page_size));
 }
 
 
@@ -555,24 +568,27 @@ adj_interpolate( GtkAdjustment *adj, double k, GtkAdjustment *a_adj, GtkAdjustme
 void
 camera_update_scrollbars( boolean hard_update )
 {
-	GtkAdjustment x_adj, y_adj;
+	GtkAdjustment *x_adj, *y_adj;
+
+	x_adj = GTK_ADJUSTMENT(gtk_adjustment_new(0, 0, 0, 0, 0, 0));
+	y_adj = GTK_ADJUSTMENT(gtk_adjustment_new(0, 0, 0, 0, 0, 0));
 
 	/* Get current scrollbar states */
 	switch (globals.fsv_mode) {
 		case FSV_SPLASH:
-		null_get_scrollbar_states( &x_adj, &y_adj );
+		null_get_scrollbar_states(x_adj, y_adj);
 		break;
 
 		case FSV_DISCV:
-		discv_get_scrollbar_states( &x_adj, &y_adj );
+		discv_get_scrollbar_states(x_adj, y_adj);
 		break;
 
 		case FSV_MAPV:
-		mapv_get_scrollbar_states( &x_adj, &y_adj );
+		mapv_get_scrollbar_states(x_adj, y_adj);
 		break;
 
 		case FSV_TREEV:
-		treev_get_scrollbar_states( &x_adj, &y_adj );
+		treev_get_scrollbar_states(x_adj, y_adj);
 		break;
 
 		SWITCH_FAIL
@@ -581,13 +597,13 @@ camera_update_scrollbars( boolean hard_update )
 	if (camera_moving( )) {
 		/* Interpolate between current and previous scrollbar
 		 * states according to position in camera pan */
-		adj_interpolate( x_scrollbar_adj, camera->pan_part, &prev_x_scrollbar_adj, &x_adj );
-		adj_interpolate( y_scrollbar_adj, camera->pan_part, &prev_y_scrollbar_adj, &y_adj );
+		adj_interpolate( x_scrollbar_adj, camera->pan_part, prev_x_scrollbar_adj, x_adj );
+		adj_interpolate( y_scrollbar_adj, camera->pan_part, prev_y_scrollbar_adj, y_adj );
 	}
 	else {
 		/* Use scrollbar states as-is */
-		adj_copy( x_scrollbar_adj, &x_adj );
-		adj_copy( y_scrollbar_adj, &y_adj );
+		adj_copy( x_scrollbar_adj, x_adj );
+		adj_copy( y_scrollbar_adj, y_adj );
 	}
 
 	/* Update the scrollbar widgets */
@@ -601,6 +617,9 @@ camera_update_scrollbars( boolean hard_update )
 		g_signal_emit_by_name( y_scrollbar_adj, "changed" );
 		g_signal_handlers_unblock_by_func( y_scrollbar_adj, G_CALLBACK (camera_scrollbar_move_cb), y_axis_mesg );
 	}
+	// Why does freeing this cause a crash?
+	//g_free(x_adj);
+	//g_free(y_adj);
 }
 
 
@@ -1007,6 +1026,20 @@ pan_end_cb( Morph *morph )
 	camera_currently_moving = FALSE;
 }
 
+// Initialize the static GtkAdjustments
+static void
+init_static_adjs()
+{
+	if (!prev_x_scrollbar_adj)
+		prev_x_scrollbar_adj = GTK_ADJUSTMENT(gtk_adjustment_new(0, 0, 0, 0, 0, 0));
+	if (!prev_y_scrollbar_adj)
+		prev_y_scrollbar_adj = GTK_ADJUSTMENT(gtk_adjustment_new(0, 0, 0, 0, 0, 0));
+	if (!x_scrollbar_adj)
+		x_scrollbar_adj = GTK_ADJUSTMENT(gtk_adjustment_new(0, 0, 0, 0, 0, 0));
+	if (!y_scrollbar_adj)
+		y_scrollbar_adj = GTK_ADJUSTMENT(gtk_adjustment_new(0, 0, 0, 0, 0, 0));
+}
+
 
 /* Points the camera at the given node, using the specified motion
  * morph type and (optionally, if value is nonnegative) the specified
@@ -1035,8 +1068,9 @@ camera_look_at_full( GNode *node, MorphType mtype, double pan_time_override )
 	}
 
 	/* Save current scrollbar states */
-	adj_copy( &prev_x_scrollbar_adj, x_scrollbar_adj );
-	adj_copy( &prev_y_scrollbar_adj, y_scrollbar_adj );
+	init_static_adjs();
+	adj_copy( prev_x_scrollbar_adj, x_scrollbar_adj );
+	adj_copy( prev_y_scrollbar_adj, y_scrollbar_adj );
 
 	/* Halt any ongoing camera pan */
 	camera_pan_break( );
@@ -1222,8 +1256,9 @@ camera_birdseye_view( boolean going_up )
 	window_set_access( FALSE );
 
 	/* Save current scrollbar states */
-	adj_copy( &prev_x_scrollbar_adj, x_scrollbar_adj );
-	adj_copy( &prev_y_scrollbar_adj, y_scrollbar_adj );
+	init_static_adjs();
+	adj_copy( prev_x_scrollbar_adj, x_scrollbar_adj );
+	adj_copy( prev_y_scrollbar_adj, y_scrollbar_adj );
 
 	/* Halt any ongoing camera pan */
 	camera_pan_break( );
