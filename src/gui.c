@@ -521,7 +521,7 @@ gui_cursor( GtkWidget *widget, int glyph )
 		cursor = gdk_cursor_new( (GdkCursorType)glyph );
 	else
 		cursor = NULL;
-	gdk_window_set_cursor( widget->window, cursor );
+	gdk_window_set_cursor(gtk_widget_get_window(widget), cursor);
 
 	/* Don't need the old cursor anymore */
 	if (prev_cursor != NULL)
@@ -888,8 +888,10 @@ spectrum_draw(GtkWidget *spectrum_w)
 	int width, height;
 	int i;
 
-	width = spectrum_w->allocation.width;
-	height = spectrum_w->allocation.height;
+	GtkAllocation allocation;
+	gtk_widget_get_allocation(spectrum_w, &allocation);
+	width = allocation.width;
+	height = allocation.height;
 
 	if (!gtk_widget_is_drawable(spectrum_w))
 		return;
@@ -1013,9 +1015,6 @@ void
 gui_statusbar_message( GtkWidget *statusbar_w, const char *message )
 {
 	char strbuf[1024];
-
-	if (GTK_STATUSBAR(statusbar_w)->messages == NULL)
-		gtk_statusbar_push( GTK_STATUSBAR(statusbar_w), 1, "" );
 
 	gtk_statusbar_pop( GTK_STATUSBAR(statusbar_w), 1 );
 	/* Prefix a space so that text doesn't touch left edge */

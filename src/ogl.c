@@ -81,11 +81,10 @@ ogl_init( void )
 void
 ogl_resize( void )
 {
-	int width, height;
+	GtkAllocation allocation;
 
-	width = viewport_gl_area_w->allocation.width;
-	height = viewport_gl_area_w->allocation.height;
-	glViewport( 0, 0, width, height );
+	gtk_widget_get_allocation(viewport_gl_area_w, &allocation);
+	glViewport(0, 0, allocation.width, allocation.height);
 }
 
 
