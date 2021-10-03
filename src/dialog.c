@@ -285,7 +285,8 @@ csdialog_time_color_picker_set_access( boolean enabled )
 		gui_colorpicker_set_color( csdialog.time.new_colorpicker_w, color );
 	}
 	else {
-		gcolor = &csdialog.time.old_colorpicker_w->style->bg[GTK_STATE_NORMAL];
+		GtkStyle *style = gtk_widget_get_style(csdialog.time.old_colorpicker_w);
+		gcolor = &style->bg[GTK_STATE_NORMAL];
 		disabled_color.r = (float)gcolor->red / 65535.0;
 		disabled_color.g = (float)gcolor->green / 65535.0;
 		disabled_color.b = (float)gcolor->blue / 65535.0;
@@ -349,7 +350,7 @@ solid_color_cell_style( GtkWidget *list_w, RGBcolor *color )
 	gcolor.red = (unsigned short)(65535.0 * color->r);
 	gcolor.green = (unsigned short)(65535.0 * color->g);
 	gcolor.blue = (unsigned short)(65535.0 * color->b);
-	style = gtk_style_copy( list_w->style );
+	style = gtk_style_copy(gtk_widget_get_style(list_w));
 	style->base[GTK_STATE_NORMAL] = gcolor; /* struct assign */
 	style->bg[GTK_STATE_SELECTED] = gcolor; /* struct assign */
 
