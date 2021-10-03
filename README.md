@@ -32,7 +32,10 @@ Useful info and screenshots of the original SGI IRIX implementation are availabl
    `meson configure -Dc_args="-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED" builddir`
 2. Update code, still using gtk+-2.0, to build cleanly with
    `meson configure -Dc_args="-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED -DGTK_DISABLE_SINGLE_INCLUDES -DGSEAL_ENABLE" builddir`
-3. Switch to Gtk+3
+3. Update to 'modern' OpenGL 2.1. GtkGLArea in Gtk+3 supports only core
+   profile, so modernize the OpenGL code as much as possible before switching to
+   Gtk+3 and the OpenGL core profile.
+4. Switch to Gtk+3
 
 ### Setup github actions for CI
 
