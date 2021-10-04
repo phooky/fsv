@@ -32,10 +32,11 @@ static GtkWidget *viewport_gl_area_w = NULL;
 static void
 ogl_init( void )
 {
-	float light_ambient[] = { 0.2, 0.2, 0.2, 1.0 };
-	float light_diffuse[] = { 0.5, 0.5, 0.5, 1.0 };
-	float light_specular[] = { 0.4, 0.4, 0.4, 1.0 };
-	float light_position[] = { 0.0, 0.0, 0.0, 1.0 };
+	float light_ambient[] = {0.1, 0.1, 0.1, 1};
+	float light_diffuse[] = {1, 1, 1, 1};
+	float light_specular[] = {1, 1, 1, 1};
+	float light_position[] = { 1.0, 0.0, 0.0, 0.0 };
+	float material_specular[] = {.1, .1, .1, 1};
 
 	/* Set viewport size */
 	ogl_resize( );
@@ -59,13 +60,15 @@ ogl_init( void )
 
 	/* Set up materials */
 	glColorMaterial( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE );
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, material_specular);
+	glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, 1);
 	glEnable( GL_COLOR_MATERIAL );
 
 	/* Miscellaneous */
 	glAlphaFunc( GL_GEQUAL, 0.0625 );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	glEnable( GL_CULL_FACE );
-	glShadeModel( GL_FLAT );
+	glShadeModel(GL_SMOOTH);
 	glEnable( GL_DEPTH_TEST );
 	glDepthFunc( GL_LEQUAL );
 	glEnable( GL_POLYGON_OFFSET_FILL );
