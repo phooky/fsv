@@ -1,5 +1,6 @@
 project('fsv', 'c', version: '2.2alpha')
-gtkdep = [dependency('gtk+-2.0'), dependency('gtkgl-2.0'), dependency('gdk-pixbuf-2.0')]
+gtkdep = [dependency('gtk+-2.0'), dependency('gtkgl-2.0'),
+          dependency('gdk-pixbuf-2.0'), dependency('epoxy')]
 compiler = meson.get_compiler('c')
 conf = configuration_data()
 conf.set_quoted('PACKAGE', meson.project_name())

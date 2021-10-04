@@ -13,7 +13,7 @@
 #include "common.h"
 #include "tmaptext.h"
 
-#include <GL/gl.h>
+#include <epoxy/gl.h>
 #include <GL/glu.h> /* gluBuild2DMipmaps( ) */
 
 /* Bitmap font definition */

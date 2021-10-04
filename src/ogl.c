@@ -15,7 +15,7 @@
 
 #include <gtk/gtk.h>
 #include <gtkgl/gtkglarea.h>
-#include <GL/gl.h>
+#include <epoxy/gl.h>
 #include <GL/glu.h> /* gluPickMatrix( ) */
 
 #include "animation.h" /* redraw( ) */

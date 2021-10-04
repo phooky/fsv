@@ -13,7 +13,7 @@
 #include "common.h"
 #include "about.h"
 
-#include <GL/gl.h>
+#include <epoxy/gl.h>
 
 #include "animation.h"
 #include "geometry.h"

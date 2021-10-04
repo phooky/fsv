@@ -13,7 +13,7 @@
 #include "viewport.h"
 
 #include <gtk/gtk.h>
-#include <GL/gl.h> /* GLuint */
+#include <epoxy/gl.h> /* GLuint */
 
 #include "about.h"
 #include "camera.h"
