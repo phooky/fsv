@@ -826,13 +826,37 @@ mapv_gldraw_node( GNode *node )
 	glPushName( 1 );
 
 	/* Draw top face */
-	glNormal3d( 0.0, 0.0, 1.0 );
-	glBegin( GL_QUADS );
-	glVertex3d( gparams->c0.x + offset.x, gparams->c0.y + offset.y, gparams->height );
-	glVertex3d( gparams->c1.x - offset.x, gparams->c0.y + offset.y, gparams->height );
-	glVertex3d( gparams->c1.x - offset.x, gparams->c1.y - offset.y, gparams->height );
-	glVertex3d( gparams->c0.x + offset.x, gparams->c1.y - offset.y, gparams->height );
-	glEnd( );
+	// Vertices, in order 1,2,4,3 for triangle stripping
+	GLfloat vertex_data[] = {
+		gparams->c0.x + offset.x, gparams->c0.y + offset.y, gparams->height, // 1
+		gparams->c1.x - offset.x, gparams->c0.y + offset.y, gparams->height, // 2
+		gparams->c0.x + offset.x, gparams->c1.y - offset.y, gparams->height, // 4
+		gparams->c1.x - offset.x, gparams->c1.y - offset.y, gparams->height // 3
+	};
+	GLfloat normal_data[] = {0, 0, 1};
+	static GLuint vbo;
+	if (!vbo)
+		glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), &vertex_data, GL_DYNAMIC_DRAW);
+	glVertexPointer(3, GL_FLOAT, 3 * sizeof(GLfloat), 0);
+
+	static GLuint nvbo;
+	if (!nvbo)
+		glGenBuffers(1, &nvbo);
+	glBindBuffer(GL_ARRAY_BUFFER, nvbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(normal_data), &normal_data, GL_DYNAMIC_DRAW);
+	glNormalPointer(GL_FLOAT, 0, 0);
+
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	// glNormal3d( 0.0, 0.0, 1.0 );
+	// glBegin( GL_QUADS );
+	// glVertex3d( gparams->c0.x + offset.x, gparams->c0.y + offset.y, gparams->height );
+	// glVertex3d( gparams->c1.x - offset.x, gparams->c0.y + offset.y, gparams->height );
+	// glVertex3d( gparams->c1.x - offset.x, gparams->c1.y - offset.y, gparams->height );
+	// glVertex3d( gparams->c0.x + offset.x, gparams->c1.y - offset.y, gparams->height );
+	// glEnd( );
 
 	glPopName( );
 }

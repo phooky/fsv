@@ -27,6 +27,8 @@
 /* Main viewport OpenGL area widget */
 static GtkWidget *viewport_gl_area_w = NULL;
 
+static GLuint vao; // OpenGL Vertex Array Object Names
+
 
 /* Initializes OpenGL state */
 static void
@@ -37,6 +39,16 @@ ogl_init( void )
 	float light_specular[] = {1, 1, 1, 1};
 	float light_position[] = { 1.0, 0.0, 0.0, 0.0 };
 	float material_specular[] = {.1, .1, .1, 1};
+
+	// Modern OpenGL initialization. Even if we don't use the VAO it must be
+	// initialized or VBO stuff might fail.
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	// Should be eventually switched to glEnableVertexAttribArray once
+	// shaders are taken into use
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
 
 	/* Set viewport size */
 	ogl_resize( );
