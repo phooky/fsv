@@ -45,3 +45,26 @@ Useful info and screenshots of the original SGI IRIX implementation are availabl
 There exists commented out code for using gnome date edit widget
 (gnome_date_edit_new etc.). Use gtk calendar widget instead.
 https://developer-old.gnome.org/gtk2/stable/GtkCalendar.html
+
+## Misc notes
+
+### OpenGL versions and compatibility
+
+Gtk+3 tries to create a OpenGL 3.2 core context, and if that fails it falls
+back to whatever legacy context it manages to create. Thus one cannot assume
+availability of any legacy pre-3.2 API's that are dropped in a core context. So
+for maximum compatibility use the oldest API's still possible in 3.2.
+
+For the shading language version, the latest [OpenGL core
+specification](https://www.khronos.org/registry/OpenGL/specs/gl/glspec46.core.pdf)
+says "The core profile of OpenGL 4.6 is also guaranteed to support all previous
+versions of the OpenGL Shading Language back to version 1.40". Thus GLSL 1.40
+is the minimum version. This corresponds to OpenGL 3.1. However, it also says
+that "OpenGL 4.6 implementations are guaranteed to support versions 1.00, 3.00,
+and 3.10 of the OpenGL ES Shading Language.". So that is also an alternative.
+There's also WebGL 2.0 that roughly corresponds to OpenGL ES 3.0 & OpenGL 3.3
+and also uses GLSL ES 3.0.
+
+Fsv is a relatively simple OpenGL application and doesn't need very fancy
+features. Thus, aim for OpenGL 3.1 and GLSL 1.40 in order to provide maximum
+compatibility.

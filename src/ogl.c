@@ -255,6 +255,9 @@ static void
 realize_cb( GtkWidget *gl_area_w )
 {
 	gtk_gl_area_make_current( GTK_GL_AREA(gl_area_w) );
+	/* Check for OpenGL 3.1 support */
+	if (epoxy_gl_version() < 31)
+		quit( _("fsv requires OpenGL 3.1 / GLSL 1.40 support.") );
 	ogl_init( );
 }
 

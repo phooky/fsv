@@ -14,7 +14,6 @@
 #include "fsv.h"
 
 #include <gtk/gtk.h>
-#include <gtkgl/gdkgl.h>
 #include <getopt.h>
 
 #include "about.h"
@@ -285,10 +284,6 @@ main( int argc, char **argv )
 
 	/* Initialize GTK+ */
 	gtk_init( &argc, &argv );
-
-	/* Check for OpenGL support */
-	if (!gdk_gl_query( ))
-		quit( _("fsv requires OpenGL support.") );
 
 	window_init( initial_fsv_mode );
 	color_init( );
