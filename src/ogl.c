@@ -27,8 +27,113 @@
 /* Main viewport OpenGL area widget */
 static GtkWidget *viewport_gl_area_w = NULL;
 
-static GLuint vao; // OpenGL Vertex Array Object Names
+static struct GLState {
+	GLuint vao; // OpenGL Vertex Array Object Names
 
+	// These _location variables are handles to input 'slots' in the
+	// vertex shader.
+	GLint mvp_location;
+	GLint position_location;
+	GLint normal_location;
+	GLint color_location;
+} gl;
+
+static GLuint
+create_shader(GLenum shader_type, const char *source)
+{
+	GLuint shader = glCreateShader(shader_type);
+	glShaderSource(shader, 1, &source, NULL);
+	glCompileShader(shader);
+
+	GLint status;
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+	if (status == GL_FALSE)
+	{
+		GLint log_len;
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_len);
+
+		char *buffer = g_malloc(log_len + 1);
+		glGetShaderInfoLog(shader, log_len, NULL, buffer);
+
+		g_error("Compilation failure in %s shader: %s",
+			shader_type == GL_VERTEX_SHADER ? "vertex" : "fragment",
+			buffer);
+
+		g_free(buffer);
+
+		glDeleteShader(shader);
+		shader = 0;
+	}
+	return shader;
+}
+
+// Initialize OpenGL shaders
+static GLuint
+init_shaders()
+{
+	GBytes *source;
+	GLuint program = 0;
+
+	/* load the vertex shader */
+	source = g_resources_lookup_data("/jabl/fsv/fsv-vertex.glsl", 0, NULL);
+	GLuint vertex = create_shader(GL_VERTEX_SHADER, g_bytes_get_data(source, NULL));
+	g_bytes_unref(source);
+	if (vertex == 0)
+		goto out;
+
+	/* load the fragment shader */
+	source = g_resources_lookup_data("/jabl/fsv/fsv-fragment.glsl", 0, NULL);
+	GLuint fragment = create_shader(GL_FRAGMENT_SHADER, g_bytes_get_data(source, NULL));
+	g_bytes_unref(source);
+	if (fragment == 0)
+		goto out;
+
+	/* link the vertex and fragment shaders together */
+	program = glCreateProgram();
+	glAttachShader(program, vertex);
+	glAttachShader(program, fragment);
+	glLinkProgram(program);
+
+	GLint status = 0;
+	glGetProgramiv(program, GL_LINK_STATUS, &status);
+	if (status == GL_FALSE)
+	{
+		GLint log_len = 0;
+		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_len);
+
+		char *buffer = g_malloc(log_len + 1);
+		glGetProgramInfoLog(program, log_len, NULL, buffer);
+
+		g_error("Linking failure in program: %s", buffer);
+
+		g_free(buffer);
+
+		glDeleteProgram(program);
+		program = 0;
+
+		goto out;
+	}
+
+	/* get the location of the "mvp" uniform */
+	gl.mvp_location = glGetUniformLocation(program, "mvp");
+
+	/* get the location of the "position" and "color" attributes */
+	gl.position_location = glGetAttribLocation(program, "position");
+	gl.normal_location = glGetAttribLocation(program, "normal");
+	gl.color_location = glGetAttribLocation(program, "color");
+
+	/* the individual shaders can be detached and destroyed */
+	glDetachShader(program, vertex);
+	glDetachShader(program, fragment);
+
+out:
+	if (vertex != 0)
+		glDeleteShader(vertex);
+	if (fragment != 0)
+		glDeleteShader(fragment);
+
+	return program;
+}
 
 /* Initializes OpenGL state */
 static void
@@ -42,8 +147,12 @@ ogl_init( void )
 
 	// Modern OpenGL initialization. Even if we don't use the VAO it must be
 	// initialized or VBO stuff might fail.
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+	glGenVertexArrays(1, &gl.vao);
+	glBindVertexArray(gl.vao);
+
+	GLuint program = init_shaders();
+	if (!program)
+		g_error("Compiling shaders failed");
 
 	// Should be eventually switched to glEnableVertexAttribArray once
 	// shaders are taken into use

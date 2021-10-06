@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/jabl/fsv">
+    <file>fsv-fragment.glsl</file>
+    <file>fsv-vertex.glsl</file>
+  </gresource>
+</gresources>
