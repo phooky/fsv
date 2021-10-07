@@ -145,8 +145,6 @@ window_init( FsvMode fsv_mode )
 	gui_menu_item_add( menu_w, "Memory summary", debug_show_mem_summary, NULL );
 	gui_menu_item_add( menu_w, "Memory stats", debug_show_mem_stats, NULL );
 	gui_separator_add( menu_w );
-	gui_menu_item_add( menu_w, "GLib memory profile", g_mem_profile, NULL );
-	gui_menu_item_add( menu_w, "GMemChunk info", g_mem_chunk_info, NULL );
 #endif
 
 	/* Help menu (right-justified) */
