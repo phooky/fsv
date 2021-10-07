@@ -4,6 +4,7 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * SPDX-FileCopyrightText: 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * SPDX-License-Identifier:  LGPL-2.1-or-later
  */
@@ -12,7 +13,7 @@
 #include "common.h"
 #include "geometry.h"
 
-#include <epoxy/gl.h>
+#include <cglm/call.h>
 
 #include "about.h"
 #include "animation.h"
@@ -57,6 +58,53 @@ static void cursor_visible_part( void );
 static void cursor_post( void );
 static void queue_uncached_draw( void );
 
+
+// Vertex struct for modern OpenGL
+// The _pad variable is unused and is there to make sure the normal vector
+// is aligned on a 16 byte boundary, and the struct itself is 32 bytes.
+typedef struct Vertex {
+	GLfloat position[3];
+	GLuint _pad;
+	GLfloat normal[3];
+	GLubyte color[4];
+} Vertex;
+
+
+// Convert the color of a node to a 4 element array of 1 byte unsigned integers
+static void
+node_color_rgba8(GNode *node, GLubyte *rgba)
+{
+	const RGBcolor *c = NODE_DESC(node)->color;
+	rgba[0] = c->r * 255;
+	rgba[1] = c->g * 255;
+	rgba[2] = c->b * 255;
+	rgba[3] = 255;
+}
+
+// Print the legacy and modern OpenGL projection and modelview matrices.
+static void
+debug_print_matrices()
+{
+#ifdef DEBUG
+	g_print("Modelview matrices. First modern\n");
+	float gl1[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, gl1);
+	glmc_mat4_print(gl.modelview, stdout);
+	for (int ii = 0; ii < 4; ii++) {
+		for (int jj = 0; jj < 4; jj++)
+			g_print("%9.5f ", (double)gl1[jj*4 + ii]);
+		g_print("\n");
+	}
+	g_print("\nProjection matrices. First modern:\n");
+	glGetFloatv(GL_PROJECTION_MATRIX, gl1);
+	glmc_mat4_print(gl.projection, stdout);
+	for (int ii = 0; ii < 4; ii++) {
+		for (int jj = 0; jj < 4; jj++)
+			g_print("%9.5f ", (double)gl1[jj*4 + ii]);
+		g_print("\n");
+	}
+#endif
+}
 
 /**** DISC VISUALIZATION **************************************/
 
@@ -826,29 +874,60 @@ mapv_gldraw_node( GNode *node )
 	glPushName( 1 );
 
 	/* Draw top face */
+	GLubyte color[4];
+	node_color_rgba8(node, color);
 	// Vertices, in order 1,2,4,3 for triangle stripping
-	GLfloat vertex_data[] = {
-		gparams->c0.x + offset.x, gparams->c0.y + offset.y, gparams->height, // 1
-		gparams->c1.x - offset.x, gparams->c0.y + offset.y, gparams->height, // 2
-		gparams->c0.x + offset.x, gparams->c1.y - offset.y, gparams->height, // 4
-		gparams->c1.x - offset.x, gparams->c1.y - offset.y, gparams->height // 3
+	Vertex vertex_data[] = {
+		{{gparams->c0.x + offset.x, gparams->c0.y + offset.y, gparams->height}, // 1
+		 0, {0.0f, 0.0f, 1.0f}, {color[0], color[1], color[2], color[3]}},
+		{{gparams->c1.x - offset.x, gparams->c0.y + offset.y, gparams->height}, // 2
+		 0, {0.0f, 0.0f, 1.0f}, {color[0], color[1], color[2], color[3]}},
+		{{gparams->c0.x + offset.x, gparams->c1.y - offset.y, gparams->height}, // 4
+		 0, {0.0f, 0.0f, 1.0f}, {color[0], color[1], color[2], color[3]}},
+		{{gparams->c1.x - offset.x, gparams->c1.y - offset.y, gparams->height}, // 3
+		 0, {0.0f, 0.0f, 1.0f}, {color[0], color[1], color[2], color[3]}}
 	};
-	GLfloat normal_data[] = {0, 0, 1};
+	debug_print_matrices();
 	static GLuint vbo;
 	if (!vbo)
 		glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), &vertex_data, GL_DYNAMIC_DRAW);
-	glVertexPointer(3, GL_FLOAT, 3 * sizeof(GLfloat), 0);
 
-	static GLuint nvbo;
-	if (!nvbo)
-		glGenBuffers(1, &nvbo);
-	glBindBuffer(GL_ARRAY_BUFFER, nvbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(normal_data), &normal_data, GL_DYNAMIC_DRAW);
-	glNormalPointer(GL_FLOAT, 0, 0);
+	glEnableVertexAttribArray(gl.position_location);
+	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(Vertex), (void *)offsetof(Vertex, position));
+	//glVertexPointer(3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, position));
 
+	// Normal is unused in shader, trying to set the attribpointer causes
+	// a crash later when rendering.
+	//glEnableVertexAttribArray(gl.normal_location);
+	//glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
+	//		      sizeof(Vertex), (void *)offsetof(Vertex, normal));
+	//glNormalPointer(GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+
+	glEnableVertexAttribArray(gl.color_location);
+	glVertexAttribPointer(gl.color_location, 4, GL_UNSIGNED_BYTE, GL_TRUE,
+			      sizeof(Vertex), (void *)offsetof(Vertex, color));
+
+#ifdef DEBUG
+	mat4 mvp;
+	glm_mat4_mul(gl.projection, gl.modelview, mvp);
+	// Check coords
+	vec3 out;
+	g_print("quad coords:\n");
+	glm_mat4_mulv3(mvp, vertex_data[0].position, 1, out);
+	glmc_vec3_print(out, stdout);
+	glm_mat4_mulv3(mvp, vertex_data[1].position, 1, out);
+	glmc_vec3_print(out, stdout);
+	glmc_vec3_print(out, stdout);
+	glm_mat4_mulv3(mvp, vertex_data[3].position, 1, out);
+	glmc_vec3_print(out, stdout);
+#endif
+
+	glUseProgram(gl.program);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glUseProgram(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	// glNormal3d( 0.0, 0.0, 1.0 );
 	// glBegin( GL_QUADS );
@@ -974,6 +1053,9 @@ mapv_draw_recursive( GNode *dnode, int action )
 
 	glPushMatrix( );
 	glTranslated( 0.0, 0.0, MAPV_GEOM_PARAMS(dnode)->height );
+	mat4 tmpmat;
+	glm_mat4_copy(gl.modelview, tmpmat);
+	glm_translate(gl.modelview, (vec3){0.0f, 0.0f, MAPV_GEOM_PARAMS(dnode)->height});
 
 	dir_ndesc = DIR_NODE_DESC(dnode);
 	dir_collapsed = DIR_COLLAPSED(dnode);
@@ -983,22 +1065,25 @@ mapv_draw_recursive( GNode *dnode, int action )
 		/* Grow/shrink children heightwise */
 		glEnable( GL_NORMALIZE );
 		glScaled( 1.0, 1.0, dir_ndesc->deployment );
+		glm_scale(gl.modelview, (vec3){1.0f, 1.0f, dir_ndesc->deployment});
 	}
+
+	ogl_upload_matrices();
 
 	if (action == MAPV_DRAW_GEOMETRY) {
 		/* Draw directory face or geometry of children
 		 * (display list A) */
 		if (dir_ndesc->a_dlist_stale) {
 			/* Rebuild */
-			if (dir_ndesc->a_dlist == NULL_DLIST)
-				dir_ndesc->a_dlist = glGenLists( 1 );
-			glNewList( dir_ndesc->a_dlist, GL_COMPILE_AND_EXECUTE );
+			//if (dir_ndesc->a_dlist == NULL_DLIST)
+			//	dir_ndesc->a_dlist = glGenLists( 1 );
+			//glNewList( dir_ndesc->a_dlist, GL_COMPILE_AND_EXECUTE );
 			if (dir_collapsed)
 				mapv_gldraw_folder( dnode );
 			else
 				mapv_build_dir( dnode );
-			glEndList( );
-			dir_ndesc->a_dlist_stale = FALSE;
+			//glEndList( );
+			//dir_ndesc->a_dlist_stale = FALSE;
 		}
 		else
 			glCallList( dir_ndesc->a_dlist );
@@ -1049,6 +1134,8 @@ mapv_draw_recursive( GNode *dnode, int action )
 		glDisable( GL_NORMALIZE );
 
 	glPopMatrix( );
+	glm_mat4_copy(tmpmat, gl.modelview);
+	ogl_upload_matrices();
 }
 
 
@@ -1147,32 +1234,32 @@ mapv_draw( boolean high_detail )
 {
 	/* Draw low-detail geometry */
 
-	if (fstree_low_draw_stage == 1)
-		glNewList( fstree_low_dlist, GL_COMPILE_AND_EXECUTE );
+	//if (fstree_low_draw_stage == 1)
+	//	glNewList( fstree_low_dlist, GL_COMPILE_AND_EXECUTE );
 
-	if (fstree_low_draw_stage <= 1)
+	//if (fstree_low_draw_stage <= 1)
 		mapv_draw_recursive( globals.fstree, MAPV_DRAW_GEOMETRY );
-	else
-		glCallList( fstree_low_dlist );
+	//else
+	//	glCallList( fstree_low_dlist );
 
-	if (fstree_low_draw_stage == 1)
-		glEndList( );
+	//if (fstree_low_draw_stage == 1)
+	//	glEndList( );
 	if (fstree_low_draw_stage <= 1)
 		++fstree_low_draw_stage;
 
 	if (high_detail) {
 		/* Draw additional high-detail stuff */
 
-		if (fstree_high_draw_stage == 1)
-			glNewList( fstree_high_dlist, GL_COMPILE_AND_EXECUTE );
+		//if (fstree_high_draw_stage == 1)
+		//	glNewList( fstree_high_dlist, GL_COMPILE_AND_EXECUTE );
 
-		if (fstree_high_draw_stage <= 1) {
+		//if (fstree_high_draw_stage <= 1) {
 			/* "Cel lines" */
 			outline_pre( );
-			if (fstree_low_draw_stage <= 1)
+			//if (fstree_low_draw_stage <= 1)
 				mapv_draw_recursive( globals.fstree, MAPV_DRAW_GEOMETRY );
-			else
-				glCallList( fstree_low_dlist ); /* shortcut */
+			//else
+			//	glCallList( fstree_low_dlist ); /* shortcut */
 			outline_post( );
 
 			/* Node name labels */
@@ -1180,12 +1267,12 @@ mapv_draw( boolean high_detail )
 			glColor3f( 0.0, 0.0, 0.0 ); /* all labels are black */
 			mapv_draw_recursive( globals.fstree, MAPV_DRAW_LABELS );
 			text_post( );
-		}
-		else
-			glCallList( fstree_high_dlist );
+		//}
+		//else
+		//	glCallList( fstree_high_dlist );
 
-		if (fstree_high_draw_stage == 1)
-			glEndList( );
+		//if (fstree_high_draw_stage == 1)
+		//	glEndList( );
 		if (fstree_high_draw_stage <= 1)
 			++fstree_high_draw_stage;
 
@@ -3000,6 +3087,8 @@ static void
 draw_node( GNode *node )
 {
 	glPushMatrix( );
+	mat4 tmpmat;
+	glm_mat4_copy(gl.modelview, tmpmat);
 
 	switch (globals.fsv_mode) {
 		case FSV_DISCV:
@@ -3008,16 +3097,22 @@ draw_node( GNode *node )
 
 		case FSV_MAPV:
 		glTranslated( 0.0, 0.0, geometry_mapv_node_z0( node ) );
+		glm_translate(gl.modelview, (vec3){0.0f, 0.0f, geometry_mapv_node_z0(node)});
+		ogl_upload_matrices();
 		mapv_gldraw_node( node );
 		break;
 
 		case FSV_TREEV:
 		if (geometry_treev_is_leaf( node )) {
 			glRotated( geometry_treev_platform_theta( node->parent ), 0.0, 0.0, 1.0 );
+			glm_rotate_z(gl.modelview, geometry_treev_platform_theta(node->parent) * M_PI/180, gl.modelview);
+			ogl_upload_matrices();
 			treev_gldraw_leaf( node, geometry_treev_platform_r0( node->parent ), TRUE );
 		}
 		else {
 			glRotated( geometry_treev_platform_theta( node ), 0.0, 0.0, 1.0 );
+			glm_rotate_z(gl.modelview, geometry_treev_platform_theta(node) * M_PI/180, gl.modelview);
+			ogl_upload_matrices();
 			treev_gldraw_platform( node, geometry_treev_platform_r0( node ) );
 		}
 		break;
@@ -3026,6 +3121,8 @@ draw_node( GNode *node )
 	}
 
 	glPopMatrix( );
+	glm_mat4_copy(tmpmat, gl.modelview);
+	ogl_upload_matrices();
 }
 
 

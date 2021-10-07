@@ -15,7 +15,6 @@
 
 #include <gtk/gtk.h>
 #include <gtkgl/gtkglarea.h>
-#include <epoxy/gl.h>
 #include <GL/glu.h> /* gluPickMatrix( ) */
 
 #include "animation.h" /* redraw( ) */
@@ -27,16 +26,7 @@
 /* Main viewport OpenGL area widget */
 static GtkWidget *viewport_gl_area_w = NULL;
 
-static struct GLState {
-	GLuint vao; // OpenGL Vertex Array Object Names
-
-	// These _location variables are handles to input 'slots' in the
-	// vertex shader.
-	GLint mvp_location;
-	GLint position_location;
-	GLint normal_location;
-	GLint color_location;
-} gl;
+FsvGlState gl;
 
 static GLuint
 create_shader(GLenum shader_type, const char *source)
@@ -150,14 +140,14 @@ ogl_init( void )
 	glGenVertexArrays(1, &gl.vao);
 	glBindVertexArray(gl.vao);
 
-	GLuint program = init_shaders();
-	if (!program)
+	gl.program = init_shaders();
+	if (!gl.program)
 		g_error("Compiling shaders failed");
 
 	// Should be eventually switched to glEnableVertexAttribArray once
 	// shaders are taken into use
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
+	//glEnableClientState(GL_NORMAL_ARRAY);
+	//glEnableClientState(GL_COLOR_ARRAY);
 
 	/* Set viewport size */
 	ogl_resize( );
@@ -170,6 +160,13 @@ ogl_init( void )
 	glRotated( -90.0, 1.0, 0.0, 0.0 );
 	glRotated( -90.0, 0.0, 0.0, 1.0 );
 	glPushMatrix( ); /* Matrix will stay just below top of MVM stack */
+	// Same but for the modern OpenGL code
+	glm_mat4_identity(gl.modelview);
+	glm_rotate_x(gl.modelview, -M_PI_2, gl.modelview);
+	glm_rotate_z(gl.modelview, -M_PI_2, gl.modelview);
+	glm_mat4_copy(gl.modelview, gl.base_modelview);
+	glm_mat4_identity(gl.projection);
+	//ogl_upload_matrices();
 
 	/* Set up lighting */
 	glEnable( GL_LIGHTING );
@@ -246,6 +243,13 @@ setup_projection_matrix( boolean full_reset )
 	if (full_reset)
 		glLoadIdentity( );
 	glFrustum( - dx, dx, - dy, dy, camera->near_clip, camera->far_clip );
+
+	// Modern OpenGL using cglm
+	mat4 frustum;
+	glm_frustum(-dx, dx, -dy, dy, camera->near_clip, camera->far_clip, frustum);
+	if (full_reset)
+		glm_mat4_identity(gl.projection);
+	glm_mat4_mul(frustum, gl.projection, gl.projection);
 }
 
 
@@ -257,6 +261,7 @@ setup_modelview_matrix( void )
 	/* Remember, base matrix lives just below top of stack */
 	glPopMatrix( );
 	glPushMatrix( );
+	glm_mat4_copy(gl.base_modelview, gl.modelview);
 
 	switch (globals.fsv_mode) {
 		case FSV_SPLASH:
@@ -267,6 +272,12 @@ setup_modelview_matrix( void )
 		glRotated( 90.0, 0.0, 1.0, 0.0 );
 		glRotated( 90.0, 0.0, 0.0, 1.0 );
 		glTranslated( - DISCV_CAMERA(camera)->target.x, - DISCV_CAMERA(camera)->target.y, 0.0 );
+		glm_translate(gl.modelview, (vec3){-camera->distance, 0.f, 0.f});
+		glm_rotate_y(gl.modelview, M_PI_2, gl.modelview);
+		glm_rotate_z(gl.modelview, M_PI_2, gl.modelview);
+		glm_translate(gl.modelview, (vec3){-DISCV_CAMERA(camera)->target.x,
+						   -DISCV_CAMERA(camera)->target.y,
+						   0.f});
 		break;
 
 		case FSV_MAPV:
@@ -274,6 +285,12 @@ setup_modelview_matrix( void )
 		glRotated( camera->phi, 0.0, 1.0, 0.0 );
 		glRotated( - camera->theta, 0.0, 0.0, 1.0 );
 		glTranslated( - MAPV_CAMERA(camera)->target.x, - MAPV_CAMERA(camera)->target.y, - MAPV_CAMERA(camera)->target.z );
+		glm_translate(gl.modelview, (vec3){-camera->distance, 0.f, 0.f});
+		glm_rotate_y(gl.modelview, camera->phi * M_PI / 180, gl.modelview);
+		glm_rotate_z(gl.modelview, -camera->theta * M_PI / 180, gl.modelview);
+		glm_translate(gl.modelview, (vec3){-MAPV_CAMERA(camera)->target.x,
+						   -MAPV_CAMERA(camera)->target.y,
+						   -MAPV_CAMERA(camera)->target.z});
 		break;
 
 		case FSV_TREEV:
@@ -282,12 +299,40 @@ setup_modelview_matrix( void )
 		glRotated( - camera->theta, 0.0, 0.0, 1.0 );
 		glTranslated( TREEV_CAMERA(camera)->target.r, 0.0, - TREEV_CAMERA(camera)->target.z );
 		glRotated( 180.0 - TREEV_CAMERA(camera)->target.theta, 0.0, 0.0, 1.0 );
+		glm_translate(gl.modelview, (vec3){-camera->distance, 0.f, 0.f});
+		glm_rotate_y(gl.modelview, camera->phi * M_PI / 180, gl.modelview);
+		glm_rotate_z(gl.modelview, -camera->theta * M_PI / 180, gl.modelview);
+		glm_translate(gl.modelview, (vec3){TREEV_CAMERA(camera)->target.r,
+						   0.0f,
+						   -TREEV_CAMERA(camera)->target.z});
+		glm_rotate_z(gl.modelview,
+			     (180.0 - TREEV_CAMERA(camera)->target.theta) * M_PI / 180,
+			     gl.modelview);
 		break;
 
 		SWITCH_FAIL
 	}
 }
 
+
+// Upload modified projection and modelview matrices to the GPU
+void
+ogl_upload_matrices()
+{
+	// As we're not doing any shading yet, just create the single MVP
+	// matrix instead of uploading separate projection and modelview
+	// matrices.
+	mat4 mvp;
+	glm_mat4_mul(gl.projection, gl.modelview, mvp);
+
+	/* load our program */
+	glUseProgram(gl.program);
+
+	/* update the "mvp" matrix we use in the shader */
+	glUniformMatrix4fv(gl.mvp_location, 1, GL_FALSE, (float*)mvp);
+
+	glUseProgram(0);
+}
 
 /* (Re)draws the viewport
  * NOTE: Don't call this directly! Use redraw( ) */
@@ -302,6 +347,7 @@ ogl_draw( void )
 
 	setup_projection_matrix( TRUE );
 	setup_modelview_matrix( );
+	ogl_upload_matrices();
 	geometry_draw( TRUE );
 
 	/* Error check */
@@ -345,6 +391,7 @@ ogl_select( int x, int y, const GLuint **selectbuf_ptr )
 	/* Draw geometry */
 	setup_projection_matrix( FALSE );
 	setup_modelview_matrix( );
+	ogl_upload_matrices();
 	geometry_draw( FALSE );
 
 	/* Get the hits */
@@ -354,6 +401,7 @@ ogl_select( int x, int y, const GLuint **selectbuf_ptr )
 	/* Leave matrices in a usable state */
 	setup_projection_matrix( TRUE );
 	setup_modelview_matrix( );
+	ogl_upload_matrices();
 
 	return hit_count;
 }

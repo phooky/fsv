@@ -8,5 +8,5 @@ srcs = ['about.c', 'animation.c', 'callbacks.c', 'camera.c', 'colexp.c',
   'viewport.c', 'window.c']
 incdir = include_directories('..', '../lib')
 executable('fsv', sources: [srcs, gr],
-  dependencies : [libmisc_dep, libdebug_dep, gtkdep, libm],
+  dependencies : [libmisc_dep, libdebug_dep, gtkdep, libm, cglm_dep],
   include_directories: incdir)

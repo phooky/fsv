@@ -16,7 +16,13 @@ Useful info and screenshots of the original SGI IRIX implementation are availabl
 ### Install
 
 1. Clone the repository
-2. Install dependencies (Ubuntu): `sudo apt-get install libgtkgl2.0-dev libgl1-mesa-dev libglu1-mesa-dev`
+2. Install dependencies (Ubuntu): `sudo apt install libgtkgl2.0-dev libgl1-mesa-dev libglu1-mesa-dev libepoxy-dev libcglm-dev`
+    1. cglm is available as of Ubuntu 20.10. If cglm is not available
+       system-wide, make a subdirectory under the project root and extract
+        cglm there under the name cglm:
+        1. `mkdir -p subprojects; cd subprojects`
+        2. `tar xaf /path/to/cglm-version.tar.gz`
+        3. `mv cglm-version cglm`
 3. Run meson in repository root directory: `meson setup builddir`
     - Or set non-default options: `meson setup -Dbuildtype=release -Dprefix=~/.local builddir`
     - Check current options: `meson configure builddir`
@@ -32,10 +38,18 @@ Useful info and screenshots of the original SGI IRIX implementation are availabl
    `meson configure -Dc_args="-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED" builddir`
 2. DONE Update code, still using gtk+-2.0, to build cleanly with
    `meson configure -Dc_args="-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED -DGTK_DISABLE_SINGLE_INCLUDES -DGSEAL_ENABLE" builddir`
-3. Update to 'modern' OpenGL 2.1. GtkGLArea in Gtk+3 supports only core
-   profile, so modernize the OpenGL code as much as possible before switching to
-   Gtk+3 and the OpenGL core profile.
-    1. Switch from GL_QUADS to GL_TRIANGLES
+3. Update to 'modern' OpenGL 3.1. GtkGLArea in Gtk+3 supports only core
+   profile, so modernize the OpenGL code before switching to Gtk+3 and the
+   OpenGL core profile.
+    1. Build scaffolding to use shaders and VBO's. Bundle shaders using
+       Gresource, compile and link shaders, use cglm for host side linear
+       algebra instead of OpenGL 1.x matrix stack manipulation.
+    2. Get rid of display lists, using VBO's and shaders inside display lists
+       does not work properly.
+    3. Replace deprecated GL_SELECT for picking objects. Maybe with something like
+       http://www.opengl-tutorial.org/miscellaneous/clicking-on-objects/picking-with-an-opengl-hack/
+    4. Convert immediate mode OpenGL code to VBO's, including switching from
+       GL_QUADS to GL_TRIANGLES.
 4. Switch to Gtk+3
 
 ### Setup github actions for CI
@@ -50,10 +64,11 @@ https://developer-old.gnome.org/gtk2/stable/GtkCalendar.html
 
 ### OpenGL versions and compatibility
 
-Gtk+3 tries to create a OpenGL 3.2 core context, and if that fails it falls
-back to whatever legacy context it manages to create. Thus one cannot assume
-availability of any legacy pre-3.2 API's that are dropped in a core context. So
-for maximum compatibility use the oldest API's still possible in 3.2.
+Gtk+3 tries to create a OpenGL 3.2 core context (since 3.16), and if that fails
+it falls back to whatever legacy context it manages to create (since 3.20).
+Thus one cannot assume availability of any legacy pre-3.2 API's that are
+dropped in a core context. So for maximum compatibility use the oldest API's
+still possible in 3.2.
 
 For the shading language version, the latest [OpenGL core
 specification](https://www.khronos.org/registry/OpenGL/specs/gl/glspec46.core.pdf)
