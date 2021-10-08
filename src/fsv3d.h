@@ -15,15 +15,15 @@
 #define FSV_FSV3D_H
 
 
-static const RGBcolor fsv_colors[] = {
+static const RGBAColor fsv_colors[] = {
         /* f */
-	{ 1.0, 0.0, 0.0 },
+	{G_MAXUINT8, 0, 0, G_MAXUINT8},
 
         /* s */
-	{ 0.0, 0.875, 0.0 },
+	{0, 223, 0, G_MAXUINT8},
 
 	/* v */
-	{ 0.0, 0.0, 1.0 }
+	{0, 0, G_MAXUINT8, G_MAXUINT8}
 };
 
 

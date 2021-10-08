@@ -84,8 +84,8 @@ GtkWidget *gui_button_add( GtkWidget *parent_w, const char *label, void (*callba
 GtkWidget *gui_button_with_pixbuf_xpm_add(GtkWidget *parent_w, const char **xpm_data, const char *label, void (*callback)( ), void *callback_data);
 GtkWidget *gui_toggle_button_add( GtkWidget *parent_w, const char *label, boolean active, void (*callback)( ), void *callback_data );
 GtkWidget *gui_wpattern_list_new(GtkWidget *parent_w);
-GtkWidget *gui_colorpicker_add( GtkWidget *parent_w, RGBcolor *init_color, const char *title, void (*callback)( ), void *callback_data );
-void gui_colorpicker_set_color( GtkWidget *colorpicker_w, RGBcolor *color );
+GtkWidget *gui_colorpicker_add(GtkWidget *parent_w, RGBAColor *init_color, const char *title, void (*callback)( ), void *callback_data );
+void gui_colorpicker_set_color(GtkWidget *colorpicker_w, RGBAColor *color );
 GtkWidget *gui_filelist_new(GtkWidget *parent_w);
 GtkWidget *gui_filelist_scan_new(GtkWidget *parent_w);
 GtkWidget *gui_tree_add( GtkWidget *parent_w );
@@ -110,7 +110,7 @@ GtkWidget *gui_hpaned_add( GtkWidget *parent_w, int divider_x_pos );
 GtkWidget *gui_vpaned_add( GtkWidget *parent_w, int divider_y_pos );
 GtkWidget *gui_pixbuf_xpm_add(GtkWidget *parent_w, const char **xpm_data);
 GtkWidget *gui_spectrum_new( GtkWidget *parent_w );
-void gui_spectrum_fill( GtkWidget *spectrum_w, RGBcolor (*spectrum_func)( double x ) );
+void gui_spectrum_fill(GtkWidget *spectrum_w, RGBAColor (*spectrum_func)( double x ));
 GtkWidget *gui_hscrollbar_add( GtkWidget *parent_w, GtkAdjustment *adjustment );
 GtkWidget *gui_vscrollbar_add( GtkWidget *parent_w, GtkAdjustment *adjustment );
 GtkWidget *gui_separator_add( GtkWidget *parent_w );
@@ -120,12 +120,14 @@ GtkWidget *gui_table_add( GtkWidget *parent_w, int num_rows, int num_cols, boole
 void gui_table_attach( GtkWidget *table_w, GtkWidget *widget, int left, int right, int top, int bottom );
 GtkWidget *gui_text_area_add( GtkWidget *parent_w, const char *init_text );
 void gui_widget_packing( GtkWidget *widget, boolean expand, boolean fill, boolean start );
-void gui_colorsel_window( const char *title, RGBcolor *init_color, void (*ok_callback)( ), void *ok_callback_data );
+void gui_colorsel_window(const char *title, RGBAColor *init_color, void (*ok_callback)( ), void *ok_callback_data);
 GtkWidget *gui_dialog_window( const char *title, void (*close_callback )( ) );
 GtkWidget *gui_entry_window( const char *title, const char *init_text, void (*ok_callback)( ), void *ok_callback_data );
 gchar *gui_dir_choose(const char *title, GtkWidget *parent, const char *init_dir);
 void gui_window_icon_xpm(GtkWidget *window_w, const char **xpm_data);
 void gui_window_modalize( GtkWidget *window_w, GtkWidget *parent_window_w );
+RGBAColor GdkColor2RGBA(GdkColor *color);
+void RGBAColor2GdkColor(RGBAColor src, GdkColor *dest);
 #endif /* __GTK_H__ */
 
 

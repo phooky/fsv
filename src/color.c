@@ -4,6 +4,7 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * SPDX-FileCopyrightText: 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * SPDX-License-Identifier:  LGPL-2.1-or-later
  */
@@ -109,9 +110,9 @@ static struct ColorConfig color_config;
 static ColorMode color_mode;
 
 /* Colors for spectrum */
-static RGBcolor spectrum_underflow_color;
-static RGBcolor spectrum_colors[SPECTRUM_NUM_SHADES];
-static RGBcolor spectrum_overflow_color;
+static RGBAColor spectrum_underflow_color;
+static RGBAColor spectrum_colors[SPECTRUM_NUM_SHADES];
+static RGBAColor spectrum_overflow_color;
 
 
 /* Copies a ColorConfig structure from one location to another */
@@ -198,7 +199,7 @@ color_get_config( struct ColorConfig *ccfg )
 
 
 /* Returns the appropriate color for the given node, as per its type */
-static const RGBcolor *
+static const RGBAColor *
 node_type_color( GNode *node )
 {
 	return &color_config.by_nodetype.colors[NODE_DESC(node)->type];
@@ -206,7 +207,7 @@ node_type_color( GNode *node )
 
 
 /* Returns the appropriate color for the given node, as per its timestamp */
-static const RGBcolor *
+static const RGBAColor *
 time_color( GNode *node )
 {
 	double x;
@@ -255,7 +256,7 @@ time_color( GNode *node )
 
 /* Returns the appropriate color for the given node, as matched (or not
  * matched) to the current set of wildcard patterns */
-static const RGBcolor *
+static const RGBAColor *
 wpattern_color( GNode *node )
 {
 	struct WPatternGroup *wpgroup;
@@ -295,7 +296,7 @@ void
 color_assign_recursive( GNode *dnode )
 {
 	GNode *node;
-	const RGBcolor *color;
+	const RGBAColor *color;
 
 	g_assert( NODE_IS_DIR(dnode) || NODE_IS_METANODE(dnode) );
 
@@ -341,11 +342,11 @@ color_set_mode( ColorMode mode )
 /* Returns a color in the given type of spectrum, at the given position
  * x = [0, 1]. If the spectrum is of a type which requires parameters,
  * those are passed in via the data argument */
-RGBcolor
+RGBAColor
 color_spectrum_color( SpectrumType type, double x, void *data )
 {
-	RGBcolor color;
-	RGBcolor *zero_color, *one_color;
+	RGBAColor color = {0, 0, 0, 0};
+	RGBAColor *zero_color, *one_color;
 
 	g_assert( (x >= 0.0) && (x <= 1.0) );
 
@@ -357,18 +358,19 @@ color_spectrum_color( SpectrumType type, double x, void *data )
 		return heat_color( x );
 
 		case SPECTRUM_GRADIENT:
-		zero_color = ((RGBcolor **)data)[0];
-		one_color = ((RGBcolor **)data)[1];
-		color.r = zero_color->r + x * (one_color->r - zero_color->r);
-		color.g = zero_color->g + x * (one_color->g - zero_color->g);
-		color.b = zero_color->b + x * (one_color->b - zero_color->b);
+		zero_color = ((RGBAColor **)data)[0];
+		one_color = ((RGBAColor **)data)[1];
+		color.red = zero_color->red + x * (one_color->red - zero_color->red);
+		color.green = zero_color->green + x * (one_color->green - zero_color->green);
+		color.blue = zero_color->blue + x * (one_color->blue - zero_color->blue);
+		color.alpha = zero_color->alpha + x * (one_color->alpha - zero_color->alpha);
 		return color;
 
 		SWITCH_FAIL
 	}
 
 	/* cc: duh... shouldn't there be a return value here? */
-	color.r = -1.0; color.g = -1.0; color.b = -1.0; return color;
+	return color;
 }
 
 
@@ -376,7 +378,7 @@ color_spectrum_color( SpectrumType type, double x, void *data )
 static void
 generate_spectrum_colors( void )
 {
-	RGBcolor *boundary_colors[2];
+	RGBAColor *boundary_colors[2];
         double x;
 	int i;
 	void *data = NULL;
@@ -395,14 +397,14 @@ generate_spectrum_colors( void )
         /* Off-spectrum colors - make them dark */
 
 	spectrum_underflow_color = spectrum_colors[0]; /* struct assign */
-	spectrum_underflow_color.r *= 0.5;
-	spectrum_underflow_color.g *= 0.5;
-	spectrum_underflow_color.b *= 0.5;
+	spectrum_underflow_color.red /= 2;
+	spectrum_underflow_color.green /= 2;
+	spectrum_underflow_color.blue /= 2;
 
 	spectrum_overflow_color = spectrum_colors[(SPECTRUM_NUM_SHADES - 1)]; /* struct assign */
-	spectrum_overflow_color.r *= 0.5;
-	spectrum_overflow_color.g *= 0.5;
-	spectrum_overflow_color.b *= 0.5;
+	spectrum_overflow_color.red /= 2;
+	spectrum_overflow_color.green /= 2;
+	spectrum_overflow_color.blue /= 2;
 }
 
 

@@ -33,7 +33,7 @@
 
 /* Use this to set the current GL color for a node */
 #define node_glcolor( node ) \
-	glColor3fv( (const float *)NODE_DESC(node)->color )
+	glColor4ubv( (const GLubyte *)NODE_DESC(node)->color )
 
 
 /* Low- and high-detail geometry display lists */
@@ -74,11 +74,11 @@ typedef struct Vertex {
 static void
 node_color_rgba8(GNode *node, GLubyte *rgba)
 {
-	const RGBcolor *c = NODE_DESC(node)->color;
-	rgba[0] = c->r * 255;
-	rgba[1] = c->g * 255;
-	rgba[2] = c->b * 255;
-	rgba[3] = 255;
+	const RGBAColor *c = NODE_DESC(node)->color;
+	rgba[0] = c->red;
+	rgba[1] = c->green;
+	rgba[2] = c->blue;
+	rgba[3] = c->alpha;
 }
 
 // Print the legacy and modern OpenGL projection and modelview matrices.
@@ -1313,11 +1313,11 @@ enum {
 
 
 /* Color of interconnecting branches */
-static RGBcolor branch_color = { 0.5, 0.0, 0.0 };
+static RGBAColor branch_color = {128, 0, 0, G_MAXUINT8};
 
 /* Label colors for platform and leaf nodes */
-static RGBcolor treev_platform_label_color = { 1.0, 1.0, 1.0 };
-static RGBcolor treev_leaf_label_color = { 0.0, 0.0, 0.0 };
+static RGBAColor treev_platform_label_color = {G_MAXUINT8, G_MAXUINT8, G_MAXUINT8, G_MAXUINT8};
+static RGBAColor treev_leaf_label_color = {0, 0, 0, G_MAXUINT8};
 
 /* Point buffers used in drawing curved geometry */
 static XYvec *inner_edge_buf = NULL;
@@ -2401,7 +2401,7 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 				treev_gldraw_folder( dnode, prev_r0 );
 			}
 			else if (action == TREEV_DRAW_LABELS) {
-				glColor3fv( (float *)&treev_leaf_label_color );
+				glColor4ubv( (GLubyte *)&treev_leaf_label_color );
 				treev_apply_label( dnode, prev_r0, TRUE );
 			}
 
@@ -2473,7 +2473,7 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 				dir_ndesc->b_dlist = glGenLists( 1 );
 			glNewList( dir_ndesc->b_dlist, GL_COMPILE_AND_EXECUTE );
 			glLoadName( NODE_DESC(dnode)->id );
-			glColor3fv( (float *)&branch_color );
+			glColor4ubv( (GLubyte *)&branch_color );
 			glNormal3d( 0.0, 0.0, 1.0 );
 			if (NODE_IS_METANODE(dnode)) {
 				treev_gldraw_loop( r0 );
@@ -2503,15 +2503,15 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 			glNewList( dir_ndesc->c_dlist, GL_COMPILE_AND_EXECUTE );
 			if (dir_collapsed) {
 				/* Label directory leaf */
-				glColor3fv( (float *)&treev_leaf_label_color );
+				glColor4ubv( (GLubyte *)&treev_leaf_label_color );
 				treev_apply_label( dnode, prev_r0, TRUE );
 			}
 			else if (NODE_IS_DIR(dnode)) {
 				/* Label directory platform */
-				glColor3fv( (float *)&treev_platform_label_color );
+				glColor4ubv( (GLubyte *)&treev_platform_label_color );
 				treev_apply_label( dnode, r0, FALSE );
 				/* Label leaf nodes that aren't directories */
-				glColor3fv( (float *)&treev_leaf_label_color );
+				glColor4ubv( (GLubyte *)&treev_leaf_label_color );
 				node = dnode->children;
 				while (node != NULL) {
 					if (!NODE_IS_DIR(node))
@@ -2835,7 +2835,7 @@ geometry_gldraw_fsv( void )
 
 	glEnable( GL_NORMALIZE );
 	for (c = 0; c < 3; c++) {
-		glColor3fv( (float *)&fsv_colors[c] );
+		glColor4ubv( (GLubyte *)&fsv_colors[c] );
 		vertices = fsv_vertices[c];
 		triangles = fsv_triangles[c];
 		edges = fsv_edges[c];
