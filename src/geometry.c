@@ -65,6 +65,10 @@ typedef struct Vertex {
 	GLfloat normal[3];
 } Vertex;
 
+// Vertex struct with only position
+typedef struct VertexPos {
+	GLfloat position[3];
+} VertexPos;
 
 // Convert the color of a node to a 4 element array of 1 byte unsigned integers
 static void
@@ -76,6 +80,18 @@ node_color_rgba8(GNode *node, GLubyte *rgba)
 	rgba[2] = c->blue;
 	rgba[3] = c->alpha;
 }
+
+// Convert the color of a node to a 4-elem array of GLfloat in range [0,1)
+// Unused, uncomment if needed.
+// static void
+// node_color_rgbaf(GNode *node, GLfloat *color)
+// {
+// 	const RGBAColor *c = NODE_DESC(node)->color;
+// 	color[0] = c->red / 255.0;
+// 	color[1] = c->green / 255.0;
+// 	color[2] = c->blue / 255.0;
+// 	color[3] = c->alpha / 255.0;
+// }
 
 // Print the legacy and modern OpenGL projection and modelview matrices.
 static void
@@ -990,17 +1006,35 @@ mapv_gldraw_folder( GNode *dnode )
 	folder_tab.x = folder_c1.x - (MAGIC_NUMBER - 1.0) * (folder_c1.x - folder_c0.x);
 	folder_tab.y = folder_c1.y - border;
 
-	node_glcolor( dnode );
-	glBegin( GL_LINE_STRIP );
-	glVertex2d( folder_c0.x, folder_c0.y );
-	glVertex2d( folder_c0.x, folder_tab.y );
-	glVertex2d( folder_c0.x + border, folder_c1.y );
-	glVertex2d( folder_tab.x - border, folder_c1.y );
-	glVertex2d( folder_tab.x, folder_tab.y );
-	glVertex2d( folder_c1.x, folder_tab.y );
-	glVertex2d( folder_c1.x, folder_c0.y );
-	glVertex2d( folder_c0.x, folder_c0.y );
-	glEnd( );
+	VertexPos vert[] = {
+		{{folder_c0.x, folder_c0.y, 0}},
+		{{folder_c0.x, folder_tab.y, 0}},
+		{{folder_c0.x + border, folder_c1.y, 0}},
+		{{folder_tab.x - border, folder_c1.y, 0}},
+		{{folder_tab.x, folder_tab.y, 0}},
+		{{folder_c1.x, folder_tab.y, 0}},
+		{{folder_c1.x, folder_c0.y, 0}}
+	};
+
+	static GLuint vbo;
+	if (!vbo)
+		glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vert), &vert, GL_STREAM_DRAW);
+
+	glEnableVertexAttribArray(gl.position_location);
+	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(VertexPos), (void *)offsetof(VertexPos, position));
+
+	glUseProgram(gl.program);
+	glUniform4f(gl.color_location, 0, 0, 0, 1); // Black
+	glDrawArrays(GL_LINE_LOOP, 0, 7);
+	glUseProgram(0);
+
+	// Avoid implicit sync by allowing GL to dealloc memory
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vert), NULL, GL_STREAM_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 
