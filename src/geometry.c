@@ -85,6 +85,7 @@ node_color_rgba8(GNode *node, GLubyte *rgba)
 static void
 debug_print_matrices()
 {
+#if 0
 #ifdef DEBUG
 	g_print("Modelview matrices. First modern\n");
 	float gl1[16];
@@ -103,6 +104,7 @@ debug_print_matrices()
 			g_print("%9.5f ", (double)gl1[jj*4 + ii]);
 		g_print("\n");
 	}
+#endif
 #endif
 }
 
@@ -875,7 +877,20 @@ mapv_gldraw_node( GNode *node )
 
 	/* Draw top face */
 	GLubyte color[4];
-	node_color_rgba8(node, color);
+	if (gl.render_mode == RENDERMODE_RENDER)
+		node_color_rgba8(node, color);
+	else {
+		GLuint c = NODE_DESC(node)->id;
+		int r = (c & 0x000000FF) >>  0;
+		int g = (c & 0x0000FF00) >>  8;
+		int b = (c & 0x00FF0000) >> 16;
+		color[0] = r;
+		color[1] = g;
+		color[2] = b;
+		color[3] = 255;
+		g_print("Painting node %u with Color red %u green %u blue %u alpha %u\n", c, color[0], color[1], color[2], color[3]);
+	}
+
 	// Vertices, in order 1,2,4,3 for triangle stripping
 	Vertex vertex_data[] = {
 		{{gparams->c0.x + offset.x, gparams->c0.y + offset.y, gparams->height}, // 1
@@ -910,6 +925,7 @@ mapv_gldraw_node( GNode *node )
 	glVertexAttribPointer(gl.color_location, 4, GL_UNSIGNED_BYTE, GL_TRUE,
 			      sizeof(Vertex), (void *)offsetof(Vertex, color));
 
+#if 0
 #ifdef DEBUG
 	mat4 mvp;
 	glm_mat4_mul(gl.projection, gl.modelview, mvp);
@@ -923,6 +939,7 @@ mapv_gldraw_node( GNode *node )
 	glmc_vec3_print(out, stdout);
 	glm_mat4_mulv3(mvp, vertex_data[3].position, 1, out);
 	glmc_vec3_print(out, stdout);
+#endif
 #endif
 
 	glUseProgram(gl.program);

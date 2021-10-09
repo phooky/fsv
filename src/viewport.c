@@ -31,6 +31,7 @@
 
 /* The node table, used to find a node by its ID number */
 static GNode **node_table = NULL;
+static size_t node_table_size;
 
 /* The currently highlighted (indicated) node */
 static GNode *indicated_node = NULL;
@@ -41,12 +42,13 @@ static int prev_x = 0, prev_y = 0;
 
 /* Receives a newly created node table from scanfs( ) */
 void
-viewport_pass_node_table( GNode **new_node_table )
+viewport_pass_node_table(GNode **new_node_table, size_t ntsize)
 {
 	if (node_table != NULL)
 		xfree( node_table );
 
 	node_table = new_node_table;
+	node_table_size = ntsize;
 }
 
 
@@ -56,6 +58,20 @@ viewport_pass_node_table( GNode **new_node_table )
 static GNode *
 node_at_location( int x, int y, unsigned int *face_id )
 {
+	// First try the new method
+	// GLuint n_id = ogl_select_modern(x, y);
+	// if (n_id) {
+	// 	g_print("Found node id %u\n", n_id);
+	// 	if (n_id >= node_table_size)
+	// 		g_warning("Got node id %u larger than node table size %zu\n", n_id, node_table_size);
+	// 	else {
+	// 		GNode *node = node_table[n_id];
+	// 		g_print("ogl_select_modern found node %s\n", NODE_DESC(node)->name);
+	// 		return node_table[n_id];
+	// 	}
+	// }
+
+	// Then try the old method
 	const GLuint *hit_records;
 	unsigned int name_count, z1, z2, name1, name2;
 	unsigned int min_z1;
@@ -97,8 +113,8 @@ node_at_location( int x, int y, unsigned int *face_id )
 
 
 /* This callback catches all events for the viewport */
-int
-viewport_cb( GtkWidget *gl_area_w, GdkEvent *event )
+gboolean
+viewport_cb(GtkWidget *gl_area_w, GdkEvent *event, gpointer user_data)
 {
 	GdkEventButton *ev_button;
 	GdkEventMotion *ev_motion;

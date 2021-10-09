@@ -367,6 +367,57 @@ ogl_draw( void )
 }
 
 
+// Node selection with modern GL. Use the slow but simple trick described in
+// http://www.opengl-tutorial.org/miscellaneous/clicking-on-objects/picking-with-an-opengl-hack/
+GLuint
+ogl_select_modern(GLint x, GLint y)
+{
+	gl.render_mode = RENDERMODE_SELECT;
+	setup_projection_matrix(FALSE);
+	setup_modelview_matrix();
+	ogl_upload_matrices();
+	// Enable depth test
+	//glEnable(GL_DEPTH_TEST);
+	// Accept fragment if it closer to the camera than the former one
+	//glDepthFunc(GL_LESS);
+
+	// Cull triangles which normal is not towards the camera
+	//glEnable(GL_CULL_FACE);
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	geometry_draw(FALSE);
+
+	// Wait until all the pending drawing commands are really done.
+	// Ultra-mega-over slow !
+	// There are usually a long time between glDrawElements() and
+	// all the fragments completely rasterized.
+	glFlush();
+	glFinish();
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	// Read the pixel at the specified coordinates. Have to massage y
+	// coordinate since GTk and OpenGL use different coord systems.
+	// Ultra-mega-over slow too, even for 1 pixel,
+	// because the framebuffer is on the GPU.
+	GLubyte color[4];
+	GLint viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	GLint yy = viewport[3] - y;
+	glReadPixels(x, yy, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
+	g_print("ogl_select_modern: Color red %u green %u blue %u alpha %u\n", color[0], color[1], color[2], color[3]);
+	GLuint node_id = color[0] + (color[1] << 8) + (color[2] << 16);
+
+	/* Leave matrices in a usable state */
+	setup_projection_matrix(TRUE);
+	setup_modelview_matrix();
+	ogl_upload_matrices();
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	gl.render_mode = RENDERMODE_RENDER;
+	return node_id;
+}
+
 /* This returns an array of names (unsigned ints) of the primitives which
  * occur under the given viewport coordinates (x,y) (where (0,0) indicates
  * the upper left corner). Return value is the number of names (hit records)

@@ -15,7 +15,7 @@
 #define FSV_VIEWPORT_H
 
 
-void viewport_pass_node_table( GNode **new_node_table );
+void viewport_pass_node_table(GNode **new_node_table, size_t nz);
 #ifdef __GTK_H__
 int viewport_cb( GtkWidget *gl_area_w, GdkEvent *event );
 #endif

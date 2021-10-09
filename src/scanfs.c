@@ -372,7 +372,7 @@ scanfs( const char *dir )
 	setup_fstree_recursive( globals.fstree, node_table );
 
 	/* Pass off new node table to the viewport handler */
-	viewport_pass_node_table( node_table );
+	viewport_pass_node_table(node_table, node_id);
 }
 
 

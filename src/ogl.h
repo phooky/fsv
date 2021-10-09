@@ -15,7 +15,12 @@
 #include <epoxy/gl.h>
 #include <cglm/cglm.h>
 
+typedef enum {
+	RENDERMODE_RENDER = 0,  // The usual rendering
+	RENDERMODE_SELECT	// Render with unique colors when selecting (no display)
+} RenderMode;
 
+// Global state for modern GL
 typedef struct FsvGlState {
 	GLuint vao; // OpenGL Vertex Array Object Names
 
@@ -34,6 +39,8 @@ typedef struct FsvGlState {
 	// The base modelview matrix. Not to be used directly, but copy it
 	// over the modelview matrix when resetting matrix state.
 	mat4 base_modelview;
+
+	RenderMode render_mode;
 } FsvGlState;
 
 extern FsvGlState gl;
@@ -43,9 +50,8 @@ void ogl_refresh( void );
 double ogl_aspect_ratio( void );
 void ogl_upload_matrices();
 void ogl_draw( void );
-#ifdef GL_NO_ERROR
+GLuint ogl_select_modern(GLint x, GLint y);
 int ogl_select( int x, int y, const GLuint **selectbuf_ptr );
-#endif
 #ifdef __GTK_H__
 GtkWidget *ogl_widget_new( void );
 #endif
