@@ -1303,14 +1303,6 @@ mapv_draw( boolean high_detail )
 		//	glNewList( fstree_high_dlist, GL_COMPILE_AND_EXECUTE );
 
 		//if (fstree_high_draw_stage <= 1) {
-			/* "Cel lines" */
-			outline_pre( );
-			//if (fstree_low_draw_stage <= 1)
-				mapv_draw_recursive( globals.fstree, MAPV_DRAW_GEOMETRY );
-			//else
-			//	glCallList( fstree_low_dlist ); /* shortcut */
-			outline_post( );
-
 			/* Node name labels */
 			text_pre( );
 			glColor3f( 0.0, 0.0, 0.0 ); /* all labels are black */
