@@ -106,11 +106,11 @@ init_shaders()
 
 	/* get the location of the "mvp" uniform */
 	gl.mvp_location = glGetUniformLocation(program, "mvp");
+	gl.color_location = glGetUniformLocation(program, "color");
 
 	/* get the location of the "position" and "color" attributes */
 	gl.position_location = glGetAttribLocation(program, "position");
 	gl.normal_location = glGetAttribLocation(program, "normal");
-	gl.color_location = glGetAttribLocation(program, "color");
 
 	/* the individual shaders can be detached and destroyed */
 	glDetachShader(program, vertex);

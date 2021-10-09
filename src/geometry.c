@@ -59,14 +59,10 @@ static void cursor_post( void );
 static void queue_uncached_draw( void );
 
 
-// Vertex struct for modern OpenGL
-// The _pad variable is unused and is there to make sure the normal vector
-// is aligned on a 16 byte boundary, and the struct itself is 32 bytes.
+// Vertex struct for modern OpenGL with normals
 typedef struct Vertex {
 	GLfloat position[3];
-	GLuint _pad;
 	GLfloat normal[3];
-	GLubyte color[4];
 } Vertex;
 
 
@@ -893,15 +889,14 @@ mapv_gldraw_node( GNode *node )
 
 	// Vertices, in order 1,2,4,3 for triangle stripping
 	Vertex vertex_data[] = {
-		{{gparams->c0.x + offset.x, gparams->c0.y + offset.y, gparams->height}, // 1
-		 0, {0.0f, 0.0f, 1.0f}, {color[0], color[1], color[2], color[3]}},
-		{{gparams->c1.x - offset.x, gparams->c0.y + offset.y, gparams->height}, // 2
-		 0, {0.0f, 0.0f, 1.0f}, {color[0], color[1], color[2], color[3]}},
-		{{gparams->c0.x + offset.x, gparams->c1.y - offset.y, gparams->height}, // 4
-		 0, {0.0f, 0.0f, 1.0f}, {color[0], color[1], color[2], color[3]}},
-		{{gparams->c1.x - offset.x, gparams->c1.y - offset.y, gparams->height}, // 3
-		 0, {0.0f, 0.0f, 1.0f}, {color[0], color[1], color[2], color[3]}}
-	};
+	    {{gparams->c0.x + offset.x, gparams->c0.y + offset.y, gparams->height}, // 1
+	     {0.0f, 0.0f, 1.0f}},
+	    {{gparams->c1.x - offset.x, gparams->c0.y + offset.y, gparams->height}, // 2
+	     {0.0f, 0.0f, 1.0f}},
+	    {{gparams->c0.x + offset.x, gparams->c1.y - offset.y, gparams->height}, // 4
+	     {0.0f, 0.0f, 1.0f}},
+	    {{gparams->c1.x - offset.x, gparams->c1.y - offset.y, gparams->height}, // 3
+	     {0.0f, 0.0f, 1.0f}}};
 	debug_print_matrices();
 	static GLuint vbo;
 	if (!vbo)
@@ -921,9 +916,13 @@ mapv_gldraw_node( GNode *node )
 	//		      sizeof(Vertex), (void *)offsetof(Vertex, normal));
 	//glNormalPointer(GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
-	glEnableVertexAttribArray(gl.color_location);
-	glVertexAttribPointer(gl.color_location, 4, GL_UNSIGNED_BYTE, GL_TRUE,
-			      sizeof(Vertex), (void *)offsetof(Vertex, color));
+
+	glUseProgram(gl.program);
+
+	glUniform4f(gl.color_location, color[0]/255.0,
+		     color[1]/255.0,
+		     color[2]/255.0,
+		     color[3]/255.0);
 
 #if 0
 #ifdef DEBUG
@@ -942,7 +941,6 @@ mapv_gldraw_node( GNode *node )
 #endif
 #endif
 
-	glUseProgram(gl.program);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glUseProgram(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);

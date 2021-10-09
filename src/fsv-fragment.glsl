@@ -1,9 +1,9 @@
 #version 140
 
-smooth in vec4 vertexColor;
+uniform vec4 color;
 
 out vec4 outputColor;
 
 void main() {
-  outputColor = vertexColor;
+  outputColor = color;
 }
