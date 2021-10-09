@@ -14,7 +14,6 @@
 #include "tmaptext.h"
 
 #include <epoxy/gl.h>
-#include <GL/glu.h> /* gluBuild2DMipmaps( ) */
 
 /* Bitmap font definition */
 #define char_width 16
@@ -24,8 +23,6 @@
 
 /* Text can be squeezed to at most half its normal width */
 #define TEXT_MAX_SQUEEZE 2.0
-/* Mipmaps make faraway text look nice */
-#define TEXT_USE_MIPMAPS
 
 
 /* Normal character aspect ratio */
@@ -80,22 +77,16 @@ text_init( void )
 	/* Set up texture-mapping parameters */
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
-#ifdef TEXT_USE_MIPMAPS
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR );
-#else
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-#endif
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 	glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color );
 
 	/* Load texture */
 	glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 	charset_pixels = xbm_pixels( charset_bits, charset_width * charset_height );
-#ifdef TEXT_USE_MIPMAPS
-	gluBuild2DMipmaps( GL_TEXTURE_2D, GL_INTENSITY4, charset_width, charset_height, GL_LUMINANCE, GL_UNSIGNED_BYTE, charset_pixels );
-#else
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_INTENSITY4, charset_width, charset_height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, charset_pixels );*/
-#endif
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY4, charset_width, charset_height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, charset_pixels);
+	glGenerateMipmap(GL_TEXTURE_2D);
 	xfree( charset_pixels );
 }
 
