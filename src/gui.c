@@ -285,13 +285,10 @@ static void
 color_picker_cb(GtkColorButton *colorpicker_w, gpointer data)
 {
 	void (*user_callback)( RGBcolor *, void * );
-	RGBcolor color;
 	GdkColor gcolor;
 
 	gtk_color_button_get_color(colorpicker_w, &gcolor);
-	color.r = (float)gcolor.red / 65535.0;
-	color.g = (float)gcolor.green / 65535.0;
-	color.b = (float)gcolor.blue / 65535.0;
+	RGBcolor color = GdkColor2RGB(&gcolor);
 
 	/* Call user callback */
 	user_callback = (void (*)( RGBcolor *, void * ))g_object_get_data(G_OBJECT(colorpicker_w), "user_callback");
@@ -1093,22 +1090,16 @@ gui_colorsel_window( const char *title, RGBcolor *init_color, void (*ok_callback
 {
 	GtkWidget *colorsel_window_w;
 	GtkColorSelectionDialog *csd;
-	GdkColor gcolor;
 
 	colorsel_window_w = gtk_color_selection_dialog_new( title );
 	csd = GTK_COLOR_SELECTION_DIALOG(colorsel_window_w);
-	gcolor.red = init_color->r * G_MAXUINT16;
-	gcolor.green = init_color->g * G_MAXUINT16;
-	gcolor.blue = init_color->b * G_MAXUINT16;
+	GdkColor gcolor = RGB2GdkColor(init_color);
 	gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(gtk_color_selection_dialog_get_color_selection(csd)), &gcolor);
 
 	if (gtk_dialog_run(GTK_DIALOG(csd)) == GTK_RESPONSE_OK) {
 		GtkWidget *colorsel = gtk_color_selection_dialog_get_color_selection(csd);
 		gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(colorsel), &gcolor);
-		RGBcolor color;
-		color.r = (float) gcolor.red / G_MAXUINT16;
-		color.g = (float) gcolor.green / G_MAXUINT16;
-		color.b = (float) gcolor.blue / G_MAXUINT16;
+		RGBcolor color = GdkColor2RGB(&gcolor);
 		/* Call user callback */
 		(ok_callback)(&color, ok_callback_data);
         }
@@ -1263,6 +1254,25 @@ gui_window_modalize( GtkWidget *window_w, GtkWidget *parent_window_w )
 
 	/* Restore original state once the window is destroyed */
 	g_signal_connect(G_OBJECT(window_w), "destroy", G_CALLBACK(window_unmodalize), parent_window_w);
+}
+
+
+RGBcolor GdkColor2RGB(const GdkColor *color)
+{
+	RGBcolor c;
+	c.r = color->red / G_MAXUINT16;
+	c.g = color->green / G_MAXUINT16;
+	c.b = color->blue / G_MAXUINT16;
+	return c;
+}
+
+GdkColor RGB2GdkColor(const RGBcolor *src)
+{
+	GdkColor dest;
+	dest.red = src->r * G_MAXUINT16;
+	dest.green = src->g * G_MAXUINT16;
+	dest.blue = src->b * G_MAXUINT16;
+	return dest;
 }
 
 

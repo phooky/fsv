@@ -269,7 +269,6 @@ csdialog_time_spectrum_func( double x )
 static void
 csdialog_time_color_picker_set_access( boolean enabled )
 {
-	RGBcolor disabled_color;
 	RGBcolor *color;
 	GdkColor *gcolor;
 
@@ -287,9 +286,7 @@ csdialog_time_color_picker_set_access( boolean enabled )
 	else {
 		GtkStyle *style = gtk_widget_get_style(csdialog.time.old_colorpicker_w);
 		gcolor = &style->bg[GTK_STATE_NORMAL];
-		disabled_color.r = (float)gcolor->red / 65535.0;
-		disabled_color.g = (float)gcolor->green / 65535.0;
-		disabled_color.b = (float)gcolor->blue / 65535.0;
+		RGBcolor disabled_color = GdkColor2RGB(gcolor);
 		gui_colorpicker_set_color( csdialog.time.old_colorpicker_w, &disabled_color );
 		gui_colorpicker_set_color( csdialog.time.new_colorpicker_w, &disabled_color );
 	}
@@ -344,12 +341,9 @@ csdialog_time_color_picker_cb( RGBcolor *picked_color, RGBcolor *end_color )
 static GtkStyle *
 solid_color_cell_style( GtkWidget *list_w, RGBcolor *color )
 {
-	GdkColor gcolor;
 	GtkStyle *style;
 
-	gcolor.red = (unsigned short)(65535.0 * color->r);
-	gcolor.green = (unsigned short)(65535.0 * color->g);
-	gcolor.blue = (unsigned short)(65535.0 * color->b);
+	GdkColor gcolor = RGB2GdkColor(color);
 	style = gtk_style_copy(gtk_widget_get_style(list_w));
 	style->base[GTK_STATE_NORMAL] = gcolor; /* struct assign */
 	style->bg[GTK_STATE_SELECTED] = gcolor; /* struct assign */
@@ -391,9 +385,7 @@ wplist_row(GtkListStore *store, GtkTreeIter *iter, struct WPListRowData *row_dat
 	else
 		color = &csdialog.color_config.by_wpattern.default_color;
 	GdkColor *gdk_color = NEW(GdkColor);
-	gdk_color->red    = color->r * G_MAXUINT16;
-	gdk_color->green  = color->g * G_MAXUINT16;
-	gdk_color->blue   = color->b * G_MAXUINT16;
+	*gdk_color = RGB2GdkColor(color);
 
 	gtk_list_store_set(store, iter,
 			   DIALOG_WPATTERN_WPATTERN_COLUMN, rowtext,
