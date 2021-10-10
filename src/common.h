@@ -146,13 +146,12 @@ typedef enum {
 
 /**** Global data structures ****************/
 
-/* RGBA color definition (components are in range [0, G_MAXUINT8]) */
-typedef struct _RGBAColor RGBAColor;
-struct _RGBAColor {
-	guint8	red;
-	guint8	green;
-	guint8	blue;
-	guint8  alpha;
+/* RGB color definition (components are in range [0, 1]) */
+typedef struct _RGBcolor RGBcolor;
+struct _RGBcolor {
+	float	r;
+	float	g;
+	float	b;
 };
 
 /* Point/vector definition (2D Cartesian coordinates) */
@@ -201,7 +200,7 @@ struct _NodeDesc {
 	time_t		atime;		/* Last access time */
 	time_t		mtime;		/* Last modification time */
 	time_t		ctime;		/* Last attribute change time */
-	const RGBAColor	*color;		/* Node color */
+	const RGBcolor	*color;		/* Node color */
 	double		geomparams[5];	/* Geometry parameters */
 };
 
@@ -308,10 +307,10 @@ const char *abbrev_size( int64 size );
 const char *node_absname( GNode *node );
 GNode *node_named( const char *absname );
 const struct NodeInfo *get_node_info( GNode *node );
-const char *rgb2hex(RGBAColor *color);
-RGBAColor hex2rgb(const char *hex_color);
-RGBAColor rainbow_color(double x);
-RGBAColor heat_color(double x);
+const char *rgb2hex( RGBcolor *color );
+RGBcolor hex2rgb( const char *hex_color );
+RGBcolor rainbow_color( double x );
+RGBcolor heat_color( double x );
 GList *g_list_replace( GList *list, gpointer old_data, gpointer new_data );
 int gnome_config_get_token( const char *path, const char **tokens );
 void gnome_config_set_token( const char *path, int new_value, const char **tokens );

@@ -4,7 +4,6 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
- * SPDX-FileCopyrightText: 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * SPDX-License-Identifier:  LGPL-2.1-or-later
  */
@@ -736,14 +735,14 @@ get_node_info( GNode *node )
 
 /* Generates a hexadecimal color triplet */
 const char *
-rgb2hex( RGBAColor *color )
+rgb2hex( RGBcolor *color )
 {
 	static char hexbuf[8];
 	int r, g, b;
 
-	r = (int)color->red;
-	g = (int)color->green;
-	b = (int)color->blue;
+	r = (int)floor( 255.0 * color->r + 0.5 );
+	g = (int)floor( 255.0 * color->g + 0.5 );
+	b = (int)floor( 255.0 * color->b + 0.5 );
 
 	sprintf( hexbuf, "#%02X%02X%02X", r, g, b );
 
@@ -752,10 +751,10 @@ rgb2hex( RGBAColor *color )
 
 
 /* Parses a hexadecimal color triplet */
-RGBAColor
+RGBcolor
 hex2rgb( const char *hex_color )
 {
-	RGBAColor rgb_color;
+	RGBcolor rgb_color;
 	int c[3] = { 0, 0, 0 };
 	int x, y, i;
 	const char *hex;
@@ -781,10 +780,9 @@ hex2rgb( const char *hex_color )
 		c[i >> 1] += y;
 	}
 
-	rgb_color.red = c[0];
-	rgb_color.green = c[1];
-	rgb_color.blue = c[2];
-	rgb_color.alpha = G_MAXUINT8;
+	rgb_color.r = (float)c[0] / 255.0;
+	rgb_color.g = (float)c[1] / 255.0;
+	rgb_color.b = (float)c[2] / 255.0;
 
 	return rgb_color;
 }
@@ -792,11 +790,11 @@ hex2rgb( const char *hex_color )
 
 /* Returns a color at the given fractional position in a rainbow spectrum
  * (0 == red, 1 == magenta, 0.5 == around green, etc.) */
-RGBAColor
+RGBcolor
 rainbow_color( double x )
 {
-	RGBAColor color;
-	double h, q, t, r, g, b;
+	RGBcolor color;
+	double h, q, t;
 
 	g_assert( (x >= 0.0) && (x <= 1.0) );
 
@@ -806,64 +804,54 @@ rainbow_color( double x )
 
 	switch ((int)floor( h )) {
 		case 0:
-		r = 1.0;
-		g = t;
-		b = 0.0;
+		color.r = 1.0;
+		color.g = t;
+		color.b = 0.0;
 		break;
 
 		case 1:
-		r = q;
-		g = 1.0;
-		b = 0.0;
+		color.r = q;
+		color.g = 1.0;
+		color.b = 0.0;
 		break;
 
 		case 2:
-		r = 0.0;
-		g = 1.0;
-		b = t;
+		color.r = 0.0;
+		color.g = 1.0;
+		color.b = t;
 		break;
 
 		case 3:
-		r = 0.0;
-		g = q;
-		b = 1.0;
+		color.r = 0.0;
+		color.g = q;
+		color.b = 1.0;
 		break;
 
 		case 4:
-		r = t;
-		g = 0.0;
-		b = 1.0;
+		color.r = t;
+		color.g = 0.0;
+		color.b = 1.0;
 		break;
 
 		SWITCH_FAIL
 	}
 
-	color.red = r * G_MAXUINT8;
-	color.green = g * G_MAXUINT8;
-	color.blue = b * G_MAXUINT8;
-	color.alpha = G_MAXUINT8;
         return color;
 }
 
 
 /* Returns a color at the given fractional position in a heat spectrum
  * (0 == cold, 1 == hot) */
-RGBAColor
+RGBcolor
 heat_color( double x )
 {
-	RGBAColor color;
-	double r, g, b;
+	RGBcolor color;
 
 	g_assert( (x >= 0.0) && (x <= 1.0) );
 
-	r = 0.5 * (1.0 - cos( PI * CLAMP(2.0 * x, 0.0, 1.0) ));
-	g = 0.5 * (1.0 - cos( PI * CLAMP(2.0 * x - 0.5, 0.0, 1.0) ));
-	b = 0.5 * (1.0 - cos( PI * CLAMP(2.0 * x - 1.0, 0.0, 1.0) ));
-
-	color.red = r * G_MAXUINT8;
-	color.green = g * G_MAXUINT8;
-	color.blue = b * G_MAXUINT8;
-	color.alpha = G_MAXUINT8;
+	color.r = 0.5 * (1.0 - cos( PI * CLAMP(2.0 * x, 0.0, 1.0) ));
+	color.g = 0.5 * (1.0 - cos( PI * CLAMP(2.0 * x - 0.5, 0.0, 1.0) ));
+	color.b = 0.5 * (1.0 - cos( PI * CLAMP(2.0 * x - 1.0, 0.0, 1.0) ));
 
 	return color;
 }

@@ -284,15 +284,17 @@ gui_wpattern_list_new(GtkWidget *parent_w)
 static void
 color_picker_cb(GtkColorButton *colorpicker_w, gpointer data)
 {
-	void (*user_callback)( RGBAColor *, void * );
-	RGBAColor color;
+	void (*user_callback)( RGBcolor *, void * );
+	RGBcolor color;
 	GdkColor gcolor;
 
 	gtk_color_button_get_color(colorpicker_w, &gcolor);
-	color = GdkColor2RGBA(&gcolor);
+	color.r = (float)gcolor.red / 65535.0;
+	color.g = (float)gcolor.green / 65535.0;
+	color.b = (float)gcolor.blue / 65535.0;
 
 	/* Call user callback */
-	user_callback = (void (*)( RGBAColor *, void * ))g_object_get_data(G_OBJECT(colorpicker_w), "user_callback");
+	user_callback = (void (*)( RGBcolor *, void * ))g_object_get_data(G_OBJECT(colorpicker_w), "user_callback");
 	(user_callback)( &color, data );
 }
 
@@ -302,7 +304,7 @@ color_picker_cb(GtkColorButton *colorpicker_w, gpointer data)
  * Changing the color (i.e. pressing OK in the color selection dialog)
  * activates the given callback */
 GtkWidget *
-gui_colorpicker_add(GtkWidget *parent_w, RGBAColor *init_color, const char *title, void (*callback)( ), void *callback_data)
+gui_colorpicker_add( GtkWidget *parent_w, RGBcolor *init_color, const char *title, void (*callback)( ), void *callback_data )
 {
 	GtkWidget *colorbutton_w;
 
@@ -319,10 +321,13 @@ gui_colorpicker_add(GtkWidget *parent_w, RGBAColor *init_color, const char *titl
 
 /* Sets the color on a color picker widget */
 void
-gui_colorpicker_set_color(GtkWidget *colorbutton_w, RGBAColor *color)
+gui_colorpicker_set_color( GtkWidget *colorbutton_w, RGBcolor *color )
 {
-	GdkColor gdk_color;
-	RGBAColor2GdkColor(*color, &gdk_color);
+	GdkColor gdk_color = {
+		.red	= color->r * sizeof(guint16),
+		.green	= color->g * sizeof(guint16),
+		.blue	= color->b * sizeof(guint16),
+	};
 
 	gtk_color_button_set_color(GTK_COLOR_BUTTON(colorbutton_w), &gdk_color);
 }
@@ -878,8 +883,8 @@ delete_pixbuf(guchar *pixels, gpointer data)
 static void
 spectrum_draw(GtkWidget *spectrum_w)
 {
-	RGBAColor (*spectrum_func)( double x );
-	RGBAColor color;
+	RGBcolor (*spectrum_func)( double x );
+	RGBcolor color;
 	int width, height;
 	int i;
 
@@ -892,7 +897,7 @@ spectrum_draw(GtkWidget *spectrum_w)
 		return;
 
 	/* Get spectrum function */
-	spectrum_func = (RGBAColor (*)( double x ))g_object_get_data(G_OBJECT(spectrum_w), "spectrum_func");
+	spectrum_func = (RGBcolor (*)( double x ))g_object_get_data(G_OBJECT(spectrum_w), "spectrum_func");
 
 	/* Create the spectrum image */
 	guchar *imgbuf = NEW_ARRAY(guchar, 3 * width * height);
@@ -901,9 +906,9 @@ spectrum_draw(GtkWidget *spectrum_w)
 	for (i = 0; i < width; i++) {
 		color = (spectrum_func)( (double)i / (double)(width - 1) ); /* struct assign */
 		for (int j = 0; j < height; j++) {
-			imgbuf[3*j*width + 3 * i] = (unsigned char)color.red;
-			imgbuf[3*j*width + 3 * i + 1] = (unsigned char)color.green;
-			imgbuf[3*j*width + 3 * i + 2] = (unsigned char)color.blue;
+			imgbuf[3*j*width + 3 * i] = (unsigned char)(255.0 * color.r);
+			imgbuf[3*j*width + 3 * i + 1] = (unsigned char)(255.0 * color.g);
+			imgbuf[3*j*width + 3 * i + 2] = (unsigned char)(255.0 * color.b);
 		}
 	}
 
@@ -919,7 +924,7 @@ spectrum_draw(GtkWidget *spectrum_w)
  * should be a function returning the appropriate color at a specified
  * fractional position in the spectrum */
 void
-gui_spectrum_fill(GtkWidget *spectrum_w, RGBAColor (*spectrum_func)( double x ))
+gui_spectrum_fill( GtkWidget *spectrum_w, RGBcolor (*spectrum_func)( double x ) )
 {
 	static const char data_key[] = "spectrum_func";
 
@@ -1084,7 +1089,7 @@ gui_widget_packing( GtkWidget *widget, boolean expand, boolean fill, boolean sta
 
 /* Creates a color selection window. OK button activates ok_callback */
 void
-gui_colorsel_window(const char *title, RGBAColor *init_color, void (*ok_callback)( ), void *ok_callback_data)
+gui_colorsel_window( const char *title, RGBcolor *init_color, void (*ok_callback)( ), void *ok_callback_data )
 {
 	GtkWidget *colorsel_window_w;
 	GtkColorSelectionDialog *csd;
@@ -1092,13 +1097,18 @@ gui_colorsel_window(const char *title, RGBAColor *init_color, void (*ok_callback
 
 	colorsel_window_w = gtk_color_selection_dialog_new( title );
 	csd = GTK_COLOR_SELECTION_DIALOG(colorsel_window_w);
-	RGBAColor2GdkColor(*init_color, &gcolor);
+	gcolor.red = init_color->r * G_MAXUINT16;
+	gcolor.green = init_color->g * G_MAXUINT16;
+	gcolor.blue = init_color->b * G_MAXUINT16;
 	gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(gtk_color_selection_dialog_get_color_selection(csd)), &gcolor);
 
 	if (gtk_dialog_run(GTK_DIALOG(csd)) == GTK_RESPONSE_OK) {
 		GtkWidget *colorsel = gtk_color_selection_dialog_get_color_selection(csd);
 		gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(colorsel), &gcolor);
-		RGBAColor color = GdkColor2RGBA(&gcolor);
+		RGBcolor color;
+		color.r = (float) gcolor.red / G_MAXUINT16;
+		color.g = (float) gcolor.green / G_MAXUINT16;
+		color.b = (float) gcolor.blue / G_MAXUINT16;
 		/* Call user callback */
 		(ok_callback)(&color, ok_callback_data);
         }
@@ -1255,24 +1265,6 @@ gui_window_modalize( GtkWidget *window_w, GtkWidget *parent_window_w )
 	g_signal_connect(G_OBJECT(window_w), "destroy", G_CALLBACK(window_unmodalize), parent_window_w);
 }
 
-
-RGBAColor GdkColor2RGBA(GdkColor *color)
-{
-	RGBAColor c;
-	c.red = ((guint32) color->red * G_MAXUINT8) / G_MAXUINT16;
-	c.green = ((guint32) color->green * G_MAXUINT8) / G_MAXUINT16;
-	c.blue = ((guint32) color->blue * G_MAXUINT8) / G_MAXUINT16;
-	c.alpha = G_MAXUINT8;
-	return c;
-}
-
-void RGBAColor2GdkColor(RGBAColor src, GdkColor *dest)
-{
-	g_assert(dest != NULL);
-	dest->red = ((guint32) src.red * G_MAXUINT16) / G_MAXUINT8;
-	dest->green = ((guint32) src.green * G_MAXUINT16) / G_MAXUINT8;
-	dest->blue = ((guint32) src.blue * G_MAXUINT16) / G_MAXUINT8;
-}
 
 #if 0
 /* The following is stuff that isn't being used right now (obviously),

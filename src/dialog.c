@@ -169,14 +169,13 @@ static const char *spectrum_heat;
 
 /* Callback for the node type color pickers */
 static void
-csdialog_node_type_color_picker_cb(RGBAColor *picked_color, RGBAColor *node_type_color)
+csdialog_node_type_color_picker_cb( RGBcolor *picked_color, RGBcolor *node_type_color )
 {
 	/* node_type_color points to the appropriate member of
 	 * csdialog.color_config.by_nodetype.colors[] */
-	node_type_color->red = picked_color->red;
-	node_type_color->green = picked_color->green;
-	node_type_color->blue = picked_color->blue;
-	node_type_color->alpha = picked_color->alpha;
+	node_type_color->r = picked_color->r;
+	node_type_color->g = picked_color->g;
+	node_type_color->b = picked_color->b;
 }
 
 
@@ -249,10 +248,10 @@ csdialog_time_timestamp_combobox_changed(GtkComboBox *combobox, gpointer user_da
 
 
 /* This is the spectrum function used to paint the spectrum widget */
-static RGBAColor
+static RGBcolor
 csdialog_time_spectrum_func( double x )
 {
-	RGBAColor *boundary_colors[2];
+	RGBcolor *boundary_colors[2];
 	void *data = NULL;
 
 	if (csdialog.color_config.by_timestamp.spectrum_type == SPECTRUM_GRADIENT) {
@@ -270,8 +269,8 @@ csdialog_time_spectrum_func( double x )
 static void
 csdialog_time_color_picker_set_access( boolean enabled )
 {
-	RGBAColor disabled_color;
-	RGBAColor *color;
+	RGBcolor disabled_color;
+	RGBcolor *color;
 	GdkColor *gcolor;
 
 	gtk_widget_set_sensitive( csdialog.time.old_colorpicker_w, enabled );
@@ -288,7 +287,9 @@ csdialog_time_color_picker_set_access( boolean enabled )
 	else {
 		GtkStyle *style = gtk_widget_get_style(csdialog.time.old_colorpicker_w);
 		gcolor = &style->bg[GTK_STATE_NORMAL];
-		disabled_color = GdkColor2RGBA(gcolor);
+		disabled_color.r = (float)gcolor->red / 65535.0;
+		disabled_color.g = (float)gcolor->green / 65535.0;
+		disabled_color.b = (float)gcolor->blue / 65535.0;
 		gui_colorpicker_set_color( csdialog.time.old_colorpicker_w, &disabled_color );
 		gui_colorpicker_set_color( csdialog.time.new_colorpicker_w, &disabled_color );
 	}
@@ -325,14 +326,13 @@ csdialog_time_spectrum_combobox_changed(GtkComboBox *cbox, gpointer user_data)
 
 /* Callback for the spectrum's color picker buttons */
 static void
-csdialog_time_color_picker_cb(RGBAColor *picked_color, RGBAColor *end_color)
+csdialog_time_color_picker_cb( RGBcolor *picked_color, RGBcolor *end_color )
 {
 	/* end_color points to either old_color or new_color in
 	 * csdialog.color_config.by_timestamp */
-	end_color->red = picked_color->red;
-	end_color->green = picked_color->green;
-	end_color->blue = picked_color->blue;
-	end_color->alpha = picked_color->alpha;
+	end_color->r = picked_color->r;
+	end_color->g = picked_color->g;
+	end_color->b = picked_color->b;
 
 	/* Redraw spectrum */
 	gui_spectrum_fill(csdialog.time.spectrum_w, csdialog_time_spectrum_func);
@@ -342,13 +342,14 @@ csdialog_time_color_picker_cb(RGBAColor *picked_color, RGBAColor *end_color)
 /* Helper function for csdialog_wpattern_list_populate( ). This
  * generates a GtkStyle to permit setting a cell to a solid color */
 static GtkStyle *
-solid_color_cell_style( GtkWidget *list_w, RGBAColor *color )
+solid_color_cell_style( GtkWidget *list_w, RGBcolor *color )
 {
 	GdkColor gcolor;
 	GtkStyle *style;
 
-	RGBAColor2GdkColor(*color, &gcolor);
-
+	gcolor.red = (unsigned short)(65535.0 * color->r);
+	gcolor.green = (unsigned short)(65535.0 * color->g);
+	gcolor.blue = (unsigned short)(65535.0 * color->b);
 	style = gtk_style_copy(gtk_widget_get_style(list_w));
 	style->base[GTK_STATE_NORMAL] = gcolor; /* struct assign */
 	style->bg[GTK_STATE_SELECTED] = gcolor; /* struct assign */
@@ -384,13 +385,15 @@ wplist_row(GtkListStore *store, GtkTreeIter *iter, struct WPListRowData *row_dat
 		break;
 	}
 
-	RGBAColor *color;
+	RGBcolor *color;
 	if (row_data && row_data->wpgroup)
 		color = &row_data->wpgroup->color;
 	else
 		color = &csdialog.color_config.by_wpattern.default_color;
 	GdkColor *gdk_color = NEW(GdkColor);
-	RGBAColor2GdkColor(*color, gdk_color);
+	gdk_color->red    = color->r * G_MAXUINT16;
+	gdk_color->green  = color->g * G_MAXUINT16;
+	gdk_color->blue   = color->b * G_MAXUINT16;
 
 	gtk_list_store_set(store, iter,
 			   DIALOG_WPATTERN_WPATTERN_COLUMN, rowtext,
@@ -525,14 +528,13 @@ csdialog_wpattern_list_populate( void )
 /* Callback for the color selection dialog popped up by clicking on a
  * color bar in the wildcard pattern list */
 static void
-csdialog_wpattern_color_selection_cb(RGBAColor *selected_color, RGBAColor *wpattern_color)
+csdialog_wpattern_color_selection_cb( RGBcolor *selected_color, RGBcolor *wpattern_color )
 {
 	/* wpattern_color points to the appropriate color record
 	 * somewhere inside csdialog.color_config.by_wpattern */
-	wpattern_color->red = selected_color->red;
-	wpattern_color->green = selected_color->green;
-	wpattern_color->blue = selected_color->blue;
-	wpattern_color->alpha = selected_color->alpha;
+	wpattern_color->r = selected_color->r;
+	wpattern_color->g = selected_color->g;
+	wpattern_color->b = selected_color->b;
 
 	/* Update the list */
 	csdialog_wpattern_list_populate( );
@@ -544,7 +546,7 @@ static gboolean
 csdialog_wpattern_list_click_cb( GtkWidget *list_w, GdkEventButton *ev_button )
 {
 	struct WPListRowData *row_data = NULL;
-	RGBAColor *color;
+        RGBcolor *color;
 	const char *title;
 
 	/* Ignore button release following a row drag */
@@ -656,17 +658,16 @@ csdialog_wpattern_list_drag_cb( GtkWidget *unused1, GdkDragContext *unused2, int
 /* Callback for the color selection dialog popped up by the "New color"
  * button */
 static void
-csdialog_wpattern_new_color_selection_cb(RGBAColor *selected_color, struct WPListRowData *row_data )
+csdialog_wpattern_new_color_selection_cb( RGBcolor *selected_color, struct WPListRowData *row_data )
 {
 	struct WPatternGroup *wpgroup;
 	boolean place_before_existing_group = FALSE;
 
 	/* Create new group */
 	wpgroup = NEW(struct WPatternGroup);
-	wpgroup->color.red = selected_color->red;
-	wpgroup->color.green = selected_color->green;
-	wpgroup->color.blue = selected_color->blue;
-	wpgroup->color.alpha = selected_color->alpha;
+        wpgroup->color.r = selected_color->r;
+        wpgroup->color.g = selected_color->g;
+	wpgroup->color.b = selected_color->b;
 	wpgroup->wp_list = NULL;
 
 	/* If a row in an existing group was selected, we add the new group
@@ -752,8 +753,8 @@ static void
 csdialog_wpattern_button_cb( GtkWidget *button_w )
 {
 	struct WPListRowData *row_data = NULL;
-	RGBAColor default_new_color = { 0, 0, 191, G_MAXUINT8 }; /* I like blue, 191 = 0.75 in [0,1] fp format */
-        RGBAColor *color;
+	RGBcolor default_new_color = { 0.0, 0.0, 0.75 }; /* I like blue */
+        RGBcolor *color;
         const char *title = NULL;
 
 	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(csdialog.wpattern.list_w));
@@ -872,7 +873,7 @@ dialog_color_setup( void )
 	GtkWidget *table_w;
 	GtkWidget *label_w;
 	GtkWidget *optmenu_w;
-	RGBAColor *color;
+        RGBcolor *color;
         ColorMode color_mode;
 	int i;
 	char strbuf[256];
