@@ -70,28 +70,6 @@ typedef struct VertexPos {
 	GLfloat position[3];
 } VertexPos;
 
-// Convert the color of a node to a 4 element array of 1 byte unsigned integers
-static void
-node_color_rgba8(GNode *node, GLubyte *rgba)
-{
-	const RGBcolor *c = NODE_DESC(node)->color;
-	rgba[0] = c->r * 255;
-	rgba[1] = c->g * 255;
-	rgba[2] = c->b * 255;
-	rgba[3] = 255;
-}
-
-// Convert the color of a node to a 4-elem array of GLfloat in range [0,1)
-// Unused, uncomment if needed.
-// static void
-// node_color_rgbaf(GNode *node, GLfloat *color)
-// {
-// 	const RGBAColor *c = NODE_DESC(node)->color;
-// 	color[0] = c->red / 255.0;
-// 	color[1] = c->green / 255.0;
-// 	color[2] = c->blue / 255.0;
-// 	color[3] = c->alpha / 255.0;
-// }
 
 // Print the legacy and modern OpenGL projection and modelview matrices.
 static void
@@ -888,19 +866,20 @@ mapv_gldraw_node( GNode *node )
 	glPushName( 1 );
 
 	/* Draw top face */
-	GLubyte color[4];
+	GLfloat color[4];
+	color[3] = 1.0; // Alpha
 	if (gl.render_mode == RENDERMODE_RENDER)
-		node_color_rgba8(node, color);
+		memcpy(color, NODE_DESC(node)->color, 3 * sizeof(GLfloat));
 	else {
 		GLuint c = NODE_DESC(node)->id;
-		int r = (c & 0x000000FF) >>  0;
-		int g = (c & 0x0000FF00) >>  8;
-		int b = (c & 0x00FF0000) >> 16;
-		color[0] = r;
-		color[1] = g;
-		color[2] = b;
-		color[3] = 255;
-		g_print("Painting node %u with Color red %u green %u blue %u alpha %u\n", c, color[0], color[1], color[2], color[3]);
+		GLuint r = (c & 0x000000FF) >>  0;
+		GLuint g = (c & 0x0000FF00) >>  8;
+		GLuint b = (c & 0x00FF0000) >> 16;
+		color[0] = (GLfloat) r / G_MAXUINT8;
+		color[1] = (GLfloat) g / G_MAXUINT8;
+		color[2] = (GLfloat) b / G_MAXUINT8;
+		g_print("Painting node %u with Color red %f green %f blue %f\n",
+			c, (double)color[0], (double)color[1], (double)color[2]);
 	}
 
 	// Vertices, in order 1,2,4,3 for triangle stripping
@@ -935,10 +914,7 @@ mapv_gldraw_node( GNode *node )
 
 	glUseProgram(gl.program);
 
-	glUniform4f(gl.color_location, color[0]/255.0,
-		     color[1]/255.0,
-		     color[2]/255.0,
-		     color[3]/255.0);
+	glUniform4fv(gl.color_location, 1, color);
 
 #if 0
 #ifdef DEBUG
