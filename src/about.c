@@ -121,11 +121,15 @@ draw_text( void )
 	glLoadIdentity( );
 	dy = 1.0 / ogl_aspect_ratio( );
 	glFrustum( - 1.0, 1.0, - dy, dy, 1.0, 205.0 );
+	mat4 proj;
+	glm_frustum(-1.0, 1.0, -dy, dy, 1.0, 205.0, proj);
 
 	/* Set up modelview matrix */
 	glMatrixMode( GL_MODELVIEW );
 	glPushMatrix( );
 	glLoadIdentity( );
+	// Modelview matrix is the identity, so mvp is just proj.
+	text_upload_mvp((float*) proj);
 
         if (about_part < 0.75)
 		p = INTERVAL_PART(about_part, 0.625, 0.75);

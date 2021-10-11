@@ -1093,7 +1093,7 @@ mapv_draw_recursive( GNode *dnode, int action )
 		glm_scale(gl.modelview, (vec3){1.0f, 1.0f, dir_ndesc->deployment});
 	}
 
-	ogl_upload_matrices();
+	ogl_upload_matrices(TRUE);
 
 	if (action == MAPV_DRAW_GEOMETRY) {
 		/* Draw directory face or geometry of children
@@ -1160,7 +1160,7 @@ mapv_draw_recursive( GNode *dnode, int action )
 
 	glPopMatrix( );
 	glm_mat4_copy(tmpmat, gl.modelview);
-	ogl_upload_matrices();
+	ogl_upload_matrices(FALSE);
 }
 
 
@@ -3123,7 +3123,7 @@ draw_node( GNode *node )
 		case FSV_MAPV:
 		glTranslated( 0.0, 0.0, geometry_mapv_node_z0( node ) );
 		glm_translate(gl.modelview, (vec3){0.0f, 0.0f, geometry_mapv_node_z0(node)});
-		ogl_upload_matrices();
+		ogl_upload_matrices(TRUE);
 		mapv_gldraw_node( node );
 		break;
 
@@ -3131,13 +3131,13 @@ draw_node( GNode *node )
 		if (geometry_treev_is_leaf( node )) {
 			glRotated( geometry_treev_platform_theta( node->parent ), 0.0, 0.0, 1.0 );
 			glm_rotate_z(gl.modelview, geometry_treev_platform_theta(node->parent) * M_PI/180, gl.modelview);
-			ogl_upload_matrices();
+			ogl_upload_matrices(TRUE);
 			treev_gldraw_leaf( node, geometry_treev_platform_r0( node->parent ), TRUE );
 		}
 		else {
 			glRotated( geometry_treev_platform_theta( node ), 0.0, 0.0, 1.0 );
 			glm_rotate_z(gl.modelview, geometry_treev_platform_theta(node) * M_PI/180, gl.modelview);
-			ogl_upload_matrices();
+			ogl_upload_matrices(TRUE);
 			treev_gldraw_platform( node, geometry_treev_platform_r0( node ) );
 		}
 		break;
@@ -3147,7 +3147,7 @@ draw_node( GNode *node )
 
 	glPopMatrix( );
 	glm_mat4_copy(tmpmat, gl.modelview);
-	ogl_upload_matrices();
+	ogl_upload_matrices(FALSE);
 }
 
 

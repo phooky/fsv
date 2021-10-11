@@ -166,7 +166,6 @@ ogl_init( void )
 	glm_rotate_z(gl.modelview, -M_PI_2, gl.modelview);
 	glm_mat4_copy(gl.modelview, gl.base_modelview);
 	glm_mat4_identity(gl.projection);
-	//ogl_upload_matrices();
 
 	/* Set up lighting */
 	glEnable( GL_LIGHTING );
@@ -317,7 +316,7 @@ setup_modelview_matrix( void )
 
 // Upload modified projection and modelview matrices to the GPU
 void
-ogl_upload_matrices()
+ogl_upload_matrices(gboolean text)
 {
 	// As we're not doing any shading yet, just create the single MVP
 	// matrix instead of uploading separate projection and modelview
@@ -332,6 +331,9 @@ ogl_upload_matrices()
 	glUniformMatrix4fv(gl.mvp_location, 1, GL_FALSE, (float*)mvp);
 
 	glUseProgram(0);
+
+	if (text)
+		text_upload_mvp((float*) mvp);
 }
 
 /* (Re)draws the viewport
@@ -347,7 +349,7 @@ ogl_draw( void )
 
 	setup_projection_matrix( TRUE );
 	setup_modelview_matrix( );
-	ogl_upload_matrices();
+	ogl_upload_matrices(FALSE);
 	geometry_draw( TRUE );
 
 	/* Error check */
@@ -375,7 +377,7 @@ ogl_select_modern(GLint x, GLint y)
 	gl.render_mode = RENDERMODE_SELECT;
 	setup_projection_matrix(FALSE);
 	setup_modelview_matrix();
-	ogl_upload_matrices();
+	ogl_upload_matrices(FALSE);
 	// Enable depth test
 	//glEnable(GL_DEPTH_TEST);
 	// Accept fragment if it closer to the camera than the former one
@@ -411,7 +413,7 @@ ogl_select_modern(GLint x, GLint y)
 	/* Leave matrices in a usable state */
 	setup_projection_matrix(TRUE);
 	setup_modelview_matrix();
-	ogl_upload_matrices();
+	ogl_upload_matrices(FALSE);
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	gl.render_mode = RENDERMODE_RENDER;
@@ -442,7 +444,7 @@ ogl_select( int x, int y, const GLuint **selectbuf_ptr )
 	/* Draw geometry */
 	setup_projection_matrix( FALSE );
 	setup_modelview_matrix( );
-	ogl_upload_matrices();
+	ogl_upload_matrices(FALSE);
 	geometry_draw( FALSE );
 
 	/* Get the hits */
@@ -452,7 +454,7 @@ ogl_select( int x, int y, const GLuint **selectbuf_ptr )
 	/* Leave matrices in a usable state */
 	setup_projection_matrix( TRUE );
 	setup_modelview_matrix( );
-	ogl_upload_matrices();
+	ogl_upload_matrices(FALSE);
 
 	return hit_count;
 }

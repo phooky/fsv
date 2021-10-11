@@ -49,7 +49,7 @@ GLuint ogl_create_shader(GLenum shader_type, const char *source);
 void ogl_resize( void );
 void ogl_refresh( void );
 double ogl_aspect_ratio( void );
-void ogl_upload_matrices();
+void ogl_upload_matrices(gboolean text);
 void ogl_draw( void );
 GLuint ogl_select_modern(GLint x, GLint y);
 int ogl_select( int x, int y, const GLuint **selectbuf_ptr );

@@ -45,6 +45,7 @@ static struct FsvGlTextState {
 	GLint mvp_location;
 	GLint position_location;
 	GLint texcoord_location;
+	GLint texture_location;
 	GLint color_location;
 
 	// Projection and modelview matrices (using cglm library) from the
@@ -137,6 +138,7 @@ text_init_shaders()
 	/* get the location of the "mvp" uniform */
 	glt.mvp_location = glGetUniformLocation(program, "mvp");
 	glt.color_location = glGetUniformLocation(program, "color");
+	glt.texture_location = glGetUniformLocation(program, "tex");
 
 	/* get the location of the "position" and "color" attributes */
 	glt.position_location = glGetAttribLocation(program, "position");
@@ -177,10 +179,13 @@ text_init( void )
 	/* Load texture */
 	glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 	charset_pixels = xbm_pixels( charset_bits, charset_width * charset_height );
-	// Legacy OpenGL
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY4, charset_width, charset_height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, charset_pixels);
-	// Modern GL
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, charset_width, charset_height, 0, GL_RED, GL_UNSIGNED_BYTE, charset_pixels);
+	// In modern GL GL_RED is the only supported single channel texture format.
+	// But actually the texture is an alpha map that decides where the color
+	// (specified via a uniform) will be shown and where it will be transparent.
+	// In the fragment shader the red component in the texture is swizzled to
+	// the alpha component of the output color.
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, charset_width, charset_height,
+		     0, GL_RED, GL_UNSIGNED_BYTE, charset_pixels);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	xfree( charset_pixels );
 
@@ -194,11 +199,8 @@ text_init( void )
 void
 text_pre( void )
 {
-	glDisable( GL_LIGHTING );
 	glDisable( GL_POLYGON_OFFSET_FILL );
-	glEnable( GL_ALPHA_TEST );
 	glEnable( GL_BLEND );
-	glEnable( GL_TEXTURE_2D );
 	glBindTexture( GL_TEXTURE_2D, text_tobj );
 }
 
@@ -207,11 +209,9 @@ text_pre( void )
 void
 text_post( void )
 {
-	glDisable( GL_TEXTURE_2D );
 	glDisable( GL_BLEND );
-	glDisable( GL_ALPHA_TEST );
 	glEnable( GL_POLYGON_OFFSET_FILL );
-	glEnable( GL_LIGHTING );
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 
@@ -282,8 +282,10 @@ get_char_tex_coords( int c, XYvec *t_c0, XYvec *t_c1 )
 
 // Draw a set of text vertices with a specified color.
 // Use indexed drawing.
+// The vertices for each char must be in order
+// LL - LR - UL - UR
 static void
-draw_text_vertices(TextVertex *tv, GLsizeiptr nchars)
+draw_text_vertices(TextVertex *tv, size_t nchars)
 {
 	GLsizeiptr ntv = nchars * 4;
 	GLsizei idx_len = nchars * 6;
@@ -291,7 +293,7 @@ draw_text_vertices(TextVertex *tv, GLsizeiptr nchars)
 	if (!vbo)
 		glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(TextVertex) * ntv, &tv, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(TextVertex) * ntv, tv, GL_STREAM_DRAW);
 
 	glEnableVertexAttribArray(glt.position_location);
 	glVertexAttribPointer(glt.position_location, 3, GL_FLOAT, GL_FALSE,
@@ -302,27 +304,33 @@ draw_text_vertices(TextVertex *tv, GLsizeiptr nchars)
 			      sizeof(TextVertex), (void *)offsetof(TextVertex, texCoord));
 
 	GLushort *idx = NEW_ARRAY(GLushort, idx_len);
-	for (GLsizei i = 0; i < nchars; i++) {
-		GLsizei j = 6 * i;  // 6 indices per char
+	for (size_t i = 0; i < nchars; i++) {
+		size_t j = 6 * i;  // 6 indices per char
+		GLushort v = 4 * i;  // 4 Vertices per char
 		// First triangle in a character
-		idx[j] = j;
-		idx[j + 1] = j + 1;
-		idx[j + 2] = j + 2;
-		// Second triangle
-		idx[j + 3] = j + 1;
-		idx[j + 4] = j + 2;
-		idx[j + 5] = j + 3;
+		idx[j] = v;
+		idx[j + 1] = v + 1;
+		idx[j + 2] = v + 2;
+		// Second triangle (counter-clockwise order)
+		idx[j + 3] = v + 2;
+		idx[j + 4] = v + 1;
+		idx[j + 5] = v + 3;
 	}
+
+	static GLuint ebo;
+	if (!ebo)
+		glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * idx_len, idx, GL_STREAM_DRAW);
 
 	glUseProgram(glt.program);
 
-	// MVP matrix. Use global ones, no need to use MVP specific to text drawing.
-	mat4 mvp;
-	glm_mat4_mul(gl.projection, gl.modelview, mvp);
-	glUniformMatrix4fv(glt.mvp_location, 1, GL_FALSE, (float*)mvp);
-	glDrawElements(GL_TRIANGLES, idx_len, GL_UNSIGNED_SHORT, idx);
+	// Set the texture unit. TODO. Move to text_init()?
+	glUniform1i(glt.texture_location, 0);
+	glDrawElements(GL_TRIANGLES, idx_len, GL_UNSIGNED_SHORT, 0);
 	glUseProgram(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	xfree(idx);
 }
 
@@ -333,7 +341,7 @@ text_draw_straight( const char *text, const XYZvec *text_pos, const XYvec *text_
 {
 	XYvec cdims;
 	XYvec t_c0, t_c1, c0, c1;
-	size_t len, i;
+	size_t len;
 
 	len = strlen( text );
 	get_char_dims( len, text_max_dims, &cdims );
@@ -346,52 +354,24 @@ text_draw_straight( const char *text, const XYZvec *text_pos, const XYvec *text_
 
 	GLsizeiptr nverts = len * 4;
 	TextVertex *tv = NEW_ARRAY(TextVertex, nverts);
-	for (i = 0; i < len; i++) {
+	for (size_t i = 0; i < len; i++) {
 		get_char_tex_coords( text[i], &t_c0, &t_c1 );
 		size_t j = i * 4;
 		// Each char defined by corners in zigzag order
 		// Lower left {pos, texcoords}
-		tv[j] = (TextVertex) {{c0.x, c0.y, text_pos->z}, {t_c0.x, t_c0.y}};
+		tv[j] = (TextVertex){{c0.x, c0.y, text_pos->z}, {t_c0.x, t_c0.y}};
 		// Lower right
-		tv[j + 1] = (TextVertex) {{c1.x, c0.y, text_pos->z}, {t_c1.x, t_c0.y}};
+		tv[j + 1] = (TextVertex){{c1.x, c0.y, text_pos->z}, {t_c1.x, t_c0.y}};
 		// Upper left
-		tv[j + 2] = (TextVertex) {{c0.x, c1.y, text_pos->z}, {t_c0.x, t_c1.y}};
+		tv[j + 2] = (TextVertex){{c0.x, c1.y, text_pos->z}, {t_c0.x, t_c1.y}};
 		// Upper right
-		tv[j + 3] = (TextVertex) {{c1.x, c1.y, text_pos->z}, {t_c1.x, t_c1.y}};
-	}
-	// draw_text_vertices(tv, len);
-	xfree(tv);
-
-	glBegin(GL_TRIANGLES);
-	for (i = 0; i < len; i++) {
-		get_char_tex_coords( text[i], &t_c0, &t_c1 );
-
-		// Render each char as two triangles.
-		/* Lower left */
-		glTexCoord2d( t_c0.x, t_c0.y );
-		glVertex3d( c0.x, c0.y, text_pos->z );
-		/* Lower right */
-		glTexCoord2d( t_c1.x, t_c0.y );
-		glVertex3d( c1.x, c0.y, text_pos->z );
-		/* Upper right */
-		glTexCoord2d( t_c1.x, t_c1.y );
-		glVertex3d( c1.x, c1.y, text_pos->z );
-
-		// Second triangle
-		/* Upper right */
-		glTexCoord2d( t_c1.x, t_c1.y );
-		glVertex3d( c1.x, c1.y, text_pos->z );
-		/* Upper left */
-		glTexCoord2d( t_c0.x, t_c1.y );
-		glVertex3d( c0.x, c1.y, text_pos->z );
-		/* Lower left */
-		glTexCoord2d( t_c0.x, t_c0.y );
-		glVertex3d( c0.x, c0.y, text_pos->z );
+		tv[j + 3] = (TextVertex){{c1.x, c1.y, text_pos->z}, {t_c1.x, t_c1.y}};
 
 		c0.x = c1.x;
 		c1.x += cdims.x;
 	}
-	glEnd( );
+	draw_text_vertices(tv, len);
+	xfree(tv);
 }
 
 
@@ -405,7 +385,7 @@ text_draw_straight_rotated( const char *text, const RTZvec *text_pos, const XYve
 	XYvec t_c0, t_c1, c0, c1;
 	XYvec hdelta, vdelta;
 	double sin_theta, cos_theta;
-	int len, i;
+	size_t len;
 
 	len = strlen( text );
 	get_char_dims( len, text_max_dims, &cdims );
@@ -426,38 +406,29 @@ text_draw_straight_rotated( const char *text, const RTZvec *text_pos, const XYve
 	c1.x = c0.x + hdelta.x + vdelta.x;
 	c1.y = c0.y + hdelta.y + vdelta.y;
 
-	glBegin(GL_TRIANGLES);
-	for (i = 0; i < len; i++) {
+	GLsizeiptr nverts = len * 4;
+	TextVertex *tv = NEW_ARRAY(TextVertex, nverts);
+	for (size_t i = 0; i < len; i++) {
 		get_char_tex_coords( text[i], &t_c0, &t_c1 );
-
-		// Render each char as two triangles. First triangle:
-		/* Lower left */
-		glTexCoord2d( t_c0.x, t_c0.y );
-		glVertex3d( c0.x, c0.y, text_pos->z );
-		/* Lower right */
-		glTexCoord2d( t_c1.x, t_c0.y );
-		glVertex3d( c0.x + hdelta.x, c0.y + hdelta.y, text_pos->z );
-		/* Upper right */
-		glTexCoord2d( t_c1.x, t_c1.y );
-		glVertex3d( c1.x, c1.y, text_pos->z );
-
-		// Second triangle
-		/* Upper right */
-		glTexCoord2d( t_c1.x, t_c1.y );
-		glVertex3d( c1.x, c1.y, text_pos->z );
-		/* Upper left */
-		glTexCoord2d( t_c0.x, t_c1.y );
-		glVertex3d( c1.x - hdelta.x, c1.y - hdelta.y, text_pos->z );
-		/* Lower left */
-		glTexCoord2d( t_c0.x, t_c0.y );
-		glVertex3d( c0.x, c0.y, text_pos->z );
+		size_t j = i * 4;
+		// Lower left
+		tv[j] = (TextVertex){{c0.x, c0.y, text_pos->z}, {t_c0.x, t_c0.y}};
+		// Lower right
+		tv[j + 1] = (TextVertex){{c0.x + hdelta.x, c0.y + hdelta.y, text_pos->z},
+					 {t_c1.x, t_c0.y}};
+		// Upper left
+		tv[j + 2] = (TextVertex){{c1.x - hdelta.x, c1.y - hdelta.y, text_pos->z},
+					 {t_c0.x, t_c1.y}};
+		// Upper right
+		tv[j + 3] = (TextVertex){{c1.x, c1.y, text_pos->z}, {t_c1.x, t_c1.y}};
 
 		c0.x += hdelta.x;
 		c0.y += hdelta.y;
 		c1.x += hdelta.x;
 		c1.y += hdelta.y;
 	}
-	glEnd( );
+	draw_text_vertices(tv, len);
+	xfree(tv);
 }
 
 
@@ -472,7 +443,7 @@ text_draw_curved( const char *text, const RTZvec *text_pos, const RTvec *text_ma
 	double char_arc_width, theta;
 	double sin_theta, cos_theta;
 	double text_r;
-	int len, i;
+	size_t len;
 
 	/* Convert curved dimensions to straight equivalent */
 	straight_dims.x = (PI / 180.0) * text_pos->r * text_max_dims->theta;
@@ -488,8 +459,10 @@ text_draw_curved( const char *text, const RTZvec *text_pos, const RTvec *text_ma
 	char_arc_width = (180.0 / PI) * cdims.x / text_r;
 
 	theta = text_pos->theta + 0.5 * (double)(len - 1) * char_arc_width;
-	glBegin(GL_TRIANGLES);
-	for (i = 0; i < len; i++) {
+
+	GLsizeiptr nverts = len * 4;
+	TextVertex *tv = NEW_ARRAY(TextVertex, nverts);
+	for (size_t i = 0; i < len; i++) {
 		sin_theta = sin( RAD(theta) );
 		cos_theta = cos( RAD(theta) );
 
@@ -503,32 +476,24 @@ text_draw_curved( const char *text, const RTZvec *text_pos, const RTvec *text_ma
 		bwsl.y = 0.5 * (- cdims.y * sin_theta - cdims.x * cos_theta);
 
 		get_char_tex_coords( text[i], &t_c0, &t_c1 );
-
-		// Render each char as two triangles. First:
-		/* Lower left */
-		glTexCoord2d( t_c0.x, t_c0.y );
-		glVertex3d( char_pos.x - fwsl.x, char_pos.y - fwsl.y, text_pos->z );
-		/* Lower right */
-		glTexCoord2d( t_c1.x, t_c0.y );
-		glVertex3d( char_pos.x + bwsl.x, char_pos.y + bwsl.y, text_pos->z );
-		/* Upper right */
-		glTexCoord2d( t_c1.x, t_c1.y );
-		glVertex3d( char_pos.x + fwsl.x, char_pos.y + fwsl.y, text_pos->z );
-
-		// Second triangle:
-		/* Upper right */
-		glTexCoord2d( t_c1.x, t_c1.y );
-		glVertex3d( char_pos.x + fwsl.x, char_pos.y + fwsl.y, text_pos->z );
-		/* Upper left */
-		glTexCoord2d( t_c0.x, t_c1.y );
-		glVertex3d( char_pos.x - bwsl.x, char_pos.y - bwsl.y, text_pos->z );
-		/* Lower left */
-		glTexCoord2d( t_c0.x, t_c0.y );
-		glVertex3d( char_pos.x - fwsl.x, char_pos.y - fwsl.y, text_pos->z );
+		size_t j = i * 4;
+		// Lower left
+		tv[j] = (TextVertex){{char_pos.x - fwsl.x, char_pos.y - fwsl.y, text_pos->z},
+				     {t_c0.x, t_c0.y}};
+		// Lower right
+		tv[j + 1] = (TextVertex){{char_pos.x + bwsl.x, char_pos.y + bwsl.y, text_pos->z},
+					 {t_c1.x, t_c0.y}};
+		// Upper left
+		tv[j + 2] = (TextVertex){{char_pos.x - bwsl.x, char_pos.y - bwsl.y, text_pos->z},
+					 {t_c0.x, t_c1.y}};
+		// Upper right
+		tv[j + 3] = (TextVertex){{char_pos.x + fwsl.x, char_pos.y + fwsl.y, text_pos->z},
+					 {t_c1.x, t_c1.y}};
 
 		theta -= char_arc_width;
 	}
-	glEnd( );
+	draw_text_vertices(tv, len);
+	xfree(tv);
 }
 
 // Set the text color
@@ -543,5 +508,14 @@ text_set_color(float red, float green, float blue)
 	glUseProgram(0);
 }
 
+
+// Upload MVP matrix
+void
+text_upload_mvp(float* mvp)
+{
+	glUseProgram(glt.program);
+	glUniformMatrix4fv(glt.mvp_location, 1, GL_FALSE, mvp);
+	glUseProgram(0);
+}
 
 /* end tmaptext.c */
