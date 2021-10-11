@@ -28,8 +28,8 @@ static GtkWidget *viewport_gl_area_w = NULL;
 
 FsvGlState gl;
 
-static GLuint
-create_shader(GLenum shader_type, const char *source)
+GLuint
+ogl_create_shader(GLenum shader_type, const char *source)
 {
 	GLuint shader = glCreateShader(shader_type);
 	glShaderSource(shader, 1, &source, NULL);
@@ -66,14 +66,14 @@ init_shaders()
 
 	/* load the vertex shader */
 	source = g_resources_lookup_data("/jabl/fsv/fsv-vertex.glsl", 0, NULL);
-	GLuint vertex = create_shader(GL_VERTEX_SHADER, g_bytes_get_data(source, NULL));
+	GLuint vertex = ogl_create_shader(GL_VERTEX_SHADER, g_bytes_get_data(source, NULL));
 	g_bytes_unref(source);
 	if (vertex == 0)
 		goto out;
 
 	/* load the fragment shader */
 	source = g_resources_lookup_data("/jabl/fsv/fsv-fragment.glsl", 0, NULL);
-	GLuint fragment = create_shader(GL_FRAGMENT_SHADER, g_bytes_get_data(source, NULL));
+	GLuint fragment = ogl_create_shader(GL_FRAGMENT_SHADER, g_bytes_get_data(source, NULL));
 	g_bytes_unref(source);
 	if (fragment == 0)
 		goto out;

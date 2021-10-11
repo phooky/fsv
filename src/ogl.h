@@ -45,6 +45,7 @@ typedef struct FsvGlState {
 
 extern FsvGlState gl;
 
+GLuint ogl_create_shader(GLenum shader_type, const char *source);
 void ogl_resize( void );
 void ogl_refresh( void );
 double ogl_aspect_ratio( void );

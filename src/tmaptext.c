@@ -13,7 +13,9 @@
 #include "common.h"
 #include "tmaptext.h"
 
-#include <epoxy/gl.h>
+#include "ogl.h"
+
+#include <gio/gio.h>
 
 /* Bitmap font definition */
 #define char_width 16
@@ -31,6 +33,28 @@ static const double char_aspect_ratio = (double)char_width / (double)char_height
 /* Font texture object */
 static GLuint text_tobj;
 
+// Global state for modern GL
+static struct FsvGlTextState {
+	// Don't need a VAO as we just use the one global VAO which is
+	// always active.
+
+	GLuint program; // Handle for the shaders
+
+	// These _location variables are handles to input 'slots' in the
+	// vertex shader.
+	GLint mvp_location;
+	GLint position_location;
+	GLint texcoord_location;
+	GLint color_location;
+
+	// Projection and modelview matrices (using cglm library) from the
+	// global state.
+} glt;
+
+typedef struct {
+	GLfloat position[3];
+	GLfloat texCoord[2];
+} TextVertex;
 
 /* Simple XBM parser - bits to bytes. Caller assumes responsibility for
  * freeing the returned pixel buffer */
@@ -63,6 +87,74 @@ xbm_pixels( const byte *xbm_bits, int pixel_count )
 }
 
 
+// Initialize OpenGL text shaders
+static GLuint
+text_init_shaders()
+{
+	GBytes *source;
+	GLuint program = 0;
+
+	/* load the vertex shader */
+	source = g_resources_lookup_data("/jabl/fsv/fsv-text-vertex.glsl", 0, NULL);
+	GLuint vertex = ogl_create_shader(GL_VERTEX_SHADER, g_bytes_get_data(source, NULL));
+	g_bytes_unref(source);
+	if (vertex == 0)
+		goto out;
+
+	/* load the fragment shader */
+	source = g_resources_lookup_data("/jabl/fsv/fsv-text-fragment.glsl", 0, NULL);
+	GLuint fragment = ogl_create_shader(GL_FRAGMENT_SHADER, g_bytes_get_data(source, NULL));
+	g_bytes_unref(source);
+	if (fragment == 0)
+		goto out;
+
+	/* link the vertex and fragment shaders together */
+	program = glCreateProgram();
+	glAttachShader(program, vertex);
+	glAttachShader(program, fragment);
+	glLinkProgram(program);
+
+	GLint status = 0;
+	glGetProgramiv(program, GL_LINK_STATUS, &status);
+	if (status == GL_FALSE)
+	{
+		GLint log_len = 0;
+		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_len);
+
+		char *buffer = g_malloc(log_len + 1);
+		glGetProgramInfoLog(program, log_len, NULL, buffer);
+
+		g_error("Linking failure in program: %s", buffer);
+
+		g_free(buffer);
+
+		glDeleteProgram(program);
+		program = 0;
+
+		goto out;
+	}
+
+	/* get the location of the "mvp" uniform */
+	glt.mvp_location = glGetUniformLocation(program, "mvp");
+	glt.color_location = glGetUniformLocation(program, "color");
+
+	/* get the location of the "position" and "color" attributes */
+	glt.position_location = glGetAttribLocation(program, "position");
+	glt.texcoord_location = glGetAttribLocation(program, "texcoord");
+
+	/* the individual shaders can be detached and destroyed */
+	glDetachShader(program, vertex);
+	glDetachShader(program, fragment);
+
+out:
+	if (vertex != 0)
+		glDeleteShader(vertex);
+	if (fragment != 0)
+		glDeleteShader(fragment);
+
+	return program;
+}
+
 /* Initializes texture-mapping state for drawing text */
 void
 text_init( void )
@@ -85,9 +177,16 @@ text_init( void )
 	/* Load texture */
 	glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 	charset_pixels = xbm_pixels( charset_bits, charset_width * charset_height );
+	// Legacy OpenGL
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY4, charset_width, charset_height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, charset_pixels);
+	// Modern GL
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, charset_width, charset_height, 0, GL_RED, GL_UNSIGNED_BYTE, charset_pixels);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	xfree( charset_pixels );
+
+	glt.program = text_init_shaders();
+	if (!glt.program)
+		g_error("Compiling shaders failed");
 }
 
 
@@ -181,6 +280,54 @@ get_char_tex_coords( int c, XYvec *t_c0, XYvec *t_c1 )
 }
 
 
+// Draw a set of text vertices with a specified color.
+// Use indexed drawing.
+static void
+draw_text_vertices(TextVertex *tv, GLsizeiptr nchars, GLfloat *text_color)
+{
+	GLsizeiptr ntv = nchars * 4;
+	GLsizei idx_len = nchars * 6;
+	static GLuint vbo;
+	if (!vbo)
+		glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(TextVertex) * ntv, &tv, GL_DYNAMIC_DRAW);
+
+	glEnableVertexAttribArray(glt.position_location);
+	glVertexAttribPointer(glt.position_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(TextVertex), (void *)offsetof(TextVertex, position));
+
+	glEnableVertexAttribArray(glt.texcoord_location);
+	glVertexAttribPointer(glt.texcoord_location, 2, GL_FLOAT, GL_FALSE,
+			      sizeof(TextVertex), (void *)offsetof(TextVertex, texCoord));
+
+	GLushort *idx = NEW_ARRAY(GLushort, idx_len);
+	for (GLsizei i = 0; i < nchars; i++) {
+		GLsizei j = 6 * i;  // 6 indices per char
+		// First triangle in a character
+		idx[j] = j;
+		idx[j + 1] = j + 1;
+		idx[j + 2] = j + 2;
+		// Second triangle
+		idx[j + 3] = j + 1;
+		idx[j + 4] = j + 2;
+		idx[j + 5] = j + 3;
+	}
+
+	glUseProgram(glt.program);
+
+	glUniform3fv(glt.color_location, 1, text_color);
+
+	// MVP matrix. Use global ones, no need to use MVP specific to text drawing.
+	mat4 mvp;
+	glm_mat4_mul(gl.projection, gl.modelview, mvp);
+	glUniformMatrix4fv(glt.mvp_location, 1, GL_FALSE, (float*)mvp);
+	glDrawElements(GL_TRIANGLES, idx_len, GL_UNSIGNED_SHORT, idx);
+	glUseProgram(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	xfree(idx);
+}
+
 /* Draws a straight line of text centered at the given position,
  * fitting within the dimensions specified */
 void
@@ -188,7 +335,7 @@ text_draw_straight( const char *text, const XYZvec *text_pos, const XYvec *text_
 {
 	XYvec cdims;
 	XYvec t_c0, t_c1, c0, c1;
-	int len, i;
+	size_t len, i;
 
 	len = strlen( text );
 	get_char_dims( len, text_max_dims, &cdims );
@@ -198,6 +345,24 @@ text_draw_straight( const char *text, const XYZvec *text_pos, const XYvec *text_
 	c0.y = text_pos->y - 0.5 * cdims.y;
 	c1.x = c0.x + cdims.x;
 	c1.y = c0.y + cdims.y;
+
+	GLsizeiptr nverts = len * 4;
+	TextVertex *tv = NEW_ARRAY(TextVertex, nverts);
+	for (i = 0; i < len; i++) {
+		get_char_tex_coords( text[i], &t_c0, &t_c1 );
+		size_t j = i * 4;
+		// Each char defined by corners in zigzag order
+		// Lower left {pos, texcoords}
+		tv[j] = (TextVertex) {{c0.x, c0.y, text_pos->z}, {t_c0.x, t_c0.y}};
+		// Lower right
+		tv[j + 1] = (TextVertex) {{c1.x, c0.y, text_pos->z}, {t_c1.x, t_c0.y}};
+		// Upper left
+		tv[j + 2] = (TextVertex) {{c0.x, c1.y, text_pos->z}, {t_c0.x, t_c1.y}};
+		// Upper right
+		tv[j + 3] = (TextVertex) {{c1.x, c1.y, text_pos->z}, {t_c1.x, t_c1.y}};
+	}
+	// draw_text_vertices(tv, len, );
+	xfree(tv);
 
 	glBegin(GL_TRIANGLES);
 	for (i = 0; i < len; i++) {
