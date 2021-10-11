@@ -116,18 +116,11 @@ draw_text( void )
 		return;
 
 	/* Set up projection matrix */
-	glMatrixMode( GL_PROJECTION );
-	glPushMatrix( );
-	glLoadIdentity( );
 	dy = 1.0 / ogl_aspect_ratio( );
-	glFrustum( - 1.0, 1.0, - dy, dy, 1.0, 205.0 );
 	mat4 proj;
 	glm_frustum(-1.0, 1.0, -dy, dy, 1.0, 205.0, proj);
 
 	/* Set up modelview matrix */
-	glMatrixMode( GL_MODELVIEW );
-	glPushMatrix( );
-	glLoadIdentity( );
 	// Modelview matrix is the identity, so mvp is just proj.
 	text_upload_mvp((float*) proj);
 
@@ -170,12 +163,6 @@ draw_text( void )
 	}
 
 	text_post( );
-
-	/* Restore previous matrices */
-	glMatrixMode( GL_PROJECTION );
-	glPopMatrix( );
-	glMatrixMode( GL_MODELVIEW );
-	glPopMatrix( );
 }
 
 
