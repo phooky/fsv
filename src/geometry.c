@@ -460,7 +460,7 @@ discv_draw( boolean high_detail )
 		if (fstree_high_draw_stage <= 1) {
 			/* Node name labels */
 			text_pre( );
-			glColor3f( 0.0, 0.0, 0.0 );
+			text_set_color(0.0, 0.0, 0.0);
 			discv_draw_recursive( globals.fstree, DISCV_DRAW_LABELS );
 			text_post( );
 		}
@@ -1281,7 +1281,7 @@ mapv_draw( boolean high_detail )
 		//if (fstree_high_draw_stage <= 1) {
 			/* Node name labels */
 			text_pre( );
-			glColor3f( 0.0, 0.0, 0.0 ); /* all labels are black */
+			text_set_color(0.0, 0.0, 0.0); /* all labels are black */
 			mapv_draw_recursive( globals.fstree, MAPV_DRAW_LABELS );
 			text_post( );
 		//}
@@ -2418,7 +2418,9 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 				treev_gldraw_folder( dnode, prev_r0 );
 			}
 			else if (action == TREEV_DRAW_LABELS) {
-				glColor3fv( (float *)&treev_leaf_label_color );
+				text_set_color(treev_leaf_label_color.r,
+					       treev_leaf_label_color.g,
+					       treev_leaf_label_color.b);
 				treev_apply_label( dnode, prev_r0, TRUE );
 			}
 
@@ -2520,15 +2522,21 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 			glNewList( dir_ndesc->c_dlist, GL_COMPILE_AND_EXECUTE );
 			if (dir_collapsed) {
 				/* Label directory leaf */
-				glColor3fv( (float *)&treev_leaf_label_color );
+				text_set_color(treev_leaf_label_color.r,
+					       treev_leaf_label_color.g,
+					       treev_leaf_label_color.b);
 				treev_apply_label( dnode, prev_r0, TRUE );
 			}
 			else if (NODE_IS_DIR(dnode)) {
 				/* Label directory platform */
-				glColor3fv( (float *)&treev_platform_label_color );
+				text_set_color(treev_platform_label_color.r,
+					       treev_platform_label_color.g,
+					       treev_platform_label_color.b);
 				treev_apply_label( dnode, r0, FALSE );
 				/* Label leaf nodes that aren't directories */
-				glColor3fv( (float *)&treev_leaf_label_color );
+				text_set_color(treev_leaf_label_color.r,
+					       treev_leaf_label_color.g,
+					       treev_leaf_label_color.b);
 				node = dnode->children;
 				while (node != NULL) {
 					if (!NODE_IS_DIR(node))
@@ -2945,7 +2953,7 @@ splash_draw( void )
 	text_pre( );
 
 	/* Title */
-	glColor3f( 1.0, 1.0, 1.0 );
+	text_set_color(1.0, 1.0, 1.0);
 	text_pos.x = 0.2059;
 	text_pos.y = -0.1700;
 	text_pos.z = 0.0;
@@ -2958,14 +2966,14 @@ splash_draw( void )
 	text_draw_straight( "Visualizer", &text_pos, &text_dims );
 
 	/* Version */
-	glColor3f( 0.75, 0.75, 0.75 );
+	text_set_color(0.75, 0.75, 0.75);
 	text_pos.x = 0.5000;
 	text_pos.y = (2.0 - MAGIC_NUMBER) * (0.2247 + bottom_y) - 0.2013;
 	text_dims.y = 0.0386;
 	text_draw_straight( "Version " VERSION, &text_pos, &text_dims );
 
 	/* Copyright/author info */
-	glColor3f( 0.5, 0.5, 0.5 );
+	text_set_color(0.5, 0.5, 0.5);
 	text_pos.y = bottom_y + 0.0117;
 	text_dims.y = 0.0234;
 	text_draw_straight( "Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>", &text_pos, &text_dims );

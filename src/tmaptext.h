@@ -21,6 +21,7 @@ void text_post( void );
 void text_draw_straight( const char *text, const XYZvec *text_pos, const XYvec *text_max_dims );
 void text_draw_straight_rotated( const char *text, const RTZvec *text_pos, const XYvec *text_max_dims );
 void text_draw_curved( const char *text, const RTZvec *text_pos, const RTvec *text_max_dims );
+void text_set_color(float red, float green, float blue);
 
 
 /* end tmaptext.h */

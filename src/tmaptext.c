@@ -283,7 +283,7 @@ get_char_tex_coords( int c, XYvec *t_c0, XYvec *t_c1 )
 // Draw a set of text vertices with a specified color.
 // Use indexed drawing.
 static void
-draw_text_vertices(TextVertex *tv, GLsizeiptr nchars, GLfloat *text_color)
+draw_text_vertices(TextVertex *tv, GLsizeiptr nchars)
 {
 	GLsizeiptr ntv = nchars * 4;
 	GLsizei idx_len = nchars * 6;
@@ -315,8 +315,6 @@ draw_text_vertices(TextVertex *tv, GLsizeiptr nchars, GLfloat *text_color)
 	}
 
 	glUseProgram(glt.program);
-
-	glUniform3fv(glt.color_location, 1, text_color);
 
 	// MVP matrix. Use global ones, no need to use MVP specific to text drawing.
 	mat4 mvp;
@@ -361,7 +359,7 @@ text_draw_straight( const char *text, const XYZvec *text_pos, const XYvec *text_
 		// Upper right
 		tv[j + 3] = (TextVertex) {{c1.x, c1.y, text_pos->z}, {t_c1.x, t_c1.y}};
 	}
-	// draw_text_vertices(tv, len, );
+	// draw_text_vertices(tv, len);
 	xfree(tv);
 
 	glBegin(GL_TRIANGLES);
@@ -531,6 +529,18 @@ text_draw_curved( const char *text, const RTZvec *text_pos, const RTvec *text_ma
 		theta -= char_arc_width;
 	}
 	glEnd( );
+}
+
+// Set the text color
+void
+text_set_color(float red, float green, float blue)
+{
+	// Legacy GL
+	glColor3f(red, green, blue);
+	// Modern GL
+	glUseProgram(glt.program);
+	glUniform3f(glt.color_location, red, green, blue);
+	glUseProgram(0);
 }
 
 
