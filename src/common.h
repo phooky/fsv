@@ -69,7 +69,6 @@
 #define PI			3.14159265358979323846
 #define EPSILON			1.0e-6
 #define NIL			0
-#define NULL_DLIST		0
 
 /* Alias for the root directory node */
 #define root_dnode		globals.fstree->children
@@ -218,15 +217,10 @@ struct _DirNodeDesc {
 	} subtree;
 	/* Following pointer should be of type GtkTreePath */
 	void		*tnode;	/* Directory tree entry */
-	unsigned int	a_dlist;	/* Display list A */
-	unsigned int	b_dlist;	/* Display list B */
-	unsigned int	c_dlist;	/* Display list C */
 	/* Flag: TRUE if directory geometry is being drawn expanded */
 	bitfield	geom_expanded : 1;
-	/* Flags: TRUE if geometry in X_dlist needs to be rebuilt */
-	bitfield	a_dlist_stale : 1;
-	bitfield	b_dlist_stale : 1;
-	bitfield	c_dlist_stale : 1;
+	/* Flags: TRUE if geometry in needs to be rebuilt and reuploaded */
+	// TODO for VBO's
 };
 
 /* Generalized node descriptor */

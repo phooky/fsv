@@ -28,9 +28,6 @@
 /* Normalized time variable (in range [0, 1]) */
 static double about_part;
 
-/* Display list for "fsv" geometry */
-static GLuint fsv_dlist = NULL_DLIST;
-
 /* TRUE while giving About presentation */
 static boolean about_active = FALSE;
 
@@ -84,15 +81,8 @@ draw_fsv( void )
 		glRotated( 5.0, 1.0, 0.0, 0.0 );
 	}
 
-	/* Draw "fsv" geometry, using a display list if possible */
-	if (fsv_dlist == NULL_DLIST) {
-		fsv_dlist = glGenLists( 1 );
-		glNewList( fsv_dlist, GL_COMPILE_AND_EXECUTE );
-		geometry_gldraw_fsv( );
-		glEndList( );
-	}
-	else
-		glCallList( fsv_dlist );
+	/* Draw "fsv" geometry */
+	geometry_gldraw_fsv( );
 
 	/* Restore previous matrices */
 	glMatrixMode( GL_PROJECTION );
@@ -192,10 +182,6 @@ about( AboutMesg mesg )
 			return FALSE;
 		/* We now return you to your regularly scheduled program */
 		morph_break( &about_part );
-		if (fsv_dlist != NULL_DLIST) {
-			glDeleteLists( fsv_dlist, 1 );
-			fsv_dlist = NULL_DLIST;
-		}
 		redraw( );
 		about_active = FALSE;
 		return TRUE;

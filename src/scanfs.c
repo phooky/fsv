@@ -148,10 +148,6 @@ process_dir( const char *dir, GNode *dnode )
 		if (NODE_IS_DIR(node)) {
 			/* Create corresponding directory tree entry */
 			dirtree_entry_new( node );
-			/* Initialize display lists */
-			DIR_NODE_DESC(node)->a_dlist = NULL_DLIST;
-			DIR_NODE_DESC(node)->b_dlist = NULL_DLIST;
-			DIR_NODE_DESC(node)->c_dlist = NULL_DLIST;
 
 			/* Recurse down */
 			process_dir( node_absname( node ), node );
@@ -336,9 +332,6 @@ scanfs( const char *dir )
 	NODE_DESC(globals.fstree)->name = g_string_chunk_insert( name_strchunk, name );
 	g_free( name );
 	DIR_NODE_DESC(globals.fstree)->tnode = NULL; /* needed in dirtree_entry_new( ) */
-	DIR_NODE_DESC(globals.fstree)->a_dlist = NULL_DLIST;
-	DIR_NODE_DESC(globals.fstree)->b_dlist = NULL_DLIST;
-	DIR_NODE_DESC(globals.fstree)->c_dlist = NULL_DLIST;
 
 	/* Set up root directory node */
 	g_node_append_data(globals.fstree, g_slice_new(DirNodeDesc));
@@ -348,9 +341,7 @@ scanfs( const char *dir )
 	name = g_path_get_basename( root_dir );
 	NODE_DESC(root_dnode)->name = g_string_chunk_insert( name_strchunk, name );
 	g_free(name);
-	DIR_NODE_DESC(root_dnode)->a_dlist = NULL_DLIST;
-	DIR_NODE_DESC(root_dnode)->b_dlist = NULL_DLIST;
-	DIR_NODE_DESC(root_dnode)->c_dlist = NULL_DLIST;
+	// TODO: Invalidate VBO's, need to upload new ones.
 	stat_node( root_dnode );
 	dirtree_entry_new( root_dnode );
 

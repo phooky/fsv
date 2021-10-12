@@ -36,10 +36,7 @@
 	glColor3fv( (const float *)NODE_DESC(node)->color )
 
 
-/* Low- and high-detail geometry display lists */
-static GLuint fstree_low_dlist = NULL_DLIST;
-static GLuint fstree_high_dlist = NULL_DLIST;
-
+// TODO: Implement this caching strategy with VBO's
 /* Current "drawing stage" for low- and high-detail geometry:
  * Stage 0: Full recursive draw, some geometry will be rebuilt along the way
  * Stage 1: Full recursive draw, no geometry rebuilt, capture everything in
@@ -375,40 +372,22 @@ discv_draw_recursive( GNode *dnode, int action )
 
 	if (action == DISCV_DRAW_GEOMETRY) {
 		/* Draw folder or leaf nodes (display list A) */
-		if (dir_ndesc->a_dlist_stale) {
-			/* Rebuild */
-			if (dir_ndesc->a_dlist == NULL_DLIST)
-				dir_ndesc->a_dlist = glGenLists( 1 );
-			glNewList( dir_ndesc->a_dlist, GL_COMPILE_AND_EXECUTE );
-			if (!dir_collapsed)
-				discv_build_dir( dnode );
-			if (!dir_expanded)
-				discv_gldraw_folder( dnode );
-			glEndList( );
-			dir_ndesc->a_dlist_stale = FALSE;
-		}
-		else
-			glCallList( dir_ndesc->a_dlist );
+		if (!dir_collapsed)
+			discv_build_dir(dnode);
+		if (!dir_expanded)
+			discv_gldraw_folder(dnode);
 	}
 
 	if (action == DISCV_DRAW_LABELS) {
 		/* Draw name label(s) (display list B) */
-		if (dir_ndesc->b_dlist_stale) {
-			/* Rebuild */
-			if (dir_ndesc->b_dlist == NULL_DLIST)
-				dir_ndesc->b_dlist = glGenLists( 1 );
-			glNewList( dir_ndesc->b_dlist, GL_COMPILE_AND_EXECUTE );
-			/* Label leaf nodes */
-			node = dnode->children;
-			while (node != NULL) {
-				discv_apply_label( node );
-				node = node->next;
-			}
-			glEndList( );
-			dir_ndesc->b_dlist_stale = FALSE;
+
+		/* Label leaf nodes */
+		node = dnode->children;
+		while (node != NULL)
+		{
+			discv_apply_label(node);
+			node = node->next;
 		}
-		else
-			glCallList( dir_ndesc->b_dlist );
 	}
 
 	/* Update geometry status */
@@ -437,25 +416,14 @@ discv_draw( boolean high_detail )
 
 	/* Draw low-detail geometry */
 
-	if (fstree_low_draw_stage == 1)
-		glNewList( fstree_low_dlist, GL_COMPILE_AND_EXECUTE );
+	discv_draw_recursive( globals.fstree, DISCV_DRAW_GEOMETRY );
 
-	if (fstree_low_draw_stage <= 1)
-		discv_draw_recursive( globals.fstree, DISCV_DRAW_GEOMETRY );
-	else
-		glCallList( fstree_low_dlist );
-
-	if (fstree_low_draw_stage == 1)
-		glEndList( );
 	if (fstree_low_draw_stage <= 1)
 		++fstree_low_draw_stage;
 
 
 	if (high_detail) {
 		/* Draw additional high-detail geometry */
-
-		if (fstree_high_draw_stage == 1)
-			glNewList( fstree_high_dlist, GL_COMPILE_AND_EXECUTE );
 
 		if (fstree_high_draw_stage <= 1) {
 			/* Node name labels */
@@ -464,11 +432,6 @@ discv_draw( boolean high_detail )
 			discv_draw_recursive( globals.fstree, DISCV_DRAW_LABELS );
 			text_post( );
 		}
-		else
-			glCallList( fstree_high_dlist );
-
-		if (fstree_high_draw_stage == 1)
-			glEndList( );
 		if (fstree_high_draw_stage <= 1)
 			++fstree_high_draw_stage;
 
@@ -1097,48 +1060,31 @@ mapv_draw_recursive( GNode *dnode, int action )
 
 	if (action == MAPV_DRAW_GEOMETRY) {
 		/* Draw directory face or geometry of children
-		 * (display list A) */
-		if (dir_ndesc->a_dlist_stale) {
-			/* Rebuild */
-			//if (dir_ndesc->a_dlist == NULL_DLIST)
-			//	dir_ndesc->a_dlist = glGenLists( 1 );
-			//glNewList( dir_ndesc->a_dlist, GL_COMPILE_AND_EXECUTE );
-			if (dir_collapsed)
-				mapv_gldraw_folder( dnode );
-			else
-				mapv_build_dir( dnode );
-			//glEndList( );
-			//dir_ndesc->a_dlist_stale = FALSE;
-		}
+		 */
+		if (dir_collapsed)
+			mapv_gldraw_folder(dnode);
 		else
-			glCallList( dir_ndesc->a_dlist );
+			mapv_build_dir(dnode);
 	}
 
 	if (action == MAPV_DRAW_LABELS) {
-		/* Draw name label(s) (display list B) */
-		if (dir_ndesc->b_dlist_stale) {
-			/* Rebuild */
-			if (dir_ndesc->b_dlist == NULL_DLIST)
-				dir_ndesc->b_dlist = glGenLists( 1 );
-			glNewList( dir_ndesc->b_dlist, GL_COMPILE_AND_EXECUTE );
-			if (dir_collapsed) {
-				/* Label directory */
-				mapv_apply_label( dnode );
-			}
-			else {
-				/* Label non-subdirectory children */
-				node = dnode->children;
-				while (node != NULL) {
-					if (!NODE_IS_DIR(node))
-						mapv_apply_label( node );
-					node = node->next;
-				}
-			}
-			glEndList( );
-			dir_ndesc->b_dlist_stale = FALSE;
+		/* Draw name label(s) */
+		if (dir_collapsed)
+		{
+			/* Label directory */
+			mapv_apply_label(dnode);
 		}
 		else
-			glCallList( dir_ndesc->b_dlist );
+		{
+			/* Label non-subdirectory children */
+			node = dnode->children;
+			while (node != NULL)
+			{
+				if (!NODE_IS_DIR(node))
+					mapv_apply_label(node);
+				node = node->next;
+			}
+		}
 	}
 
 	/* Update geometry status */
@@ -1259,37 +1205,19 @@ mapv_draw( boolean high_detail )
 {
 	/* Draw low-detail geometry */
 
-	//if (fstree_low_draw_stage == 1)
-	//	glNewList( fstree_low_dlist, GL_COMPILE_AND_EXECUTE );
+	mapv_draw_recursive( globals.fstree, MAPV_DRAW_GEOMETRY );
 
-	//if (fstree_low_draw_stage <= 1)
-		mapv_draw_recursive( globals.fstree, MAPV_DRAW_GEOMETRY );
-	//else
-	//	glCallList( fstree_low_dlist );
-
-	//if (fstree_low_draw_stage == 1)
-	//	glEndList( );
 	if (fstree_low_draw_stage <= 1)
 		++fstree_low_draw_stage;
 
 	if (high_detail) {
 		/* Draw additional high-detail stuff */
 
-		//if (fstree_high_draw_stage == 1)
-		//	glNewList( fstree_high_dlist, GL_COMPILE_AND_EXECUTE );
-
-		//if (fstree_high_draw_stage <= 1) {
-			/* Node name labels */
-			text_pre( );
-			text_set_color(0.0, 0.0, 0.0); /* all labels are black */
-			mapv_draw_recursive( globals.fstree, MAPV_DRAW_LABELS );
-			text_post( );
-		//}
-		//else
-		//	glCallList( fstree_high_dlist );
-
-		//if (fstree_high_draw_stage == 1)
-		//	glEndList( );
+		/* Node name labels */
+		text_pre( );
+		text_set_color(0.0, 0.0, 0.0); /* all labels are black */
+		mapv_draw_recursive( globals.fstree, MAPV_DRAW_LABELS );
+		text_post( );
 		if (fstree_high_draw_stage <= 1)
 			++fstree_high_draw_stage;
 
@@ -1806,8 +1734,7 @@ treev_queue_rearrange( GNode *dnode )
 	while (up_node != NULL) {
 		NODE_DESC(up_node)->flags |= TREEV_NEED_REARRANGE;
 
-		/* Branch geometry has to be rebuilt (display list B) */
-		DIR_NODE_DESC(up_node)->b_dlist_stale = TRUE;
+		// TODO: Invalidate uploaded VBO's
 
 		up_node = up_node->parent;
 	}
@@ -2441,28 +2368,20 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 
 	if (action >= TREEV_DRAW_GEOMETRY) {
 		/* Draw directory, in either leaf or platform form
-		 * (display list A) */
-		if (dir_ndesc->a_dlist_stale) {
-			/* Rebuild */
-			if (dir_ndesc->a_dlist == NULL_DLIST)
-				dir_ndesc->a_dlist = glGenLists( 1 );
-			glNewList( dir_ndesc->a_dlist, GL_COMPILE_AND_EXECUTE );
-			if (dir_collapsed) {
-				/* Leaf form */
-				glLoadName( NODE_DESC(dnode)->id );
-				node_glcolor( dnode );
-				treev_gldraw_leaf( dnode, prev_r0, TRUE );
-				treev_gldraw_folder( dnode, prev_r0 );
-			}
-			else if (NODE_IS_DIR(dnode)) {
-				/* Platform form (with leaf children) */
-				treev_build_dir( dnode, r0 );
-			}
-			glEndList( );
-			dir_ndesc->a_dlist_stale = FALSE;
+		 */
+		if (dir_collapsed)
+		{
+			/* Leaf form */
+			glLoadName(NODE_DESC(dnode)->id);
+			node_glcolor(dnode);
+			treev_gldraw_leaf(dnode, prev_r0, TRUE);
+			treev_gldraw_folder(dnode, prev_r0);
 		}
-		else
-			glCallList( dir_ndesc->a_dlist );
+		else if (NODE_IS_DIR(dnode))
+		{
+			/* Platform form (with leaf children) */
+			treev_build_dir(dnode, r0);
+		}
 	}
 
 	if (!dir_collapsed) {
@@ -2486,69 +2405,55 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 
 	if (dir_expanded && (action == TREEV_DRAW_GEOMETRY_WITH_BRANCHES)) {
 		/* Draw interconnecting branches (display list B) */
-		if (dir_ndesc->b_dlist_stale) {
-			/* Rebuild */
-			if (dir_ndesc->b_dlist == NULL_DLIST)
-				dir_ndesc->b_dlist = glGenLists( 1 );
-			glNewList( dir_ndesc->b_dlist, GL_COMPILE_AND_EXECUTE );
-			glLoadName( NODE_DESC(dnode)->id );
-			glColor3fv( (float *)&branch_color );
-			glNormal3d( 0.0, 0.0, 1.0 );
-			if (NODE_IS_METANODE(dnode)) {
-				treev_gldraw_loop( r0 );
-				treev_gldraw_outbranch( r0, 0.0, 0.0 );
-			}
-			else {
-				treev_gldraw_inbranch( r0 );
-				if (first_node != NULL) {
-					theta0 = MIN(0.0, TREEV_GEOM_PARAMS(first_node)->platform.theta);
-					theta1 = MAX(0.0, TREEV_GEOM_PARAMS(last_node)->platform.theta);
-					treev_gldraw_outbranch( r0 + dir_gparams->platform.depth, theta0, theta1 );
-				}
-			}
-			glEndList( );
-			dir_ndesc->b_dlist_stale = FALSE;
+		glLoadName(NODE_DESC(dnode)->id);
+		glColor3fv((float *)&branch_color);
+		glNormal3d(0.0, 0.0, 1.0);
+		if (NODE_IS_METANODE(dnode))
+		{
+			treev_gldraw_loop(r0);
+			treev_gldraw_outbranch(r0, 0.0, 0.0);
 		}
 		else
-			glCallList( dir_ndesc->b_dlist );
+		{
+			treev_gldraw_inbranch(r0);
+			if (first_node != NULL)
+			{
+				theta0 = MIN(0.0, TREEV_GEOM_PARAMS(first_node)->platform.theta);
+				theta1 = MAX(0.0, TREEV_GEOM_PARAMS(last_node)->platform.theta);
+				treev_gldraw_outbranch(r0 + dir_gparams->platform.depth, theta0, theta1);
+			}
+		}
 	}
 
 	if (action == TREEV_DRAW_LABELS) {
-		/* Draw name label(s) (display list C) */
-		if (dir_ndesc->c_dlist_stale) {
-			/* Rebuild */
-			if (dir_ndesc->c_dlist == NULL_DLIST)
-				dir_ndesc->c_dlist = glGenLists( 1 );
-			glNewList( dir_ndesc->c_dlist, GL_COMPILE_AND_EXECUTE );
-			if (dir_collapsed) {
-				/* Label directory leaf */
-				text_set_color(treev_leaf_label_color.r,
-					       treev_leaf_label_color.g,
-					       treev_leaf_label_color.b);
-				treev_apply_label( dnode, prev_r0, TRUE );
-			}
-			else if (NODE_IS_DIR(dnode)) {
-				/* Label directory platform */
-				text_set_color(treev_platform_label_color.r,
-					       treev_platform_label_color.g,
-					       treev_platform_label_color.b);
-				treev_apply_label( dnode, r0, FALSE );
-				/* Label leaf nodes that aren't directories */
-				text_set_color(treev_leaf_label_color.r,
-					       treev_leaf_label_color.g,
-					       treev_leaf_label_color.b);
-				node = dnode->children;
-				while (node != NULL) {
-					if (!NODE_IS_DIR(node))
-						treev_apply_label( node, r0, TRUE );
-					node = node->next;
-				}
-			}
-			glEndList( );
-			dir_ndesc->c_dlist_stale = FALSE;
+		/* Draw name label(s) */
+		if (dir_collapsed)
+		{
+			/* Label directory leaf */
+			text_set_color(treev_leaf_label_color.r,
+				       treev_leaf_label_color.g,
+				       treev_leaf_label_color.b);
+			treev_apply_label(dnode, prev_r0, TRUE);
 		}
-		else
-			glCallList( dir_ndesc->c_dlist );
+		else if (NODE_IS_DIR(dnode))
+		{
+			/* Label directory platform */
+			text_set_color(treev_platform_label_color.r,
+				       treev_platform_label_color.g,
+				       treev_platform_label_color.b);
+			treev_apply_label(dnode, r0, FALSE);
+			/* Label leaf nodes that aren't directories */
+			text_set_color(treev_leaf_label_color.r,
+				       treev_leaf_label_color.g,
+				       treev_leaf_label_color.b);
+			node = dnode->children;
+			while (node != NULL)
+			{
+				if (!NODE_IS_DIR(node))
+					treev_apply_label(node, r0, TRUE);
+				node = node->next;
+			}
+		}
 	}
 
 	/* Update geometry status */
@@ -2683,41 +2588,24 @@ treev_draw( boolean high_detail )
 
 	/* Draw low-detail geometry */
 
-	if (fstree_low_draw_stage == 1)
-		glNewList( fstree_low_dlist, GL_COMPILE_AND_EXECUTE );
+	treev_draw_recursive( globals.fstree, NIL, treev_core_radius, TREEV_DRAW_GEOMETRY_WITH_BRANCHES );
 
-	if (fstree_low_draw_stage <= 1)
-		treev_draw_recursive( globals.fstree, NIL, treev_core_radius, TREEV_DRAW_GEOMETRY_WITH_BRANCHES );
-	else
-		glCallList( fstree_low_dlist );
-
-	if (fstree_low_draw_stage == 1)
-		glEndList( );
 	if (fstree_low_draw_stage <= 1)
 		++fstree_low_draw_stage;
 
 	if (high_detail) {
 		/* Draw additional high-detail stuff */
 
-		if (fstree_high_draw_stage == 1)
-			glNewList( fstree_high_dlist, GL_COMPILE_AND_EXECUTE );
+		/* "Cel lines" */
+		outline_pre();
+		treev_draw_recursive(globals.fstree, NIL, treev_core_radius, TREEV_DRAW_GEOMETRY);
+		outline_post();
 
-		if (fstree_high_draw_stage <= 1) {
-			/* "Cel lines" */
-			outline_pre( );
-			treev_draw_recursive( globals.fstree, NIL, treev_core_radius, TREEV_DRAW_GEOMETRY );
-			outline_post( );
+		/* Node name labels */
+		text_pre();
+		treev_draw_recursive(globals.fstree, NIL, treev_core_radius, TREEV_DRAW_LABELS);
+		text_post();
 
-			/* Node name labels */
-			text_pre( );
-			treev_draw_recursive( globals.fstree, NIL, treev_core_radius, TREEV_DRAW_LABELS );
-			text_post( );
-		}
-		else
-			glCallList( fstree_high_dlist );
-
-		if (fstree_high_draw_stage == 1)
-			glEndList( );
 		if (fstree_high_draw_stage <= 1)
 			++fstree_high_draw_stage;
 
@@ -2808,10 +2696,6 @@ queue_uncached_draw( void )
 void
 geometry_queue_rebuild( GNode *dnode )
 {
-	DIR_NODE_DESC(dnode)->a_dlist_stale = TRUE;
-	DIR_NODE_DESC(dnode)->b_dlist_stale = TRUE;
-	DIR_NODE_DESC(dnode)->c_dlist_stale = TRUE;
-
 	queue_uncached_draw( );
 }
 
@@ -2820,12 +2704,6 @@ geometry_queue_rebuild( GNode *dnode )
 void
 geometry_init( FsvMode mode )
 {
-	/* Allocate filesystem display lists (first time only) */
-	if (fstree_low_dlist == NULL_DLIST)
-		fstree_low_dlist = glGenLists( 1 );
-	if (fstree_high_dlist == NULL_DLIST)
-		fstree_high_dlist = glGenLists( 1 );
-
 	DIR_NODE_DESC(globals.fstree)->deployment = 1.0;
 	geometry_queue_rebuild( globals.fstree );
 
@@ -3322,30 +3200,19 @@ geometry_highlight_node( GNode *node, boolean strong )
 }
 
 
-/* Frees all allocated display lists in the subtree rooted at the
+/* Frees all allocated GL resources for the subtree rooted at the
  * specified directory node */
 void
 geometry_free_recursive( GNode *dnode )
 {
-	DirNodeDesc *dir_ndesc;
+	//DirNodeDesc *dir_ndesc;
 	GNode *node;
 
 	g_assert( NODE_IS_DIR(dnode) || NODE_IS_METANODE(dnode) );
 
-	dir_ndesc = DIR_NODE_DESC(dnode);
+	//dir_ndesc = DIR_NODE_DESC(dnode);
 
-	if (dir_ndesc->a_dlist != NULL_DLIST) {
-		glDeleteLists( dir_ndesc->a_dlist, 1 );
-		dir_ndesc->a_dlist = NULL_DLIST;
-	}
-	if (dir_ndesc->b_dlist != NULL_DLIST) {
-		glDeleteLists( dir_ndesc->b_dlist, 1 );
-		dir_ndesc->b_dlist = NULL_DLIST;
-	}
-	if (dir_ndesc->c_dlist != NULL_DLIST) {
-		glDeleteLists( dir_ndesc->c_dlist, 1 );
-		dir_ndesc->c_dlist = NULL_DLIST;
-	}
+	// TODO delete VBO's?
 
 	/* Recurse into subdirectories */
 	node = dnode->children;
