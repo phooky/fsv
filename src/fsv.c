@@ -171,6 +171,9 @@ fsv_load( const char *dir )
 	filelist_init( );
 	gui_update( );
 
+	// Sleep for a short while so one can see the splash screen.
+	sleep(2);
+
 	/* Initialize visualization */
 	globals.fsv_mode = FSV_NONE;
 	fsv_set_mode( initial_fsv_mode );

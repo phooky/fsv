@@ -2940,15 +2940,14 @@ splash_draw( void )
 	/* Draw accompanying text */
 
 	/* Set up projection matrix */
-	glMatrixMode( GL_PROJECTION );
-	glLoadIdentity( );
 	k = 0.5 / ogl_aspect_ratio( );
-	glOrtho( 0.0, 1.0, - k, k, -1.0, 1.0 );
+	mat4 proj;
+	glm_ortho(0.0, 1.0, - k, k, -1.0, 1.0, proj);
 	bottom_y = - k;
 
 	/* Set up modelview matrix */
-	glMatrixMode( GL_MODELVIEW );
-	glLoadIdentity( );
+	// Modelview is the identity, so mvp is just the projection matrix.
+	text_upload_mvp((float*) proj);
 
 	text_pre( );
 
@@ -2974,9 +2973,11 @@ splash_draw( void )
 
 	/* Copyright/author info */
 	text_set_color(0.5, 0.5, 0.5);
-	text_pos.y = bottom_y + 0.0117;
+	text_pos.y = bottom_y + 0.0417;
 	text_dims.y = 0.0234;
 	text_draw_straight( "Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>", &text_pos, &text_dims );
+	text_pos.y = bottom_y + 0.0117;
+	text_draw_straight("Copyright (C) 2021 Janne Blomqvist", &text_pos, &text_dims);
 
 	text_post( );
 
