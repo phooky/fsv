@@ -69,29 +69,35 @@ typedef struct VertexPos {
 
 
 // Print the legacy and modern OpenGL projection and modelview matrices.
+// which = 0: both modelview and projection matrices
+// which = 1: Only modelview
+// which = 2: Only projection
 static void
-debug_print_matrices()
+debug_print_matrices(int which)
 {
+//#ifdef DEBUG
 #if 0
-#ifdef DEBUG
-	g_print("Modelview matrices. First modern\n");
 	float gl1[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, gl1);
-	glmc_mat4_print(gl.modelview, stdout);
-	for (int ii = 0; ii < 4; ii++) {
-		for (int jj = 0; jj < 4; jj++)
-			g_print("%9.5f ", (double)gl1[jj*4 + ii]);
-		g_print("\n");
+	if (which == 0 || which == 1) {
+		g_print("Modelview matrices. First modern\n");
+		glGetFloatv(GL_MODELVIEW_MATRIX, gl1);
+		glmc_mat4_print(gl.modelview, stdout);
+		for (int ii = 0; ii < 4; ii++) {
+			for (int jj = 0; jj < 4; jj++)
+				g_print("%9.5f ", (double)gl1[jj * 4 + ii]);
+			g_print("\n");
+		}
 	}
-	g_print("\nProjection matrices. First modern:\n");
-	glGetFloatv(GL_PROJECTION_MATRIX, gl1);
-	glmc_mat4_print(gl.projection, stdout);
-	for (int ii = 0; ii < 4; ii++) {
-		for (int jj = 0; jj < 4; jj++)
-			g_print("%9.5f ", (double)gl1[jj*4 + ii]);
-		g_print("\n");
+	if (which == 0 || which == 2) {
+		g_print("\nProjection matrices. First modern:\n");
+		glGetFloatv(GL_PROJECTION_MATRIX, gl1);
+		glmc_mat4_print(gl.projection, stdout);
+		for (int ii = 0; ii < 4; ii++) {
+			for (int jj = 0; jj < 4; jj++)
+				g_print("%9.5f ", (double)gl1[jj * 4 + ii]);
+			g_print("\n");
+		}
 	}
-#endif
 #endif
 }
 
@@ -855,7 +861,7 @@ mapv_gldraw_node( GNode *node )
 	     {0.0f, 0.0f, 1.0f}},
 	    {{gparams->c1.x - offset.x, gparams->c1.y - offset.y, gparams->height}, // 3
 	     {0.0f, 0.0f, 1.0f}}};
-	debug_print_matrices();
+	debug_print_matrices(0);
 	static GLuint vbo;
 	if (!vbo)
 		glGenBuffers(1, &vbo);
@@ -2331,6 +2337,9 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 	dir_gparams = TREEV_GEOM_PARAMS(dnode);
 
 	glPushMatrix( );
+	mat4 tmpmat;
+	glm_mat4_copy(gl.modelview, tmpmat);
+	debug_print_matrices(1);
 
 	dir_collapsed = DIR_COLLAPSED(dnode);
         dir_expanded = DIR_EXPANDED(dnode);
@@ -2357,13 +2366,20 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 			leaf.r = prev_r0 + dir_gparams->leaf.distance;
 			leaf.theta = dir_gparams->leaf.theta;
 			glRotated( leaf.theta, 0.0, 0.0, 1.0 );
+			glm_rotate_z(gl.modelview, leaf.theta * M_PI/180.0, gl.modelview);
 			glTranslated( leaf.r, 0.0, 0.0 );
+			glm_translate(gl.modelview, (vec3){leaf.r, 0.0, 0.0});
 			glScaled( dir_ndesc->deployment, dir_ndesc->deployment, dir_ndesc->deployment );
+			glm_scale(gl.modelview, (vec3){dir_ndesc->deployment, dir_ndesc->deployment, dir_ndesc->deployment});
 			glTranslated( - leaf.r, 0.0, 0.0 );
+			glm_translate(gl.modelview, (vec3){-leaf.r, 0.0, 0.0});
 			glRotated( - leaf.theta, 0.0, 0.0, 1.0 );
+			glm_rotate_z(gl.modelview, -leaf.theta * M_PI/180.0, gl.modelview);
 		}
 
 		glRotated( dir_gparams->platform.theta, 0.0, 0.0, 1.0 );
+		glm_rotate_z(gl.modelview, dir_gparams->platform.theta * M_PI / 180.0, gl.modelview);
+		ogl_upload_matrices(TRUE);
 	}
 
 	if (action >= TREEV_DRAW_GEOMETRY) {
@@ -2463,6 +2479,10 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 		glDisable( GL_NORMALIZE );
 
 	glPopMatrix( );
+	if (!dir_collapsed) {
+		glm_mat4_copy(tmpmat, gl.modelview);
+		ogl_upload_matrices(FALSE);
+	}
 
 	return dir_expanded;
 }
