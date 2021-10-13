@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Zlib
+
 #version 140
 
 in vec2 Texcoord;

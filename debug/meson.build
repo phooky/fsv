@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Zlib
+
 sources = 'debug.c'
 libdebug = static_library('debug', sources, include_directories: '..',
   dependencies: gtkdep)

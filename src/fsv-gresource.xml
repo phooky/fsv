@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: Zlib -->
 <gresources>
   <gresource prefix="/jabl/fsv">
     <file>fsv-fragment.glsl</file>

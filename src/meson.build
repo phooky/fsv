@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Zlib
+
 gnome = import('gnome')
 
 gr = gnome.compile_resources('gr', 'fsv-gresource.xml')

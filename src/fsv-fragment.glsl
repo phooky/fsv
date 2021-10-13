@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Zlib
+
 #version 140
 
 uniform vec4 color;
