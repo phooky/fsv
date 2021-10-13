@@ -500,9 +500,6 @@ text_draw_curved( const char *text, const RTZvec *text_pos, const RTvec *text_ma
 void
 text_set_color(float red, float green, float blue)
 {
-	// Legacy GL
-	glColor3f(red, green, blue);
-	// Modern GL
 	glUseProgram(glt.program);
 	glUniform3f(glt.color_location, red, green, blue);
 	glUseProgram(0);
