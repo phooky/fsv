@@ -153,6 +153,11 @@ ogl_init( void )
 	if (!aboutGL.program)
 		g_error("Compiling shaders for about/splash screens failed");
 	aboutGL.mvp_location = glGetUniformLocation(aboutGL.program, "mvp");
+	aboutGL.modelview_location = glGetUniformLocation(aboutGL.program, "modelview");
+	aboutGL.fog_color_location = glGetUniformLocation(aboutGL.program, "fog_color");
+	aboutGL.fog_start_location = glGetUniformLocation(aboutGL.program, "fog_start");
+	aboutGL.fog_end_location = glGetUniformLocation(aboutGL.program, "fog_end");
+
 	/* get the location of the "position", "normal" and "color" attributes */
 	aboutGL.position_location = glGetAttribLocation(aboutGL.program, "position");
 	aboutGL.normal_location = glGetAttribLocation(aboutGL.program, "normal");

@@ -97,6 +97,7 @@ draw_fsv( void )
 	glUseProgram(aboutGL.program);
 	/* update the "mvp" matrix we use in the shader */
 	glUniformMatrix4fv(aboutGL.mvp_location, 1, GL_FALSE, (float*)mvp);
+	glUniformMatrix4fv(aboutGL.modelview_location, 1, GL_FALSE, (float*) mv);
 	glUseProgram(0);
 
 	/* Draw "fsv" geometry */

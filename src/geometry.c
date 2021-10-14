@@ -2837,6 +2837,13 @@ geometry_gldraw_fsv( void )
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * ilen, idx, GL_STATIC_DRAW);
 
+		// Upload fog parameters. Emulate legacy GL with a simple
+		// linear fog model.
+		glUseProgram(aboutGL.program);
+		glUniform4f(aboutGL.fog_color_location, 0.0f, 0.0f, 0.0f, 0.0f);
+		glUniform1f(aboutGL.fog_start_location, 200.0f);
+		glUniform1f(aboutGL.fog_end_location, 1800.0f);
+
 		GLenum err = glGetError();
 		if (err != GL_NO_ERROR)
 			g_error("GL error %d\n", (int)err);
@@ -2950,6 +2957,7 @@ splash_draw( void )
 	glUseProgram(aboutGL.program);
 	/* update the "mvp" matrix we use in the shader */
 	glUniformMatrix4fv(aboutGL.mvp_location, 1, GL_FALSE, (float*)mvp);
+	glUniformMatrix4fv(aboutGL.modelview_location, 1, GL_FALSE, (float*) mv);
 	glUseProgram(0);
 
 	geometry_gldraw_fsv( );

@@ -53,9 +53,15 @@ typedef struct AboutGlState {
 	// These _location variables are handles to input 'slots' in the
 	// vertex shader.
 	GLint mvp_location;
+	GLint modelview_location; // We need the modelview matrix as well
 	GLint position_location;
 	GLint normal_location;
 	GLint color_location;
+
+	// Fog parameters
+	GLint fog_color_location;
+	GLint fog_start_location;
+	GLint fog_end_location;
 
 } AboutGlState;
 
