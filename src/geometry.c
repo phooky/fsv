@@ -72,11 +72,11 @@ typedef struct VertexPos {
 // which = 0: both modelview and projection matrices
 // which = 1: Only modelview
 // which = 2: Only projection
+#if 0
 static void
 debug_print_matrices(int which)
 {
-//#ifdef DEBUG
-#if 0
+#ifdef DEBUG
 	float gl1[16];
 	if (which == 0 || which == 1) {
 		g_print("Modelview matrices. First modern\n");
@@ -100,6 +100,7 @@ debug_print_matrices(int which)
 	}
 #endif
 }
+#endif
 
 /**** DISC VISUALIZATION **************************************/
 
@@ -861,7 +862,7 @@ mapv_gldraw_node( GNode *node )
 	     {0.0f, 0.0f, 1.0f}},
 	    {{gparams->c1.x - offset.x, gparams->c1.y - offset.y, gparams->height}, // 3
 	     {0.0f, 0.0f, 1.0f}}};
-	debug_print_matrices(0);
+	//debug_print_matrices(0);
 	static GLuint vbo;
 	if (!vbo)
 		glGenBuffers(1, &vbo);
@@ -2339,7 +2340,7 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 	glPushMatrix( );
 	mat4 tmpmat;
 	glm_mat4_copy(gl.modelview, tmpmat);
-	debug_print_matrices(1);
+	//debug_print_matrices(1);
 
 	dir_collapsed = DIR_COLLAPSED(dnode);
         dir_expanded = DIR_EXPANDED(dnode);
@@ -2754,10 +2755,114 @@ geometry_gldraw_fsv( void )
 	XYvec p, n;
 	const float *vertices = NULL;
 	const int *triangles = NULL, *edges = NULL;
-	int c, v, e, i;
+	int v, e, i;
+	// Magic constants 414 and 1188 determined by first making these arrays
+	// larger and checking vlen and ilen values in the debugger.
+	static AboutVertex vert[414];
+	static GLushort idx[1188];
+	static GLuint vbo, ebo;
+	static size_t vlen;
+	static size_t ilen;
+
+	if (!vbo) {
+		for (size_t c = 0; c < 1; c++) {
+			GLfloat *color = (GLfloat*)&fsv_colors[c];
+			vertices = fsv_vertices[c];
+			triangles = fsv_triangles[c];
+			edges = fsv_edges[c];
+			// Side faces
+			for (e = 0; edges[e] >= 0; e++) {
+				i = edges[e];
+				p.x = vertices[2 * i];
+				p.y = vertices[2 * i + 1];
+				i = edges[e + 1];
+				if (i >= 0) {
+					n.x = vertices[2 * i + 1] - p.y;
+					n.y = p.x - vertices[2 * i];
+				}
+				if (e > 0) {
+					idx[ilen++] = vlen - 2;
+					idx[ilen++] = vlen - 1;
+					idx[ilen++] = vlen;
+					idx[ilen++] = vlen;
+					idx[ilen++] = vlen - 1;
+					idx[ilen++] = vlen + 1;
+				}
+				vert[vlen++] = (AboutVertex){
+				    {p.x, p.y, 30.0},
+				    {n.x, n.y, 0.0f},
+				    {color[0], color[1], color[2]}};
+				vert[vlen++] = (AboutVertex){
+				    {p.x, p.y, -30.0},
+				    {n.x, n.y, 0.0f},
+				    {color[0], color[1], color[2]}};
+			}
+			/* Front faces */
+			int imax = 0;
+			for (v = 0; triangles[v] >= 0; v++) {
+				i = triangles[v];
+				imax = MAX(i, imax);
+				p.x = vertices[2 * i];
+				p.y = vertices[2 * i + 1];
+				vert[vlen + i] = (AboutVertex){
+					{p.x, p.y, 30.0},
+					{0.0f, 0.0f, 1.0f},
+					{color[0], color[1], color[2]}
+				};
+				idx[ilen++] = vlen + i;
+			}
+			vlen += imax + 1;
+
+			/* Back faces */
+			imax = 0;
+			for (--v; v >= 0; v--) {
+				i = triangles[v];
+				imax = MAX(i, imax);
+				p.x = vertices[2 * i];
+				p.y = vertices[2 * i + 1];
+				vert[vlen + i] = (AboutVertex){
+					{p.x, p.y, -30.0},
+					{0.0f, 0.0f, -1.0f},
+					{color[0], color[1], color[2]}
+				};
+				idx[ilen++] = vlen + i;
+			}
+			vlen += imax + 1;
+		}
+		glGenBuffers(1, &vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(AboutVertex) * vlen, vert, GL_STATIC_DRAW);
+
+		glGenBuffers(1, &ebo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * ilen, idx, GL_STATIC_DRAW);
+
+		GLenum err = glGetError();
+		if (err != GL_NO_ERROR)
+			g_error("GL error %d\n", (int)err);
+
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glEnableVertexAttribArray(aboutGL.position_location);
+	glVertexAttribPointer(aboutGL.position_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(AboutVertex),
+			      (void *)offsetof(AboutVertex, position));
+	glEnableVertexAttribArray(aboutGL.color_location);
+	glVertexAttribPointer(aboutGL.color_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(AboutVertex),
+			      (void *)offsetof(AboutVertex, color));
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glUseProgram(aboutGL.program);
+	glDrawElements(GL_TRIANGLES, ilen, GL_UNSIGNED_SHORT, 0);
+	glUseProgram(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		g_error("GL error %d\n", (int)err);
 
 	glEnable( GL_NORMALIZE );
-	for (c = 0; c < 3; c++) {
+	for (int c = 1; c < 3; c++) {
 		glColor3fv( (float *)&fsv_colors[c] );
 		vertices = fsv_vertices[c];
 		triangles = fsv_triangles[c];
@@ -2824,14 +2929,28 @@ splash_draw( void )
 	glLoadIdentity( );
 	k = 82.84 / ogl_aspect_ratio( );
 	glFrustum( -70.82, 95.40, - k, k, 200.0, 400.0 );
+	mat4 proj;
+	glm_frustum(-70.82, 95.40, - k, k, 200.0, 400.0, proj);
 
 	/* Set up modelview matrix */
 	glMatrixMode( GL_MODELVIEW );
 	glPushMatrix( );
 	glLoadIdentity( );
+	mat4 mv;
+	glm_mat4_identity(mv);
 	glTranslated( 0.0, 0.0, -300.0 );
+	glm_translate(mv, (vec3){0.0, 0.0, -300.0});
 	glRotated( 10.5, 1.0, 0.0, 0.0 );
+	glm_rotate_x(mv, 10.5 * M_PI/180.0, mv);
 	glTranslated( 20.0, 20.0, -30.0 );
+	glm_translate(mv, (vec3){20.0, 20.0, -30.0});
+
+	mat4 mvp;
+	glm_mat4_mul(proj, mv, mvp);
+	glUseProgram(aboutGL.program);
+	/* update the "mvp" matrix we use in the shader */
+	glUniformMatrix4fv(aboutGL.mvp_location, 1, GL_FALSE, (float*)mvp);
+	glUseProgram(0);
 
 	geometry_gldraw_fsv( );
 
@@ -2839,7 +2958,7 @@ splash_draw( void )
 
 	/* Set up projection matrix */
 	k = 0.5 / ogl_aspect_ratio( );
-	mat4 proj;
+	// Reuse proj matrix from the "FSV" drawing
 	glm_ortho(0.0, 1.0, - k, k, -1.0, 1.0, proj);
 	bottom_y = - k;
 

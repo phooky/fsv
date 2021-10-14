@@ -45,6 +45,29 @@ typedef struct FsvGlState {
 
 extern FsvGlState gl;
 
+// State for the About and splash screens in modern GL
+typedef struct AboutGlState {
+
+	GLuint program; // Handle for the shaders
+
+	// These _location variables are handles to input 'slots' in the
+	// vertex shader.
+	GLint mvp_location;
+	GLint position_location;
+	GLint normal_location;
+	GLint color_location;
+
+} AboutGlState;
+
+extern AboutGlState aboutGL;
+
+typedef struct {
+	GLfloat position[3];
+	GLfloat normal[3];
+	GLfloat color[3];
+} AboutVertex;
+
+
 GLuint ogl_create_shader(GLenum shader_type, const char *source);
 void ogl_resize( void );
 void ogl_refresh( void );

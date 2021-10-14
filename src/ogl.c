@@ -27,6 +27,7 @@
 static GtkWidget *viewport_gl_area_w = NULL;
 
 FsvGlState gl;
+AboutGlState aboutGL;
 
 GLuint
 ogl_create_shader(GLenum shader_type, const char *source)
@@ -59,20 +60,20 @@ ogl_create_shader(GLenum shader_type, const char *source)
 
 // Initialize OpenGL shaders
 static GLuint
-init_shaders()
+init_shaders(const char* vertex_resource, const char* fragment_resource)
 {
 	GBytes *source;
 	GLuint program = 0;
 
 	/* load the vertex shader */
-	source = g_resources_lookup_data("/jabl/fsv/fsv-vertex.glsl", 0, NULL);
+	source = g_resources_lookup_data(vertex_resource, 0, NULL);
 	GLuint vertex = ogl_create_shader(GL_VERTEX_SHADER, g_bytes_get_data(source, NULL));
 	g_bytes_unref(source);
 	if (vertex == 0)
 		goto out;
 
 	/* load the fragment shader */
-	source = g_resources_lookup_data("/jabl/fsv/fsv-fragment.glsl", 0, NULL);
+	source = g_resources_lookup_data(fragment_resource, 0, NULL);
 	GLuint fragment = ogl_create_shader(GL_FRAGMENT_SHADER, g_bytes_get_data(source, NULL));
 	g_bytes_unref(source);
 	if (fragment == 0)
@@ -104,14 +105,6 @@ init_shaders()
 		goto out;
 	}
 
-	/* get the location of the "mvp" uniform */
-	gl.mvp_location = glGetUniformLocation(program, "mvp");
-	gl.color_location = glGetUniformLocation(program, "color");
-
-	/* get the location of the "position" and "color" attributes */
-	gl.position_location = glGetAttribLocation(program, "position");
-	gl.normal_location = glGetAttribLocation(program, "normal");
-
 	/* the individual shaders can be detached and destroyed */
 	glDetachShader(program, vertex);
 	glDetachShader(program, fragment);
@@ -140,9 +133,30 @@ ogl_init( void )
 	glGenVertexArrays(1, &gl.vao);
 	glBindVertexArray(gl.vao);
 
-	gl.program = init_shaders();
+	// Shader programs for the normal view
+	gl.program = init_shaders("/jabl/fsv/fsv-vertex.glsl",
+				  "/jabl/fsv/fsv-fragment.glsl");
 	if (!gl.program)
 		g_error("Compiling shaders failed");
+		/* get the location of the "mvp" uniform */
+	gl.mvp_location = glGetUniformLocation(gl.program, "mvp");
+	gl.color_location = glGetUniformLocation(gl.program, "color");
+
+	/* get the location of the "position" and "color" attributes */
+	gl.position_location = glGetAttribLocation(gl.program, "position");
+	gl.normal_location = glGetAttribLocation(gl.program, "normal");
+
+
+	// Shader programs for the splash and about screens
+	aboutGL.program = init_shaders("/jabl/fsv/fsv-about-vertex.glsl",
+				       "/jabl/fsv/fsv-about-fragment.glsl");
+	if (!aboutGL.program)
+		g_error("Compiling shaders for about/splash screens failed");
+	aboutGL.mvp_location = glGetUniformLocation(aboutGL.program, "mvp");
+	/* get the location of the "position", "normal" and "color" attributes */
+	aboutGL.position_location = glGetAttribLocation(aboutGL.program, "position");
+	aboutGL.normal_location = glGetAttribLocation(aboutGL.program, "normal");
+	aboutGL.color_location = glGetAttribLocation(aboutGL.program, "color");
 
 	// Should be eventually switched to glEnableVertexAttribArray once
 	// shaders are taken into use

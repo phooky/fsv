@@ -6,5 +6,7 @@
     <file>fsv-vertex.glsl</file>
     <file>fsv-text-fragment.glsl</file>
     <file>fsv-text-vertex.glsl</file>
+    <file>fsv-about-fragment.glsl</file>
+    <file>fsv-about-vertex.glsl</file>
   </gresource>
 </gresources>
