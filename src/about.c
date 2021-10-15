@@ -94,10 +94,15 @@ draw_fsv( void )
 
 	mat4 mvp;
 	glm_mat4_mul(proj, mv, mvp);
+	mat3 normmat;
+	glm_mat4_pick3(mv, normmat);
+	glm_mat3_inv(normmat, normmat);
+	glm_mat3_transpose(normmat);
 	glUseProgram(aboutGL.program);
 	/* update the "mvp" matrix we use in the shader */
 	glUniformMatrix4fv(aboutGL.mvp_location, 1, GL_FALSE, (float*)mvp);
 	glUniformMatrix4fv(aboutGL.modelview_location, 1, GL_FALSE, (float*) mv);
+	glUniformMatrix3fv(aboutGL.normal_matrix_location, 1, GL_FALSE, (float*) normmat);
 	glUseProgram(0);
 
 	/* Draw "fsv" geometry */

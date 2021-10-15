@@ -58,6 +58,13 @@ typedef struct AboutGlState {
 	GLint normal_location;
 	GLint color_location;
 
+	// Phong lightning parameters
+	GLint ambient_location;
+	GLint diffuse_location;
+	GLint specular_location;
+	GLint light_pos_location;
+	GLint normal_matrix_location;
+
 	// Fog parameters
 	GLint fog_color_location;
 	GLint fog_start_location;

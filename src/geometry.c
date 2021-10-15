@@ -2765,7 +2765,7 @@ geometry_gldraw_fsv( void )
 	static size_t ilen;
 
 	if (!vbo) {
-		for (size_t c = 0; c < 1; c++) {
+		for (size_t c = 0; c < 2; c++) {
 			GLfloat *color = (GLfloat*)&fsv_colors[c];
 			vertices = fsv_vertices[c];
 			triangles = fsv_triangles[c];
@@ -2840,7 +2840,7 @@ geometry_gldraw_fsv( void )
 		// Upload fog parameters. Emulate legacy GL with a simple
 		// linear fog model.
 		glUseProgram(aboutGL.program);
-		glUniform4f(aboutGL.fog_color_location, 0.0f, 0.0f, 0.0f, 0.0f);
+		glUniform3f(aboutGL.fog_color_location, 0.0f, 0.0f, 0.0f);
 		glUniform1f(aboutGL.fog_start_location, 200.0f);
 		glUniform1f(aboutGL.fog_end_location, 1800.0f);
 
@@ -2854,6 +2854,10 @@ geometry_gldraw_fsv( void )
 	glVertexAttribPointer(aboutGL.position_location, 3, GL_FLOAT, GL_FALSE,
 			      sizeof(AboutVertex),
 			      (void *)offsetof(AboutVertex, position));
+	glEnableVertexAttribArray(aboutGL.normal_location);
+	glVertexAttribPointer(aboutGL.normal_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(AboutVertex),
+			      (void *)offsetof(AboutVertex, normal));
 	glEnableVertexAttribArray(aboutGL.color_location);
 	glVertexAttribPointer(aboutGL.color_location, 3, GL_FLOAT, GL_FALSE,
 			      sizeof(AboutVertex),
@@ -2869,7 +2873,7 @@ geometry_gldraw_fsv( void )
 		g_error("GL error %d\n", (int)err);
 
 	glEnable( GL_NORMALIZE );
-	for (int c = 1; c < 3; c++) {
+	for (int c = 2; c < 3; c++) {
 		glColor3fv( (float *)&fsv_colors[c] );
 		vertices = fsv_vertices[c];
 		triangles = fsv_triangles[c];
@@ -2954,10 +2958,15 @@ splash_draw( void )
 
 	mat4 mvp;
 	glm_mat4_mul(proj, mv, mvp);
+	mat3 normmat;
+	glm_mat4_pick3(mv, normmat);
+	glm_mat3_inv(normmat, normmat);
+	glm_mat3_transpose(normmat);
 	glUseProgram(aboutGL.program);
 	/* update the "mvp" matrix we use in the shader */
 	glUniformMatrix4fv(aboutGL.mvp_location, 1, GL_FALSE, (float*)mvp);
 	glUniformMatrix4fv(aboutGL.modelview_location, 1, GL_FALSE, (float*) mv);
+	glUniformMatrix3fv(aboutGL.normal_matrix_location, 1, GL_FALSE, (float*) normmat);
 	glUseProgram(0);
 
 	geometry_gldraw_fsv( );

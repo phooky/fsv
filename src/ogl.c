@@ -123,10 +123,10 @@ static void
 ogl_init( void )
 {
 	float light_ambient[] = {0.1, 0.1, 0.1, 1};
-	float light_diffuse[] = {1, 1, 1, 1};
-	float light_specular[] = {1, 1, 1, 1};
-	float light_position[] = { 1.0, 0.0, 0.0, 0.0 };
-	float material_specular[] = {.1, .1, .1, 1};
+	float light_diffuse[] = {0.4, 0.4, 0.4, 1};
+	float light_specular[] = {.3, .3, .3, 1};
+	float light_position[] = { 0.2, 0.0, 1.0, 0.0 };
+	float material_specular[] = {1, 1, 1, 1};
 
 	// Modern OpenGL initialization. Even if we don't use the VAO it must be
 	// initialized or VBO stuff might fail.
@@ -157,6 +157,11 @@ ogl_init( void )
 	aboutGL.fog_color_location = glGetUniformLocation(aboutGL.program, "fog_color");
 	aboutGL.fog_start_location = glGetUniformLocation(aboutGL.program, "fog_start");
 	aboutGL.fog_end_location = glGetUniformLocation(aboutGL.program, "fog_end");
+	aboutGL.ambient_location = glGetUniformLocation(aboutGL.program, "ambient");
+	aboutGL.diffuse_location = glGetUniformLocation(aboutGL.program, "diffuse");
+	aboutGL.specular_location = glGetUniformLocation(aboutGL.program, "specular");
+	aboutGL.light_pos_location = glGetUniformLocation(aboutGL.program, "light_pos");
+	aboutGL.normal_matrix_location = glGetUniformLocation(aboutGL.program, "normal_matrix");
 
 	/* get the location of the "position", "normal" and "color" attributes */
 	aboutGL.position_location = glGetAttribLocation(aboutGL.program, "position");
@@ -193,6 +198,13 @@ ogl_init( void )
 	glLightfv( GL_LIGHT0, GL_DIFFUSE, light_diffuse );
 	glLightfv( GL_LIGHT0, GL_SPECULAR, light_specular );
 	glLightfv( GL_LIGHT0, GL_POSITION, light_position );
+	glUseProgram(aboutGL.program);
+	glUniform1f(aboutGL.ambient_location, light_ambient[0]);
+	glUniform1f(aboutGL.diffuse_location, light_diffuse[0]);
+	glUniform1f(aboutGL.specular_location, light_specular[0]);
+	glUniform4fv(aboutGL.light_pos_location, 1, light_position);
+	glUseProgram(0);
+
 
 	/* Set up materials */
 	glColorMaterial( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE );
