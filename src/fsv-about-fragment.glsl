@@ -3,7 +3,7 @@
 #version 140
 
 in vec3 vertColor;
-in vec4 fragPos;
+in vec3 fragPos;
 in vec3 fragNormal;
 in vec4 lightPos;
 
@@ -27,13 +27,13 @@ void main() {
   if (lightPos.w == 0.0)  // Light at infinity
     lightDir = normalize(lightPos.xyz);
   else
-    lightDir = normalize(lightPos.xyz - fragPos.xyz/fragPos.w);
+    lightDir = normalize(lightPos.xyz - fragPos);
   float diffuse_refl = max(dot(fragNormal, lightDir), 0.0);
   vec3 diffuse_light = diffuse_refl * diffuse * light_color;
 
   // Specular light
   vec3 viewPos = vec3(0.0, 0.0, 0.0);
-  vec3 viewDir = normalize(viewPos - fragPos.xyz/fragPos.w);
+  vec3 viewDir = normalize(viewPos - fragPos);
   vec3 reflectDir = reflect(-lightDir, fragNormal);
   float spec = pow(max(dot(viewDir, reflectDir), 0.0), 2);
   vec3 spec_light = specular * spec * light_color;
@@ -42,7 +42,7 @@ void main() {
   vec3 color = (ambient_light + diffuse_light + spec_light) * vertColor;
 
   // Fog
-  float zdist = abs(fragPos.z / fragPos.w);
+  float zdist = abs(fragPos.z);
   float fog = (fog_end - zdist) / (fog_end - fog_start);
 
   outputColor = vec4(mix(fog_color, color, fog), 1.0);

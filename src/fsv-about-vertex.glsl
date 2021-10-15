@@ -7,7 +7,7 @@ in vec3 normal;
 in vec3 color;
 
 out vec3 vertColor;
-out vec4 fragPos;
+out vec3 fragPos;
 out vec3 fragNormal;
 out vec4 lightPos;
 
@@ -24,7 +24,8 @@ void main() {
   vertColor = color;
 
   // Position of vertex in camera coordinates interpolated to frag coords
-  fragPos = modelview * pos;
+  vec4 fragTmp = modelview * pos;
+  fragPos = fragTmp.xyz / fragTmp.w;
 
   fragNormal = normal_matrix * normal;
 }
