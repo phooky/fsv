@@ -122,8 +122,8 @@ out:
 static void
 ogl_init( void )
 {
-	float light_ambient[] = {0.1, 0.1, 0.1, 1};
-	float light_diffuse[] = {0.4, 0.4, 0.4, 1};
+	float light_ambient[] = {0.2, 0.2, 0.2, 1};
+	float light_diffuse[] = {0.6, 0.6, 0.6, 1};
 	float light_specular[] = {.3, .3, .3, 1};
 	float light_position[] = { 0.2, 0.0, 1.0, 0.0 };
 	float material_specular[] = {1, 1, 1, 1};
@@ -138,7 +138,7 @@ ogl_init( void )
 				  "/jabl/fsv/fsv-fragment.glsl");
 	if (!gl.program)
 		g_error("Compiling shaders failed");
-		/* get the location of the "mvp" uniform */
+	/* get the location of the "mvp" uniform */
 	gl.mvp_location = glGetUniformLocation(gl.program, "mvp");
 	gl.color_location = glGetUniformLocation(gl.program, "color");
 

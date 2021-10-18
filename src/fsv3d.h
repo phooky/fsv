@@ -4,6 +4,7 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * SPDX-FileCopyrightText: 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * SPDX-License-Identifier:  LGPL-2.1-or-later
  */
@@ -14,6 +15,12 @@
 #endif
 #define FSV_FSV3D_H
 
+// Tells whether an edge index describes a sharp or smooth corner. Sharp corners
+// need duplicated vertices with different normals.
+typedef enum EdgeSmoothness {
+	SMOOTH,
+	SHARP
+} EdgeSmoothness;
 
 static const RGBcolor fsv_colors[] = {
         /* f */
@@ -98,6 +105,13 @@ static const int _fsv_f_triangles[] = {
 static const int _fsv_f_edges[] = {
 	0, 1, 2, 5, 6, 8, 14, 30, 28, 27, 26, 9, 10, 11, 12, 23, 24, 22,
 	19, 20, 21, 18, 15, 16, 17, 25, 29, 13, 7, 4, 3, 0, -1
+};
+
+static const EdgeSmoothness _fsv_f_edge_smooth[] = {
+	SHARP, SHARP, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH,
+	SMOOTH, SMOOTH /* index 26 */, SHARP, SHARP, SHARP, SHARP, SHARP,
+	SHARP, SHARP, SHARP, SHARP, SHARP, SHARP, SHARP, SHARP, SHARP /* 17 */,
+	SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SHARP
 };
 
 
@@ -226,6 +240,16 @@ static const int _fsv_s_edges[] = {
 	44, 48, 50, 52, 3, 0, -1
 };
 
+static const EdgeSmoothness _fsv_s_edge_smooth[] = {
+	SHARP, SHARP, SHARP, SHARP, SHARP, SMOOTH, SMOOTH, SMOOTH, SMOOTH,
+	SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH /* 38 */,
+	SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH /* 15 */,
+	SMOOTH, SMOOTH, SMOOTH, SHARP /* 4 */, SHARP, SHARP, SHARP, SHARP /* 8 */,
+	SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH,
+	SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH,
+	SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SMOOTH, SHARP
+};
+
 
 static const float _fsv_v_vertices[] = {
 	63.8849, 19.3525,
@@ -267,6 +291,10 @@ static const int _fsv_v_edges[] = {
 	0, 1, 2, 11, 4, 5, 6, 7, 14, 13, 12, 10, 8, 9, 3, 0, -1
 };
 
+static const EdgeSmoothness _fsv_v_edge_smooth[] = {
+	SHARP, SHARP, SHARP, SHARP, SHARP, SHARP, SHARP, SHARP, SHARP, SHARP,
+	SHARP, SHARP, SHARP, SHARP, SHARP, SHARP
+};
 
 static const float *fsv_vertices[] = {
 	_fsv_f_vertices, _fsv_s_vertices, _fsv_v_vertices
@@ -278,6 +306,10 @@ static const int *fsv_triangles[] = {
 
 static const int *fsv_edges[] = {
 	_fsv_f_edges, _fsv_s_edges, _fsv_v_edges
+};
+
+static const EdgeSmoothness *fsv_edge_smoothness[] = {
+	_fsv_f_edge_smooth, _fsv_s_edge_smooth, _fsv_v_edge_smooth
 };
 
 

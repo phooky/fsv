@@ -38,57 +38,35 @@ draw_fsv( void )
 {
 	double dy, p, q;
 
-	if (about_part < 0.5) {
-		/* Set up a black, all-encompassing fog */
-		glEnable( GL_FOG );
-		glFogi( GL_FOG_MODE, GL_LINEAR );
-		glFogf( GL_FOG_START, 200.0 );
-		glFogf( GL_FOG_END, 1800.0 );
-	}
-
 	/* Set up projection matrix */
-	glMatrixMode( GL_PROJECTION );
-	glPushMatrix( );
-	glLoadIdentity( );
 	dy = 80.0 / ogl_aspect_ratio( );
-	glFrustum( - 80.0, 80.0, - dy, dy, 80.0, 2000.0 );
 	mat4 proj;
 	glm_frustum(-80.0, 80.0, -dy, dy, 80.0, 2000.0, proj);
 
 	/* Set up modelview matrix */
-	glMatrixMode( GL_MODELVIEW );
-	glPushMatrix( );
-	glLoadIdentity( );
 	mat4 mv;
 	glm_mat4_identity(mv);
 	if (about_part < 0.5) {
 		/* Spinning and approaching fast */
 		p = INTERVAL_PART(about_part, 0.0, 0.5);
 		q = pow( 1.0 - p, 1.5 );
-		glTranslated( 0.0, 0.0, -150.0 - 1800.0 * q );
 		glm_translate(mv, (vec3){0.0, 0.0, -150.0 - 1800.0 * q});
-		glRotated( 900.0 * q, 0.0, 1.0, 0.0 );
 		glm_rotate_y(mv, 900.0 * q * M_PI/180., mv);
 	}
 	else if (about_part < 0.625) {
 		/* Holding still for a moment */
-		glTranslated( 0.0, 0.0, -150.0 );
 		glm_translate(mv, (vec3){0.0, 0.0, -150.0});
 	}
 	else if (about_part < 0.75) {
 		/* Flipping up and back */
 		p = INTERVAL_PART(about_part, 0.625, 0.75);
 		q = 1.0 - SQR(1.0 - p);
-		glTranslated( 0.0, 40.0 * q, -150.0 - 50.0 * q );
 		glm_translate(mv, (vec3){0.0, 40.0 * q, -150.0 - 50.0 * q});
-		glRotated( 365.0 * q, 1.0, 0.0, 0.0 );
 		glm_rotate_x(mv, 365.0 * q * M_PI/180., mv);
 	}
 	else {
 		/* Holding still again */
-		glTranslated( 0.0, 40.0, -200.0 );
 		glm_translate(mv, (vec3){0.0, 40.0, -200.0});
-		glRotated( 5.0, 1.0, 0.0, 0.0 );
 		glm_rotate_x(mv, 5.0 * M_PI/180.0, mv);
 	}
 
@@ -107,14 +85,6 @@ draw_fsv( void )
 
 	/* Draw "fsv" geometry */
 	geometry_gldraw_fsv( );
-
-	/* Restore previous matrices */
-	glMatrixMode( GL_PROJECTION );
-	glPopMatrix( );
-	glMatrixMode( GL_MODELVIEW );
-	glPopMatrix( );
-
-	glDisable( GL_FOG );
 }
 
 

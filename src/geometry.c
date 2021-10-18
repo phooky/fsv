@@ -2756,30 +2756,72 @@ geometry_gldraw_fsv( void )
 	const float *vertices = NULL;
 	const int *triangles = NULL, *edges = NULL;
 	int v, e, i;
-	// Magic constants 414 and 1188 determined by first making these arrays
+	// Magic constants 490 and 1188 determined by first making these arrays
 	// larger and checking vlen and ilen values in the debugger.
-	static AboutVertex vert[414];
-	static GLushort idx[1188];
+#define VERT_MAX_LEN 490
+#define IDX_MAX_LEN 1188
+	static AboutVertex vert[VERT_MAX_LEN];
+	static GLushort idx[IDX_MAX_LEN];
 	static GLuint vbo, ebo;
 	static size_t vlen;
 	static size_t ilen;
 
 	if (!vbo) {
-		for (size_t c = 0; c < 2; c++) {
+		for (size_t c = 0; c < 3; c++) {
 			GLfloat *color = (GLfloat*)&fsv_colors[c];
 			vertices = fsv_vertices[c];
 			triangles = fsv_triangles[c];
 			edges = fsv_edges[c];
+			const EdgeSmoothness *es = fsv_edge_smoothness[c];
 			// Side faces
 			for (e = 0; edges[e] >= 0; e++) {
+				// For a smooth edge, calculate the normal from
+				// the previous and next vertices. For a sharp
+				// edge, duplicate the vertices, normal for the
+				// first is calculated from the previous and
+				// current vertex, and for the second vertex
+				// the normal is calculated from the current
+				// and next vertex.
+				// Edge here meaning the vertex indices of the
+				// vertices forming the sides of the character,
+				// not the "edge" from graph theory.
 				i = edges[e];
+				EdgeSmoothness s = es[e];
 				p.x = vertices[2 * i];
 				p.y = vertices[2 * i + 1];
-				i = edges[e + 1];
-				if (i >= 0) {
+				int inext = edges[e + 1];
+				int iprev = edges[e - 1];
+				XYvec n2;
+				if (e == 0) {
+					// First edge, must use only "forward"
+					// delta
+					s = SMOOTH;
+					i = inext;
 					n.x = vertices[2 * i + 1] - p.y;
 					n.y = p.x - vertices[2 * i];
-				}
+				} else if (inext < 0) {
+					// Last edge, must use only "backward"
+					// delta
+					s = SMOOTH;
+					n.x = p.y - vertices[2 * iprev + 1];
+					n.y = vertices[2 * iprev] - p.x;
+				} else if (s == SMOOTH) {
+					i = inext;
+					n.x = vertices[2 * i + 1] -
+					      vertices[2 * iprev + 1];
+					n.y = vertices[2 * iprev] -
+					      vertices[2 * i];
+				} else if (s == SHARP) {
+					// First normal with backward delta.
+					n.x = p.y - vertices[2 * iprev + 1];
+					n.y = vertices[2 * iprev] - p.x;
+					// Second normal with forward delta.
+					i = inext;
+					n2.x = vertices[2 * i + 1] - p.y;
+					n2.y = p.x - vertices[2 * i];
+				} else
+					g_error("Unable to calculate normal!");
+
 				if (e > 0) {
 					idx[ilen++] = vlen - 2;
 					idx[ilen++] = vlen - 1;
@@ -2796,6 +2838,18 @@ geometry_gldraw_fsv( void )
 				    {p.x, p.y, -30.0},
 				    {n.x, n.y, 0.0f},
 				    {color[0], color[1], color[2]}};
+				if (s == SHARP) {
+					// Second set of vertices with forward
+					// delta normals.
+					vert[vlen++] = (AboutVertex){
+					    {p.x, p.y, 30.0},
+					    {n2.x, n2.y, 0.0f},
+					    {color[0], color[1], color[2]}};
+					vert[vlen++] = (AboutVertex){
+					    {p.x, p.y, -30.0},
+					    {n2.x, n2.y, 0.0f},
+					    {color[0], color[1], color[2]}};
+				}
 			}
 			/* Front faces */
 			int imax = 0;
@@ -2829,6 +2883,10 @@ geometry_gldraw_fsv( void )
 			}
 			vlen += imax + 1;
 		}
+		g_assert(VERT_MAX_LEN >= vlen);
+		g_assert(IDX_MAX_LEN >= ilen);
+#undef VERT_MAX_LEN
+#undef IDX_MAX_LEN
 		glGenBuffers(1, &vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(AboutVertex) * vlen, vert, GL_STATIC_DRAW);
@@ -2871,55 +2929,6 @@ geometry_gldraw_fsv( void )
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 		g_error("GL error %d\n", (int)err);
-
-	glEnable( GL_NORMALIZE );
-	for (int c = 2; c < 3; c++) {
-		glColor3fv( (float *)&fsv_colors[c] );
-		vertices = fsv_vertices[c];
-		triangles = fsv_triangles[c];
-		edges = fsv_edges[c];
-
-		/* Side faces */
-		glBegin( GL_QUAD_STRIP );
-		for (e = 0; edges[e] >= 0; e++) {
-			i = edges[e];
-			p.x = vertices[2 * i];
-			p.y = vertices[2 * i + 1];
-			i = edges[e + 1];
-			if (i >= 0) {
-				n.x = vertices[2 * i + 1] - p.y;
-				n.y = p.x - vertices[2 * i];
-				glNormal3d( n.x, n.y, 0.0 );
-			}
-			glVertex3d( p.x, p.y, 30.0 );
-			glVertex3d( p.x, p.y, -30.0 );
-
-		}
-		glEnd( );
-
-		/* Front faces */
-		glNormal3d( 0.0, 0.0, 1.0 );
-		glBegin( GL_TRIANGLES );
-		for (v = 0; triangles[v] >= 0; v++) {
-                        i = triangles[v];
-			p.x = vertices[2 * i];
-			p.y = vertices[2 * i + 1];
-			glVertex3d( p.x, p.y, 30.0 );
-		}
-		glEnd( );
-
-		/* Back faces */
-		glNormal3d( 0.0, 0.0, -1.0 );
-		glBegin( GL_TRIANGLES );
-		for (--v; v >= 0; v--) {
-                        i = triangles[v];
-			p.x = vertices[2 * i];
-			p.y = vertices[2 * i + 1];
-			glVertex3d( p.x, p.y, -30.0 );
-		}
-		glEnd( );
-	}
-	glDisable( GL_NORMALIZE );
 }
 
 
@@ -2935,25 +2944,15 @@ splash_draw( void )
 	/* Draw fsv title */
 
 	/* Set up projection matrix */
-	glMatrixMode( GL_PROJECTION );
-	glPushMatrix( );
-	glLoadIdentity( );
 	k = 82.84 / ogl_aspect_ratio( );
-	glFrustum( -70.82, 95.40, - k, k, 200.0, 400.0 );
 	mat4 proj;
 	glm_frustum(-70.82, 95.40, - k, k, 200.0, 400.0, proj);
 
 	/* Set up modelview matrix */
-	glMatrixMode( GL_MODELVIEW );
-	glPushMatrix( );
-	glLoadIdentity( );
 	mat4 mv;
 	glm_mat4_identity(mv);
-	glTranslated( 0.0, 0.0, -300.0 );
 	glm_translate(mv, (vec3){0.0, 0.0, -300.0});
-	glRotated( 10.5, 1.0, 0.0, 0.0 );
 	glm_rotate_x(mv, 10.5 * M_PI/180.0, mv);
-	glTranslated( 20.0, 20.0, -30.0 );
 	glm_translate(mv, (vec3){20.0, 20.0, -30.0});
 
 	mat4 mvp;
@@ -3014,12 +3013,6 @@ splash_draw( void )
 	text_draw_straight("Copyright (C) 2021 Janne Blomqvist", &text_pos, &text_dims);
 
 	text_post( );
-
-	/* Restore previous matrices */
-	glMatrixMode( GL_PROJECTION );
-	glPopMatrix( );
-	glMatrixMode( GL_MODELVIEW );
-	glPopMatrix( );
 }
 
 

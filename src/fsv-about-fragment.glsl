@@ -28,13 +28,14 @@ void main() {
     lightDir = normalize(lightPos.xyz);
   else
     lightDir = normalize(lightPos.xyz - fragPos);
-  float diffuse_refl = max(dot(fragNormal, lightDir), 0.0);
+  vec3 fragNN = normalize(fragNormal);
+  float diffuse_refl = max(dot(fragNN, lightDir), 0.0);
   vec3 diffuse_light = diffuse_refl * diffuse * light_color;
 
   // Specular light
   vec3 viewPos = vec3(0.0, 0.0, 0.0);
   vec3 viewDir = normalize(viewPos - fragPos);
-  vec3 reflectDir = reflect(-lightDir, fragNormal);
+  vec3 reflectDir = reflect(-lightDir, fragNN);
   float spec = pow(max(dot(viewDir, reflectDir), 0.0), 2);
   vec3 spec_light = specular * spec * light_color;
 
@@ -49,5 +50,5 @@ void main() {
 
   // For debugging, uncomment this. Also set fragNormal to flat in both vertex
   // and fragment shader out/in
-  //outputColor = 0.99 * vec4(abs(normalize(fragNormal)), 1.0) + 0.0001 * outputColor;
+  //outputColor = 0.9999 * vec4(abs(fragNN), 1.0) + 0.0001 * outputColor;
 }
