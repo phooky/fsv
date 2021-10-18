@@ -2671,12 +2671,10 @@ cursor_pre( void )
 static void
 cursor_hidden_part( void )
 {
-	/* Hidden part is drawn with a thin dashed line */
+	/* Hidden part is drawn with a thin line */
 	glDepthFunc( GL_GREATER );
-	glEnable( GL_LINE_STIPPLE );
-	glLineStipple( 3, 0x3333 );
-	glLineWidth( 3.0 );
-	glColor3f( 0.75, 0.75, 0.75 );
+	glLineWidth(2.0);
+	glColor3f( 0.6, 0.6, 0.6 );
 }
 
 
@@ -2686,7 +2684,6 @@ cursor_visible_part( void )
 {
 	/* Visible part is drawn with a thick solid line */
 	glDepthFunc( GL_LEQUAL );
-	glDisable( GL_LINE_STIPPLE );
 	glLineWidth( 5.0 );
 	glColor3f( 1.0, 1.0, 1.0 );
 }
