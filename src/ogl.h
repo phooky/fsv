@@ -29,9 +29,18 @@ typedef struct FsvGlState {
 	// These _location variables are handles to input 'slots' in the
 	// vertex shader.
 	GLint mvp_location;
+	GLint modelview_location; // We need the modelview matrix as well
 	GLint position_location;
 	GLint normal_location;
 	GLint color_location;
+	GLint lightning_enabled_location;
+
+	// Phong lightning parameters
+	GLint ambient_location;
+	GLint diffuse_location;
+	GLint specular_location;
+	GLint light_pos_location;
+	GLint normal_matrix_location;
 
 	// Projection and modelview matrices (using cglm library)
 	mat4 projection;
@@ -86,6 +95,8 @@ void ogl_resize( void );
 void ogl_refresh( void );
 double ogl_aspect_ratio( void );
 void ogl_upload_matrices(gboolean text);
+void ogl_enable_lightning();
+void ogl_disable_lightning();
 void ogl_draw( void );
 GLuint ogl_select_modern(GLint x, GLint y);
 int ogl_select( int x, int y, const GLuint **selectbuf_ptr );

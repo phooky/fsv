@@ -874,12 +874,10 @@ mapv_gldraw_node( GNode *node )
 			      sizeof(Vertex), (void *)offsetof(Vertex, position));
 	//glVertexPointer(3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, position));
 
-	// Normal is unused in shader, trying to set the attribpointer causes
-	// a crash later when rendering.
-	//glEnableVertexAttribArray(gl.normal_location);
-	//glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
-	//		      sizeof(Vertex), (void *)offsetof(Vertex, normal));
-	//glNormalPointer(GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+	glEnableVertexAttribArray(gl.normal_location);
+	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
+	glNormalPointer(GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
 
 	glUseProgram(gl.program);
@@ -1131,13 +1129,15 @@ mapv_gldraw_cursor( const XYZvec *c0, const XYZvec *c1 )
 	corner_dims.z = bar_part * (c1->z - c0->z);
 
 	cursor_pre( );
+	static GLuint vbo;
+	if (!vbo) glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	for (i = 0; i < 2; i++) {
 		if (i == 0)
 			cursor_hidden_part( );
 		else if (i == 1)
 			cursor_visible_part( );
 
-		glBegin( GL_LINES );
 		for (c = 0; c < 8; c++) {
 			if (c & 1) {
 				p.x = c1->x;
@@ -1166,17 +1166,28 @@ mapv_gldraw_cursor( const XYZvec *c0, const XYZvec *c1 )
 				delta.z = corner_dims.z;
 			}
 
-			glVertex3d( p.x, p.y, p.z );
-			glVertex3d( p.x + delta.x, p.y, p.z );
+			VertexPos vert[] = {
+				{{p.x, p.y, p.z}}, // First line
+				{{p.x + delta.x, p.y, p.z}},
+				{{p.x, p.y, p.z}}, // Second
+				{{p.x, p.y + delta.y, p.z}},
+				{{p.x, p.y, p.z}}, // Third
+				{{p.x, p.y, p.z + delta.z}}
+			};
 
-			glVertex3d( p.x, p.y, p.z );
-			glVertex3d( p.x, p.y + delta.y, p.z );
-
-			glVertex3d( p.x, p.y, p.z );
-			glVertex3d( p.x, p.y, p.z + delta.z );
+			glBufferData(GL_ARRAY_BUFFER, sizeof(vert),
+				     vert, GL_STREAM_DRAW);
+			glEnableVertexAttribArray(gl.position_location);
+			glVertexAttribPointer(
+			    gl.position_location, 3, GL_FLOAT, GL_FALSE,
+			    sizeof(VertexPos),
+			    (void *)offsetof(VertexPos, position));
+			glDrawArrays(GL_LINES, 0, 6);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(vert),
+				     NULL, GL_STREAM_DRAW);
 		}
-		glEnd( );
 	}
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	cursor_post( );
 }
 
@@ -2663,7 +2674,8 @@ outline_post( void )
 static void
 cursor_pre( void )
 {
-	glDisable( GL_LIGHTING );
+	glUseProgram(gl.program);
+	ogl_disable_lightning();
 }
 
 
@@ -2674,7 +2686,7 @@ cursor_hidden_part( void )
 	/* Hidden part is drawn with a thin line */
 	glDepthFunc( GL_GREATER );
 	glLineWidth(2.0);
-	glColor3f( 0.6, 0.6, 0.6 );
+	glUniform4f(gl.color_location, 0.3, 0.3, 0.3, 1);
 }
 
 
@@ -2685,7 +2697,7 @@ cursor_visible_part( void )
 	/* Visible part is drawn with a thick solid line */
 	glDepthFunc( GL_LEQUAL );
 	glLineWidth( 5.0 );
-	glColor3f( 1.0, 1.0, 1.0 );
+	glUniform4f(gl.color_location, 1, 1, 1, 1);
 }
 
 
@@ -2694,7 +2706,8 @@ static void
 cursor_post( void )
 {
 	glLineWidth( 1.0 );
-	glEnable( GL_LIGHTING );
+	ogl_enable_lightning();
+	glUseProgram(0);
 }
 
 

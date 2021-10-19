@@ -140,7 +140,15 @@ ogl_init( void )
 		g_error("Compiling shaders failed");
 	/* get the location of the "mvp" uniform */
 	gl.mvp_location = glGetUniformLocation(gl.program, "mvp");
+	gl.modelview_location = glGetUniformLocation(gl.program, "modelview");
+	gl.normal_matrix_location = glGetUniformLocation(gl.program, "normal_matrix");
+	gl.ambient_location = glGetUniformLocation(gl.program, "ambient");
+	gl.diffuse_location = glGetUniformLocation(gl.program, "diffuse");
+	gl.specular_location = glGetUniformLocation(gl.program, "specular");
+	gl.light_pos_location = glGetUniformLocation(gl.program, "light_pos");
+
 	gl.color_location = glGetUniformLocation(gl.program, "color");
+	gl.lightning_enabled_location = glGetUniformLocation(gl.program, "lightning_enabled");
 
 	/* get the location of the "position" and "color" attributes */
 	gl.position_location = glGetAttribLocation(gl.program, "position");
@@ -192,12 +200,18 @@ ogl_init( void )
 	glm_mat4_identity(gl.projection);
 
 	/* Set up lighting */
-	glEnable( GL_LIGHTING );
+	glUseProgram(gl.program);
+	ogl_enable_lightning();
 	glEnable( GL_LIGHT0 );
 	glLightfv( GL_LIGHT0, GL_AMBIENT, light_ambient );
 	glLightfv( GL_LIGHT0, GL_DIFFUSE, light_diffuse );
 	glLightfv( GL_LIGHT0, GL_SPECULAR, light_specular );
 	glLightfv( GL_LIGHT0, GL_POSITION, light_position );
+	glUniform1f(gl.ambient_location, light_ambient[0]);
+	glUniform1f(gl.diffuse_location, light_diffuse[0]);
+	glUniform1f(gl.specular_location, light_specular[0]);
+	glUniform4fv(gl.light_pos_location, 1, light_position);
+	glUseProgram(0);
 	glUseProgram(aboutGL.program);
 	glUniform1f(aboutGL.ambient_location, light_ambient[0]);
 	glUniform1f(aboutGL.diffuse_location, light_diffuse[0]);
@@ -355,9 +369,16 @@ ogl_upload_matrices(gboolean text)
 	mat4 mvp;
 	glm_mat4_mul(gl.projection, gl.modelview, mvp);
 
+	mat3 normmat;
+	glm_mat4_pick3(gl.modelview, normmat);
+	glm_mat3_inv(normmat, normmat);
+	glm_mat3_transpose(normmat);
+
 	/* load our program */
 	glUseProgram(gl.program);
 
+	glUniformMatrix4fv(gl.modelview_location, 1, GL_FALSE, (float*) gl.modelview);
+	glUniformMatrix3fv(gl.normal_matrix_location, 1, GL_FALSE, (float*) normmat);
 	/* update the "mvp" matrix we use in the shader */
 	glUniformMatrix4fv(gl.mvp_location, 1, GL_FALSE, (float*)mvp);
 
@@ -366,6 +387,24 @@ ogl_upload_matrices(gboolean text)
 	if (text)
 		text_upload_mvp((float*) mvp);
 }
+
+
+// Note: gl Program must be in use before calling this.
+void
+ogl_enable_lightning()
+{
+	glEnable(GL_LIGHTING);
+	glUniform1i(gl.lightning_enabled_location, 1);
+}
+
+// Note: gl Program must be in use before calling this.
+void
+ogl_disable_lightning()
+{
+	glDisable(GL_LIGHTING);
+	glUniform1i(gl.lightning_enabled_location, 0);
+}
+
 
 /* (Re)draws the viewport
  * NOTE: Don't call this directly! Use redraw( ) */
