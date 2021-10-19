@@ -814,28 +814,6 @@ mapv_gldraw_node( GNode *node )
 
 	gparams = MAPV_GEOM_PARAMS(node);
 
-	/* Draw sides of node */
-	glBegin( GL_QUAD_STRIP );
-	glNormal3d( 0.0, normal.y, normal_z_ny ); /* Rear face */
-	glVertex3d( gparams->c0.x, gparams->c1.y, 0.0 );
-	glVertex3d( gparams->c0.x + offset.x, gparams->c1.y - offset.y, gparams->height );
-	glNormal3d( normal.x, 0.0, normal_z_nx ); /* Right face */
-	glVertex3d( gparams->c1.x, gparams->c1.y, 0.0 );
-	glVertex3d( gparams->c1.x - offset.x, gparams->c1.y - offset.y, gparams->height );
-	glNormal3d( 0.0, - normal.y, normal_z_ny ); /* Front face */
-	glVertex3d( gparams->c1.x, gparams->c0.y, 0.0 );
-	glVertex3d( gparams->c1.x - offset.x, gparams->c0.y + offset.y, gparams->height );
-	glNormal3d( - normal.x, 0.0, normal_z_nx ); /* Left face */
-	glVertex3d( gparams->c0.x, gparams->c0.y, 0.0 );
-	glVertex3d( gparams->c0.x + offset.x, gparams->c0.y + offset.y, gparams->height );
-	glVertex3d( gparams->c0.x, gparams->c1.y, 0.0 ); /* Close strip */
-	glVertex3d( gparams->c0.x + offset.x, gparams->c1.y - offset.y, gparams->height );
-	glEnd( );
-
-	/* Top face has ID of 1 */
-	glPushName( 1 );
-
-	/* Draw top face */
 	GLfloat color[4];
 	color[3] = 1.0; // Alpha
 	if (gl.render_mode == RENDERMODE_RENDER)
@@ -852,16 +830,65 @@ mapv_gldraw_node( GNode *node )
 			c, (double)color[0], (double)color[1], (double)color[2]);
 	}
 
-	// Vertices, in order 1,2,4,3 for triangle stripping
 	Vertex vertex_data[] = {
-	    {{gparams->c0.x + offset.x, gparams->c0.y + offset.y, gparams->height}, // 1
+	    {{gparams->c0.x, gparams->c1.y, 0.0}, /* Rear face */
+	     {0.0, normal.y, normal_z_ny}},
+	    {{gparams->c0.x + offset.x, gparams->c1.y - offset.y,
+	      gparams->height},
+	     {0.0, normal.y, normal_z_ny}},
+	    {{gparams->c1.x, gparams->c1.y, 0.0}, {0.0, normal.y, normal_z_ny}},
+	    {{gparams->c1.x - offset.x, gparams->c1.y - offset.y,
+	      gparams->height},
+	     {0.0, normal.y, normal_z_ny}},
+	    {{gparams->c1.x, gparams->c1.y, 0.0}, /* Right face */
+	     {normal.x, 0.0, normal_z_nx}},
+	    {{gparams->c1.x - offset.x, gparams->c1.y - offset.y,
+	      gparams->height},
+	     {normal.x, 0.0, normal_z_nx}},
+	    {{gparams->c1.x, gparams->c0.y, 0.0}, {normal.x, 0.0, normal_z_nx}},
+	    {{gparams->c1.x - offset.x, gparams->c0.y + offset.y,
+	      gparams->height},
+	     {normal.x, 0.0, normal_z_nx}},
+	    {{gparams->c1.x, gparams->c0.y, 0.0},  // Front face
+	     {0.0, -normal.y, normal_z_ny}},
+	    {{gparams->c1.x - offset.x, gparams->c0.y + offset.y,
+	      gparams->height},
+	     {0.0, -normal.y, normal_z_ny}},
+	    {{gparams->c0.x, gparams->c0.y, 0.0},
+	     {0.0, -normal.y, normal_z_ny}},
+	    {{gparams->c0.x + offset.x, gparams->c0.y + offset.y,
+	      gparams->height},
+	     {0.0, -normal.y, normal_z_ny}},
+	    {{gparams->c0.x, gparams->c0.y, 0.0},  // Left face
+	     {-normal.x, 0.0, normal_z_nx}},
+	    {{gparams->c0.x + offset.x, gparams->c0.y + offset.y,
+	      gparams->height},
+	     {-normal.x, 0.0, normal_z_nx}},
+	    {{gparams->c0.x, gparams->c1.y, 0.0},
+	     {-normal.x, 0.0, normal_z_nx}},
+	    {{gparams->c0.x + offset.x, gparams->c1.y - offset.y,
+	      gparams->height},
+	     {-normal.x, 0.0, normal_z_nx}},
+	    // Top face
+	    {{gparams->c0.x + offset.x, gparams->c0.y + offset.y,
+	      gparams->height},	 // 1
 	     {0.0f, 0.0f, 1.0f}},
-	    {{gparams->c1.x - offset.x, gparams->c0.y + offset.y, gparams->height}, // 2
+	    {{gparams->c1.x - offset.x, gparams->c0.y + offset.y,
+	      gparams->height},	 // 2
 	     {0.0f, 0.0f, 1.0f}},
-	    {{gparams->c0.x + offset.x, gparams->c1.y - offset.y, gparams->height}, // 4
+	    {{gparams->c0.x + offset.x, gparams->c1.y - offset.y,
+	      gparams->height},	 // 4
 	     {0.0f, 0.0f, 1.0f}},
-	    {{gparams->c1.x - offset.x, gparams->c1.y - offset.y, gparams->height}, // 3
+	    {{gparams->c1.x - offset.x, gparams->c1.y - offset.y,
+	      gparams->height},	 // 3
 	     {0.0f, 0.0f, 1.0f}}};
+	static const GLushort elements[] = {
+	    0,	1,  2,	2,  1,	3,   // Rear face
+	    4,	5,  6,	6,  5,	7,   // Right face
+	    8,	9,  10, 10, 9,	11,  // Front face
+	    12, 13, 14, 14, 13, 15,  // Left face
+	    16, 17, 18, 18, 17, 19   // Top face
+	};
 	//debug_print_matrices(0);
 	static GLuint vbo;
 	if (!vbo)
@@ -869,10 +896,16 @@ mapv_gldraw_node( GNode *node )
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), &vertex_data, GL_DYNAMIC_DRAW);
 
+	static GLuint ebo;
+	if (!ebo) {
+		glGenBuffers(1, &ebo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), &elements, GL_STATIC_DRAW);
+	}
+
 	glEnableVertexAttribArray(gl.position_location);
 	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
 			      sizeof(Vertex), (void *)offsetof(Vertex, position));
-	//glVertexPointer(3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, position));
 
 	glEnableVertexAttribArray(gl.normal_location);
 	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
@@ -900,19 +933,13 @@ mapv_gldraw_node( GNode *node )
 	glmc_vec3_print(out, stdout);
 #endif
 #endif
-
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	GLsizei cnt = sizeof(elements) / sizeof(GLushort);
+	glDrawElements(GL_TRIANGLES, cnt, GL_UNSIGNED_SHORT, 0);
 	glUseProgram(0);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), NULL, GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	// glNormal3d( 0.0, 0.0, 1.0 );
-	// glBegin( GL_QUADS );
-	// glVertex3d( gparams->c0.x + offset.x, gparams->c0.y + offset.y, gparams->height );
-	// glVertex3d( gparams->c1.x - offset.x, gparams->c0.y + offset.y, gparams->height );
-	// glVertex3d( gparams->c1.x - offset.x, gparams->c1.y - offset.y, gparams->height );
-	// glVertex3d( gparams->c0.x + offset.x, gparams->c1.y - offset.y, gparams->height );
-	// glEnd( );
-
-	glPopName( );
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 
