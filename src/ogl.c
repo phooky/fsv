@@ -236,6 +236,7 @@ ogl_init( void )
 	glEnable( GL_POLYGON_OFFSET_FILL );
 	glPolygonOffset( 1.0, 1.0 );
 	glClearColor( 0.0, 0.0, 0.0, 0.0 );
+	glEnable(GL_LINE_SMOOTH);
 
 	/* Initialize texture-mapped text engine */
 	text_init( );
