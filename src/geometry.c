@@ -2551,6 +2551,9 @@ treev_gldraw_cursor( RTZvec *c0, RTZvec *c1 )
 	seg_count = (int)ceil( corner_dims.theta / TREEV_CURVE_GRANULARITY );
 
 	cursor_pre( );
+	static GLuint vbo;
+	if (!vbo) glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	for (i = 0; i <= 1; i++) {
 		if (i == 0)
 			cursor_hidden_part( );
@@ -2591,26 +2594,36 @@ treev_gldraw_cursor( RTZvec *c0, RTZvec *c1 )
 			cp0.y = p.r * sin_theta;
 			cp1.x = (p.r + delta.r) * cos_theta;
 			cp1.y = (p.r + delta.r) * sin_theta;
-			glBegin( GL_LINES );
-			/* Radial axis */
-			glVertex3d( cp0.x, cp0.y, p.z );
-			glVertex3d( cp1.x, cp1.y, p.z );
-			/* Vertical axis */
-			glVertex3d( cp0.x, cp0.y, p.z );
-			glVertex3d( cp0.x, cp0.y, p.z + delta.z );
-			glEnd( );
 
+			const size_t vert_cnt = 4 + seg_count + 1;
+			VertexPos *vert = NEW_ARRAY(VertexPos, vert_cnt);
+			vert[0] = (VertexPos){{cp0.x, cp0.y, p.z + delta.z}}; // Vertical axis start
+			vert[1] = (VertexPos){{cp0.x, cp0.y, p.z}}; // Vertical axis end
+			vert[2] = (VertexPos){{cp1.x, cp1.y, p.z}}; // Radial axis end
+			vert[3] = (VertexPos){{cp0.x, cp0.y, p.z}}; // Back to radial/vertical intersection
 			/* Tangent axis (curved part) */
-			glBegin( GL_LINE_STRIP );
 			for (s = 0; s <= seg_count; s++) {
 				theta = p.theta + delta.theta * (double)s / (double)seg_count;
 				cp0.x = p.r * cos( RAD(theta) );
 				cp0.y = p.r * sin( RAD(theta) );
-				glVertex3d( cp0.x, cp0.y, p.z );
+				vert[4 + s] = (VertexPos){{cp0.x, cp0.y, p.z}};
 			}
-			glEnd( );
+
+			glBufferData(GL_ARRAY_BUFFER,
+				     sizeof(VertexPos) * vert_cnt, vert,
+				     GL_STREAM_DRAW);
+			glEnableVertexAttribArray(gl.position_location);
+			glVertexAttribPointer(
+			    gl.position_location, 3, GL_FLOAT, GL_FALSE,
+			    sizeof(VertexPos),
+			    (void *)offsetof(VertexPos, position));
+			glDrawArrays(GL_LINE_STRIP, 0, vert_cnt);
+			glBufferData(GL_ARRAY_BUFFER,
+				     sizeof(VertexPos) * vert_cnt, NULL,
+				     GL_STREAM_DRAW);
 		}
 	}
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	cursor_post( );
 }
 
