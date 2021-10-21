@@ -2122,17 +2122,35 @@ treev_gldraw_folder( GNode *dnode, double r0 )
 	p_rot.z = (1.0 - DIR_NODE_DESC(dnode)->deployment) * TREEV_GEOM_PARAMS(dnode)->leaf.height + TREEV_GEOM_PARAMS(dnode->parent)->platform.height;
 
 	/* Translate, rotate, and draw folder geometry */
-        node_glcolor( dnode );
-	glBegin( GL_LINE_STRIP );
+	VertexPos vert[8];
 	for (i = 0; i <= 7; i++) {
 		p.x = folder_r + folder_points[i % 7].x;
 		p.y = folder_points[i % 7].y;
 		p_rot.x = p.x * cos_theta - p.y * sin_theta;
 		p_rot.y = p.x * sin_theta + p.y * cos_theta;
 
-		glVertex3d( p_rot.x, p_rot.y, p_rot.z );
+		vert[i] = (VertexPos){{p_rot.x, p_rot.y, p_rot.z}};
 	}
-	glEnd( );
+
+	static GLuint vbo;
+	if (!vbo)
+		glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vert), &vert, GL_STREAM_DRAW);
+
+	glEnableVertexAttribArray(gl.position_location);
+	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(VertexPos), (void *)offsetof(VertexPos, position));
+
+	glUseProgram(gl.program);
+	glUniform4f(gl.color_location, 0, 0, 0, 1); // Black
+	glDrawArrays(GL_LINE_STRIP, 0, 8);
+	glUseProgram(0);
+
+	// Avoid implicit sync by allowing GL to dealloc memory
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vert), NULL, GL_STREAM_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 
