@@ -2169,7 +2169,8 @@ treev_gldraw_loop( double loop_r )
 	loop_r1 = loop_r + (0.5 * TREEV_BRANCH_WIDTH);
 
 	/* Draw loop */
-	glBegin( GL_QUAD_STRIP );
+	static size_t vert_cnt = (seg_count + 1) * 2;
+	Vertex *vert = NEW_ARRAY(Vertex, vert_cnt);
 	for (s = 0; s <= seg_count; s++) {
 		theta = 360.0 * (double)s / (double)seg_count;
 		sin_theta = sin( RAD(theta) );
@@ -2181,10 +2182,35 @@ treev_gldraw_loop( double loop_r )
 		p1.x = loop_r1 * cos_theta;
 		p1.y = loop_r1 * sin_theta;
 
-		glVertex2d( p0.x, p0.y );
-		glVertex2d( p1.x, p1.y );
+		vert[2 * s] = (Vertex){{p0.x, p0.y, 0}, {0, 0, 1}};
+		vert[2 * s + 1] = (Vertex){{p1.x, p1.y, 0}, {0, 0, 1}};
 	}
-	glEnd( );
+	static GLuint vbo;
+	if (!vbo) glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vert_cnt, vert,
+		     GL_STREAM_DRAW);
+
+	glEnableVertexAttribArray(gl.position_location);
+	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(Vertex),
+			      (void *)offsetof(Vertex, position));
+	glEnableVertexAttribArray(gl.normal_location);
+	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
+
+	glUseProgram(gl.program);
+	glUniform4f(gl.color_location, branch_color.r, branch_color.g,
+		    branch_color.b, 1);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, vert_cnt);
+	glUseProgram(0);
+	xfree(vert);
+
+	// Avoid implicit sync by allowing GL to dealloc memory
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vert_cnt, NULL,
+		     GL_STREAM_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 
