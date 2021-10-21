@@ -2289,18 +2289,7 @@ treev_gldraw_outbranch( double r1, double theta0, double theta1 )
 	p1.x = arc_r;
 	p1.y = (0.5 * TREEV_BRANCH_WIDTH);
 
-	/* Draw branch stem */
-	glBegin( GL_QUADS );
-	glVertex2d( p0.x, p0.y );
-	glVertex2d( p1.x, p0.y );
-	glVertex2d( p1.x, p1.y );
-	glVertex2d( p0.x, p1.y );
-	glEnd( );
-
-	/* Shortcut: If arc is zero-length, don't bother drawing it */
 	arc_width = theta1 - theta0;
-	if (arc_width < EPSILON)
-		return;
 
 	/* Supplemental arc width, to yield fully square branch corners
 	 * (where directories connect to the ends of the arc) */
@@ -2309,8 +2298,15 @@ treev_gldraw_outbranch( double r1, double theta0, double theta1 )
 	seg_count = (int)ceil( (arc_width + supp_arc_width) / TREEV_CURVE_GRANULARITY );
 	seg_arc_width = (arc_width + supp_arc_width) / (double)seg_count;
 
+	const size_t vert_cnt = 4 + (seg_count + 1) * 2;
+	Vertex *vert = NEW_ARRAY(Vertex, vert_cnt);
+	/* Branch stem */
+	vert[0] = (Vertex){{p0.x, p0.y, 0}, {0, 0, 1}};
+	vert[1] = (Vertex){{p1.x, p0.y, 0}, {0, 0, 1}};
+	vert[3] = (Vertex){{p1.x, p1.y, 0}, {0, 0, 1}};
+	vert[2] = (Vertex){{p0.x, p1.y, 0}, {0, 0, 1}};
+
 	/* Draw branch arc */
-	glBegin( GL_QUAD_STRIP );
 	theta = theta0 - 0.5 * supp_arc_width;
 	for (s = 0; s <= seg_count; s++) {
 		sin_theta = sin( RAD(theta) );
@@ -2322,12 +2318,35 @@ treev_gldraw_outbranch( double r1, double theta0, double theta1 )
 		p1.x = arc_r1 * cos_theta;
 		p1.y = arc_r1 * sin_theta;
 
-		glVertex2d( p0.x, p0.y );
-		glVertex2d( p1.x, p1.y );
+		vert[4 + s * 2] = (Vertex){{p0.x, p0.y, 0}, {0, 0, 1}};
+		vert[4 + s * 2 + 1] = (Vertex){{p1.x, p1.y, 0}, {0, 0, 1}};
 
 		theta += seg_arc_width;
 	}
-	glEnd( );
+	static GLuint vbo;
+	if (!vbo) glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vert_cnt, vert, GL_STREAM_DRAW);
+
+	glEnableVertexAttribArray(gl.position_location);
+	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(Vertex),
+			      (void *)offsetof(Vertex, position));
+	glEnableVertexAttribArray(gl.normal_location);
+	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
+
+	glUseProgram(gl.program);
+	glUniform4f(gl.color_location, branch_color.r, branch_color.g,
+		    branch_color.b, 1);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, vert_cnt);
+	glUseProgram(0);
+
+	// Avoid implicit sync by allowing GL to dealloc memory
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vert_cnt, NULL, GL_STREAM_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	xfree(vert);
 }
 
 
