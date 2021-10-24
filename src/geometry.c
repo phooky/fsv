@@ -2054,10 +2054,10 @@ treev_gldraw_leaf( GNode *node, double r0, boolean full_node )
 
 	if (!full_node) {
 		/* Draw an "X" and we're done */
-		glBegin( GL_LINES );
+		VertexPos vertx[4];
 		for (i = 0; i < 4; i++)
-			glVertex3d( corners[x_verts[i]].x, corners[x_verts[i]].y, z1 );
-		glEnd( );
+			vertx[i] = (VertexPos){{corners[x_verts[i]].x, corners[x_verts[i]].y, z1}};
+		drawVertexPos(GL_LINES, vertx, 4, &color_black);
 		return;
 	}
 
