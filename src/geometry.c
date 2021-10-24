@@ -102,6 +102,38 @@ debug_print_matrices(int which)
 }
 #endif
 
+static const RGBcolor color_black = {0, 0, 0};
+
+// Upload and draw a bunch of VertexPos vertices.
+// Note this is highly inefficient and implements every known modern GL
+// anti-pattern (e.g. does not take any advantage of batching, or keeping
+// vertex data on the GPU instead of reuploading it every time). But hey,
+// it's simple.
+static void
+drawVertexPos(GLenum mode, VertexPos *vert, size_t vert_cnt, const RGBcolor *color)
+{
+	static GLuint vbo;
+	if (!vbo)
+		glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(VertexPos) * vert_cnt, vert, GL_STREAM_DRAW);
+
+	glEnableVertexAttribArray(gl.position_location);
+	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(VertexPos), (void *)offsetof(VertexPos, position));
+
+	glUseProgram(gl.program);
+	glUniform4f(gl.color_location, color->r, color->g, color->b, 1);
+	glUniform1i(gl.lightning_enabled_location, 0);
+	glDrawArrays(mode, 0, vert_cnt);
+	glUseProgram(0);
+
+	// Avoid implicit sync by allowing GL to dealloc memory
+	glBufferData(GL_ARRAY_BUFFER, sizeof(VertexPos) * vert_cnt, NULL, GL_STREAM_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 /**** DISC VISUALIZATION **************************************/
 
 
@@ -987,25 +1019,7 @@ mapv_gldraw_folder( GNode *dnode )
 		{{folder_c1.x, folder_c0.y, 0}}
 	};
 
-	static GLuint vbo;
-	if (!vbo)
-		glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vert), &vert, GL_STREAM_DRAW);
-
-	glEnableVertexAttribArray(gl.position_location);
-	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
-			      sizeof(VertexPos), (void *)offsetof(VertexPos, position));
-
-	glUseProgram(gl.program);
-	glUniform4f(gl.color_location, 0, 0, 0, 1); // Black
-	glDrawArrays(GL_LINE_LOOP, 0, 7);
-	glUseProgram(0);
-
-	// Avoid implicit sync by allowing GL to dealloc memory
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vert), NULL, GL_STREAM_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	drawVertexPos(GL_LINE_LOOP, vert, 7, &color_black);
 }
 
 
@@ -2132,25 +2146,7 @@ treev_gldraw_folder( GNode *dnode, double r0 )
 		vert[i] = (VertexPos){{p_rot.x, p_rot.y, p_rot.z}};
 	}
 
-	static GLuint vbo;
-	if (!vbo)
-		glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vert), &vert, GL_STREAM_DRAW);
-
-	glEnableVertexAttribArray(gl.position_location);
-	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
-			      sizeof(VertexPos), (void *)offsetof(VertexPos, position));
-
-	glUseProgram(gl.program);
-	glUniform4f(gl.color_location, 0, 0, 0, 1); // Black
-	glDrawArrays(GL_LINE_STRIP, 0, 8);
-	glUseProgram(0);
-
-	// Avoid implicit sync by allowing GL to dealloc memory
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vert), NULL, GL_STREAM_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	drawVertexPos(GL_LINE_STRIP, vert, 8, &color_black);
 }
 
 
