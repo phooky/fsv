@@ -134,6 +134,38 @@ drawVertexPos(GLenum mode, VertexPos *vert, size_t vert_cnt, const RGBcolor *col
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+
+// Similar to above, but draw a Vertex
+static void
+drawVertex(GLenum mode, Vertex *vert, size_t vert_cnt, const RGBcolor *color)
+{
+	static GLuint vbo;
+	if (!vbo) glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vert_cnt, vert,
+		     GL_STREAM_DRAW);
+
+	glEnableVertexAttribArray(gl.position_location);
+	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(Vertex),
+			      (void *)offsetof(Vertex, position));
+	glEnableVertexAttribArray(gl.normal_location);
+	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
+
+	glUseProgram(gl.program);
+	glUniform4f(gl.color_location, color->r, color->g, color->b, 1);
+	glUniform1i(gl.lightning_enabled_location, 1);
+	glDrawArrays(mode, 0, vert_cnt);
+	glUseProgram(0);
+
+	// Avoid implicit sync by allowing GL to dealloc memory
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vert_cnt, NULL,
+		     GL_STREAM_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 /**** DISC VISUALIZATION **************************************/
 
 
@@ -2181,32 +2213,8 @@ treev_gldraw_loop( double loop_r )
 		vert[2 * s] = (Vertex){{p0.x, p0.y, 0}, {0, 0, 1}};
 		vert[2 * s + 1] = (Vertex){{p1.x, p1.y, 0}, {0, 0, 1}};
 	}
-	static GLuint vbo;
-	if (!vbo) glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vert_cnt, vert,
-		     GL_STREAM_DRAW);
-
-	glEnableVertexAttribArray(gl.position_location);
-	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
-			      sizeof(Vertex),
-			      (void *)offsetof(Vertex, position));
-	glEnableVertexAttribArray(gl.normal_location);
-	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
-			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
-
-	glUseProgram(gl.program);
-	glUniform4f(gl.color_location, branch_color.r, branch_color.g,
-		    branch_color.b, 1);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, vert_cnt);
-	glUseProgram(0);
+	drawVertex(GL_TRIANGLE_STRIP, vert, vert_cnt, &branch_color);
 	xfree(vert);
-
-	// Avoid implicit sync by allowing GL to dealloc memory
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vert_cnt, NULL,
-		     GL_STREAM_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 
@@ -2231,29 +2239,7 @@ treev_gldraw_inbranch( double r0 )
 		{{c0.x, c1.y, 0}, {0, 0, 1}},
 		{{c1.x, c1.y, 0}, {0, 0, 1}},
 	};
-	static GLuint vbo;
-	if (!vbo) glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vert), &vert, GL_STREAM_DRAW);
-
-	glEnableVertexAttribArray(gl.position_location);
-	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
-			      sizeof(Vertex),
-			      (void *)offsetof(Vertex, position));
-	glEnableVertexAttribArray(gl.normal_location);
-	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
-			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
-
-	glUseProgram(gl.program);
-	glUniform4f(gl.color_location, branch_color.r, branch_color.g,
-		    branch_color.b, 1);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, sizeof(vert));
-	glUseProgram(0);
-
-	// Avoid implicit sync by allowing GL to dealloc memory
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vert), NULL, GL_STREAM_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	drawVertex(GL_TRIANGLE_STRIP, vert, 4, &branch_color);
 }
 
 
@@ -2319,29 +2305,7 @@ treev_gldraw_outbranch( double r1, double theta0, double theta1 )
 
 		theta += seg_arc_width;
 	}
-	static GLuint vbo;
-	if (!vbo) glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vert_cnt, vert, GL_STREAM_DRAW);
-
-	glEnableVertexAttribArray(gl.position_location);
-	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
-			      sizeof(Vertex),
-			      (void *)offsetof(Vertex, position));
-	glEnableVertexAttribArray(gl.normal_location);
-	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
-			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
-
-	glUseProgram(gl.program);
-	glUniform4f(gl.color_location, branch_color.r, branch_color.g,
-		    branch_color.b, 1);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, vert_cnt);
-	glUseProgram(0);
-
-	// Avoid implicit sync by allowing GL to dealloc memory
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vert_cnt, NULL, GL_STREAM_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	drawVertex(GL_TRIANGLE_STRIP, vert, vert_cnt, &branch_color);
 	xfree(vert);
 }
 
