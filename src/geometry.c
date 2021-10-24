@@ -2097,34 +2097,69 @@ treev_gldraw_leaf( GNode *node, double r0, boolean full_node )
 	}
 
 	/* Draw side faces */
-	glBegin( GL_QUAD_STRIP );
-	for (i = 0; i < 4; i++) {
-		switch (i) {
-			case 0:
-			glNormal3d( sin_theta, - cos_theta, 0.0 );
-			break;
+	Vertex vside[] = {
+	    // Front face
+	    {{corners[0].x, corners[0].y, z1}, {sin_theta, -cos_theta, 0}},
+	    {{corners[0].x, corners[0].y, z0}, {sin_theta, -cos_theta, 0}},
+	    {{corners[1].x, corners[1].y, z1}, {sin_theta, -cos_theta, 0}},
+	    {{corners[1].x, corners[1].y, z0}, {sin_theta, -cos_theta, 0}},
+	    // Right
+	    {{corners[1].x, corners[1].y, z1}, {cos_theta, sin_theta, 0}},
+	    {{corners[1].x, corners[1].y, z0}, {cos_theta, sin_theta, 0}},
+	    {{corners[2].x, corners[2].y, z1}, {cos_theta, sin_theta, 0}},
+	    {{corners[2].x, corners[2].y, z0}, {cos_theta, sin_theta, 0}},
+	    // Back
+	    {{corners[2].x, corners[2].y, z1}, {-sin_theta, cos_theta, 0}},
+	    {{corners[2].x, corners[2].y, z0}, {-sin_theta, cos_theta, 0}},
+	    {{corners[3].x, corners[3].y, z1}, {-sin_theta, cos_theta, 0}},
+	    {{corners[3].x, corners[3].y, z0}, {-sin_theta, cos_theta, 0}},
+	    // Left
+	    {{corners[3].x, corners[3].y, z1}, {-cos_theta, -sin_theta, 0}},
+	    {{corners[3].x, corners[3].y, z0}, {-cos_theta, -sin_theta, 0}},
+	    {{corners[0].x, corners[0].y, z1}, {-cos_theta, -sin_theta, 0}},
+	    {{corners[0].x, corners[0].y, z0}, {-cos_theta, -sin_theta, 0}},
+	};
+	static const GLushort elems[] = {
+	    0,	1,  2,	2,  1,	3,   // Front
+	    4,	5,  6,	6,  5,	7,   // Right
+	    8,	9,  10, 10, 9,	11,  // Back
+	    12, 13, 14, 14, 13, 15   // Left
+	};
+	static GLuint vbo;
+	if (!vbo)
+		glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vside), &vside, GL_DYNAMIC_DRAW);
 
-			case 1:
-			glNormal3d( cos_theta, sin_theta, 0.0 );
-			break;
-
-			case 2:
-			glNormal3d( - sin_theta, cos_theta, 0.0 );
-			break;
-
-			case 3:
-			glNormal3d( - cos_theta, - sin_theta, 0.0 );
-			break;
-
-			SWITCH_FAIL
-		}
-		glVertex3d( corners[i].x, corners[i].y, z1 );
-		glVertex3d( corners[i].x, corners[i].y, z0 );
+	static GLuint ebo;
+	if (!ebo) {
+		glGenBuffers(1, &ebo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elems), &elems, GL_STATIC_DRAW);
 	}
-	/* Close the strip */
-	glVertex3d( corners[0].x, corners[0].y, z1 );
-	glVertex3d( corners[0].x, corners[0].y, z0 );
-	glEnd( );
+
+	glEnableVertexAttribArray(gl.position_location);
+	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(Vertex), (void *)offsetof(Vertex, position));
+
+	glEnableVertexAttribArray(gl.normal_location);
+	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
+	glNormalPointer(GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+
+	glUseProgram(gl.program);
+
+	const RGBcolor *col = NODE_DESC(node)->color;
+	glUniform4f(gl.color_location, col->r, col->g, col->b, 1);
+	glUniform1i(gl.lightning_enabled_location, 1);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	GLsizei cnt = sizeof(elems) / sizeof(GLushort);
+	glDrawElements(GL_TRIANGLES, cnt, GL_UNSIGNED_SHORT, 0);
+
+	glUseProgram(0);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vside), NULL, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 
