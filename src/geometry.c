@@ -2078,11 +2078,14 @@ treev_gldraw_leaf( GNode *node, double r0, boolean full_node )
 	}
 
 	/* Draw top face */
-	glNormal3d( 0.0, 0.0, 1.0 );
-	glBegin( GL_QUADS );
-	for (i = 0; i < 4; i++)
-		glVertex3d( corners[i].x, corners[i].y, z1 );
-	glEnd( );
+	// Note order of vertices for triangle stripping.
+	Vertex vert[] = {
+		{{corners[0].x, corners[0].y, z1}, {0, 0, 1}},
+		{{corners[1].x, corners[1].y, z1}, {0, 0, 1}},
+		{{corners[3].x, corners[3].y, z1}, {0, 0, 1}},
+		{{corners[2].x, corners[2].y, z1}, {0, 0, 1}},
+	};
+	drawVertex(GL_TRIANGLE_STRIP, vert, 4, NODE_DESC(node)->color);
 
 	if (!full_node) {
 		/* Draw an "X" and we're done */
