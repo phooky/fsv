@@ -347,8 +347,7 @@ discv_init( void )
 	gparams->pos.x = 0.0;
 	gparams->pos.y = - DISCV_GEOM_PARAMS(root_dnode)->radius;
 
-	/* DiscV mode is entirely 2D */
-	glNormal3d( 0.0, 0.0, 1.0 );
+	/* DiscV mode is entirely 2D, normal should always be {0, 0, 1} */
 }
 
 
@@ -368,15 +367,17 @@ discv_gldraw_node( GNode *node, double dir_deployment )
 	center.y = dir_deployment * gparams->pos.y;
 
 	/* Draw disc */
-	glBegin( GL_TRIANGLE_FAN );
-	glVertex2d( center.x, center.y );
+	size_t vert_cnt = seg_count + 2;
+	Vertex *vert = NEW_ARRAY(Vertex, vert_cnt);
+	vert[0] = (Vertex){{center.x, center.y, 0}, {0, 0, 1}};
 	for (s = 0; s <= seg_count; s++) {
 		theta = (double)s / (double)seg_count * 360.0;
 		p.x = center.x + gparams->radius * cos( RAD(theta) );
 		p.y = center.y + gparams->radius * sin( RAD(theta) );
-		glVertex2d( p.x, p.y );
+		vert[s + 1] = (Vertex){{p.x, p.y, 0}, {0, 0, 1}};
 	}
-	glEnd( );
+	drawVertex(GL_TRIANGLE_FAN, vert, vert_cnt, NODE_DESC(node)->color);
+	xfree(vert);
 }
 
 
@@ -404,8 +405,6 @@ discv_build_dir( GNode *dnode )
 
 	node = dnode->children;
 	while (node != NULL) {
-		glLoadName( NODE_DESC(node)->id );
-		node_glcolor( node );
 		discv_gldraw_node( node, dpm );
 		node = node->next;
 	}
@@ -433,13 +432,15 @@ discv_draw_recursive( GNode *dnode, int action )
 	dir_ndesc = DIR_NODE_DESC(dnode);
 	dir_gparams = DISCV_GEOM_PARAMS(dnode);
 
-	glPushMatrix( );
+	mat4 tmpmat;
+	glm_mat4_copy(gl.modelview, tmpmat);
 
 	dir_collapsed = DIR_COLLAPSED(dnode);
 	dir_expanded = DIR_EXPANDED(dnode);
 
-	glTranslated( dir_gparams->pos.x, dir_gparams->pos.y, 0.0 );
-	glScaled( dir_ndesc->deployment,  dir_ndesc->deployment,  1.0 );
+	glm_translate(gl.modelview, (vec3){dir_gparams->pos.x, dir_gparams->pos.y, 0.0});
+	glm_scale(gl.modelview, (vec3){dir_ndesc->deployment,  dir_ndesc->deployment,  1.0f});
+	ogl_upload_matrices(TRUE);
 
 	if (action == DISCV_DRAW_GEOMETRY) {
 		/* Draw folder or leaf nodes (display list A) */
@@ -475,7 +476,7 @@ discv_draw_recursive( GNode *dnode, int action )
 		}
 	}
 
-	glPopMatrix( );
+	glm_mat4_copy(tmpmat, gl.modelview);
 }
 
 
