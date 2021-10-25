@@ -981,7 +981,7 @@ mapv_gldraw_node( GNode *node )
 	glUseProgram(gl.program);
 
 	glUniform4fv(gl.color_location, 1, color);
-
+	glUniform1i(gl.lightning_enabled_location, 1);
 #if 0
 #ifdef DEBUG
 	mat4 mvp;
