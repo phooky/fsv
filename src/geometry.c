@@ -2807,7 +2807,6 @@ static void
 outline_pre( void )
 {
 	glDisable( GL_CULL_FACE );
-	glDisable( GL_LIGHT0 );
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 }
 
@@ -2817,7 +2816,6 @@ static void
 outline_post( void )
 {
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	glEnable( GL_LIGHT0 );
 	glEnable( GL_CULL_FACE );
 }
 
@@ -3374,7 +3372,7 @@ geometry_highlight_node( GNode *node, boolean strong )
 	 * (for a faster glCopyPixels( )) */
 	glDisable( GL_DITHER );
 	glDisable( GL_DEPTH_TEST );
-	glDisable( GL_LIGHTING );
+	//ogl_disable_lightning();
 
 	if (highlight_drawn) {
 		if ((node != highlighted_node) || (!strong && highlight_strong)) {
@@ -3400,7 +3398,7 @@ geometry_highlight_node( GNode *node, boolean strong )
 		}
 		else if (strong == highlight_strong) {
 			/* Desired highlight is already drawn */
-			glEnable( GL_LIGHTING );
+			//ogl_enable_lightning();
 			glEnable( GL_DEPTH_TEST );
 			glEnable( GL_DITHER );
 			return;
@@ -3410,7 +3408,7 @@ geometry_highlight_node( GNode *node, boolean strong )
 	if ((node == NULL) && !strong) {
 		/* Highlight has been cleared, we're done */
 		highlight_drawn = FALSE;
-		glEnable( GL_LIGHTING );
+		//ogl_enable_lightning();
 		glEnable( GL_DEPTH_TEST );
 		glEnable( GL_DITHER );
 		glFlush( );
@@ -3499,7 +3497,6 @@ geometry_highlight_node( GNode *node, boolean strong )
 	/* Restore normal GL state */
 	glDrawBuffer( GL_BACK );
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	glEnable( GL_LIGHTING );
 	glEnable( GL_DEPTH_TEST );
 	glEnable( GL_DITHER );
 

@@ -126,7 +126,7 @@ ogl_init( void )
 	float light_diffuse[] = {0.6, 0.6, 0.6, 1};
 	float light_specular[] = {.3, .3, .3, 1};
 	float light_position[] = { 0.2, 0.0, 1.0, 0.0 };
-	float material_specular[] = {1, 1, 1, 1};
+	//float material_specular[] = {1, 1, 1, 1};
 
 	// Modern OpenGL initialization. Even if we don't use the VAO it must be
 	// initialized or VBO stuff might fail.
@@ -202,11 +202,6 @@ ogl_init( void )
 	/* Set up lighting */
 	glUseProgram(gl.program);
 	ogl_enable_lightning();
-	glEnable( GL_LIGHT0 );
-	glLightfv( GL_LIGHT0, GL_AMBIENT, light_ambient );
-	glLightfv( GL_LIGHT0, GL_DIFFUSE, light_diffuse );
-	glLightfv( GL_LIGHT0, GL_SPECULAR, light_specular );
-	glLightfv( GL_LIGHT0, GL_POSITION, light_position );
 	glUniform1f(gl.ambient_location, light_ambient[0]);
 	glUniform1f(gl.diffuse_location, light_diffuse[0]);
 	glUniform1f(gl.specular_location, light_specular[0]);
@@ -219,18 +214,9 @@ ogl_init( void )
 	glUniform4fv(aboutGL.light_pos_location, 1, light_position);
 	glUseProgram(0);
 
-
-	/* Set up materials */
-	glColorMaterial( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE );
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, material_specular);
-	glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, 1);
-	glEnable( GL_COLOR_MATERIAL );
-
 	/* Miscellaneous */
-	glAlphaFunc( GL_GEQUAL, 0.0625 );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	glEnable( GL_CULL_FACE );
-	glShadeModel(GL_SMOOTH);
 	glEnable( GL_DEPTH_TEST );
 	glDepthFunc( GL_LEQUAL );
 	glEnable( GL_POLYGON_OFFSET_FILL );
@@ -394,7 +380,6 @@ ogl_upload_matrices(gboolean text)
 void
 ogl_enable_lightning()
 {
-	glEnable(GL_LIGHTING);
 	glUniform1i(gl.lightning_enabled_location, 1);
 }
 
@@ -402,7 +387,6 @@ ogl_enable_lightning()
 void
 ogl_disable_lightning()
 {
-	glDisable(GL_LIGHTING);
 	glUniform1i(gl.lightning_enabled_location, 0);
 }
 
