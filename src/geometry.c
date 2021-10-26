@@ -1894,65 +1894,52 @@ treev_gldraw_platform( GNode *dnode, double r0 )
 	/* Height of top face */
         z1 = TREEV_GEOM_PARAMS(dnode)->platform.height;
 
-	/* Everything here is done with quads */
-	glBegin( GL_QUADS );
+	size_t vert_cnt = seg_count * (8 + 4) + 8;
+	size_t idx_len = 0;
+	Vertex *vert = NEW_ARRAY(Vertex, vert_cnt);
+	GLushort *idx = NEW_ARRAY(GLushort, vert_cnt * 2);
 
 	/* Draw inner edge */
 	for (s = 0; s < seg_count; s++) {
 		/* Going up */
 		p0.x = inner_edge_buf[s].x;
 		p0.y = inner_edge_buf[s].y;
-		glNormal3d( - p0.x / r0, - p0.y / r0, 0.0 );
-		if (s > 0) {
-			glEdgeFlag( GL_FALSE );
-			glVertex3d( p0.x, p0.y, 0.0 );
-			glEdgeFlag( GL_TRUE );
-		}
-		else
-			glVertex3d( p0.x, p0.y, 0.0 );
-		glVertex3d( p0.x, p0.y, z1 );
+		vert[s * 4] = (Vertex){{p0.x, p0.y, 0}, {-p0.x / r0, -p0.y / r0, 0}};
+		vert[s * 4 + 1] = (Vertex){{p0.x, p0.y, z1}, {-p0.x / r0, -p0.y / r0, 0}};
 
 		/* Going down */
 		p0.x = inner_edge_buf[s + 1].x;
 		p0.y = inner_edge_buf[s + 1].y;
-		glNormal3d( - p0.x / r0, - p0.y / r0, 0.0 );
-		if ((s + 1) < seg_count) {
-			glEdgeFlag( GL_FALSE );
-			glVertex3d( p0.x, p0.y, z1 );
-			glEdgeFlag( GL_TRUE );
-		}
-		else
-			glVertex3d( p0.x, p0.y, z1 );
-		glVertex3d( p0.x, p0.y, 0.0 );
+		vert[s * 4 + 2] = (Vertex){{p0.x, p0.y, z1}, {-p0.x / r0, -p0.y / r0, 0}};
+		vert[s * 4 + 3] = (Vertex){{p0.x, p0.y, 0}, {-p0.x / r0, -p0.y / r0, 0}};
+		idx[idx_len++] = s * 4;
+		idx[idx_len++] = s * 4 + 1;
+		idx[idx_len++] = s * 4 + 2;
+		idx[idx_len++] = s * 4;
+		idx[idx_len++] = s * 4 + 2;
+		idx[idx_len++] = s * 4 + 3;
 	}
 
 	/* Draw outer edge */
 	for (s = seg_count; s > 0; s--) {
 		/* Going up */
+		size_t s2 = (seg_count + seg_count - s) * 4;
 		p1.x = outer_edge_buf[s].x;
 		p1.y = outer_edge_buf[s].y;
-		glNormal3d( - p1.x / r1, - p1.y / r1, 0.0 );
-		if (s < seg_count) {
-			glEdgeFlag( GL_FALSE );
-			glVertex3d( p1.x, p1.y, 0.0 );
-			glEdgeFlag( GL_TRUE );
-		}
-		else
-			glVertex3d( p1.x, p1.y, 0.0 );
-		glVertex3d( p1.x, p1.y, z1 );
+		vert[s2] = (Vertex){{p1.x, p1.y, 0}, {-p1.x / r1, -p1.y / r1, 0}};
+		vert[s2 + 1] = (Vertex){{p1.x, p1.y, z1}, {-p1.x / r1, -p1.y / r1, 0}};
 
 		/* Going down */
 		p1.x = outer_edge_buf[s - 1].x;
 		p1.y = outer_edge_buf[s - 1].y;
-		glNormal3d( - p1.x / r1, - p1.y / r1, 0.0 );
-		if ((s - 1) > 0) {
-			glEdgeFlag( GL_FALSE );
-			glVertex3d( p1.x, p1.y, z1 );
-			glEdgeFlag( GL_TRUE );
-		}
-		else
-			glVertex3d( p1.x, p1.y, z1 );
-		glVertex3d( p1.x, p1.y, 0.0 );
+		vert[s2 + 2] = (Vertex){{p1.x, p1.y, z1}, {-p1.x / r1, -p1.y / r1, 0}};
+		vert[s2 + 3] = (Vertex){{p1.x, p1.y, 0}, {-p1.x / r1, -p1.y / r1, 0}};
+		idx[idx_len++] = s2;
+		idx[idx_len++] = s2 + 1;
+		idx[idx_len++] = s2 + 2;
+		idx[idx_len++] = s2;
+		idx[idx_len++] = s2 + 2;
+		idx[idx_len++] = s2 + 3;
 	}
 
 	/* Draw leading edge face */
@@ -1960,62 +1947,102 @@ treev_gldraw_platform( GNode *dnode, double r0 )
 	p0.y = inner_edge_buf[0].y;
 	p1.x = outer_edge_buf[0].x;
 	p1.y = outer_edge_buf[0].y;
-	glNormal3d( p0.y / r0, - p0.x / r0, 0.0 );
-	glVertex3d( p0.x, p0.y, 0.0 );
-	glVertex3d( p1.x, p1.y, 0.0 );
-	glVertex3d( p1.x, p1.y, z1 );
-	glVertex3d( p0.x, p0.y, z1 );
+	size_t s2 = seg_count * 2 * 4;
+	vert[s2] = (Vertex){{p0.x, p0.y, 0}, {p0.y / r0, -p0.x / r0, 0}};
+	vert[s2 + 1] = (Vertex){{p1.x, p1.y, 0}, {p0.y / r0, -p0.x / r0, 0}};
+	vert[s2 + 2] = (Vertex){{p1.x, p1.y, z1}, {p0.y / r0, -p0.x / r0, 0}};
+	vert[s2 + 3] = (Vertex){{p0.x, p0.y, z1}, {p0.y / r0, -p0.x / r0, 0}};
+	idx[idx_len++] = s2;
+	idx[idx_len++] = s2 + 1;
+	idx[idx_len++] = s2 + 2;
+	idx[idx_len++] = s2;
+	idx[idx_len++] = s2 + 2;
+	idx[idx_len++] = s2 + 3;
+	s2 += 4;
 
 	/* Draw trailing edge face */
 	p0.x = inner_edge_buf[seg_count].x;
 	p0.y = inner_edge_buf[seg_count].y;
 	p1.x = outer_edge_buf[seg_count].x;
 	p1.y = outer_edge_buf[seg_count].y;
-	glNormal3d( - p0.y / r0, p0.x / r0, 0.0 );
-	glVertex3d( p0.x, p0.y, z1 );
-	glVertex3d( p1.x, p1.y, z1 );
-	glVertex3d( p1.x, p1.y, 0.0 );
-	glVertex3d( p0.x, p0.y, 0.0 );
-
-	glEnd( );
-	/* Top face has ID of 1 */
-	glPushName( 1 );
-	glBegin( GL_QUADS );
+	vert[s2] = (Vertex){{p0.x, p0.y, z1}, {-p0.y / r0, p0.x / r0, 0}};
+	vert[s2 + 1] = (Vertex){{p1.x, p1.y, z1}, {-p0.y / r0, p0.x / r0, 0}};
+	vert[s2 + 2] = (Vertex){{p1.x, p1.y, 0}, {-p0.y / r0, p0.x / r0, 0}};
+	vert[s2 + 3] = (Vertex){{p0.x, p0.y, 0}, {-p0.y / r0, p0.x / r0, 0}};
+	idx[idx_len++] = s2;
+	idx[idx_len++] = s2 + 1;
+	idx[idx_len++] = s2 + 2;
+	idx[idx_len++] = s2;
+	idx[idx_len++] = s2 + 2;
+	idx[idx_len++] = s2 + 3;
+	s2 += 4;
 
 	/* Draw top face */
-	glNormal3d( 0.0, 0.0, 1.0 );
 	for (s = 0; s < seg_count; s++) {
 		/* Going out */
+		size_t s3 = s2 + s * 4;
 		p0.x = inner_edge_buf[s].x;
 		p0.y = inner_edge_buf[s].y;
 		p1.x = outer_edge_buf[s].x;
 		p1.y = outer_edge_buf[s].y;
-		if (s > 0) {
-			glEdgeFlag( GL_FALSE );
-			glVertex3d( p0.x, p0.y, z1 );
-			glEdgeFlag( GL_TRUE );
-		}
-		else
-			glVertex3d( p0.x, p0.y, z1 );
-		glVertex3d( p1.x, p1.y, z1 );
+		vert[s3] = (Vertex){{p0.x, p0.y, z1}, {0, 0, 1}};
+		vert[s3 + 1] = (Vertex){{p1.x, p1.y, z1}, {0, 0, 1}};
+
 
 		/* Going in */
 		p0.x = inner_edge_buf[s + 1].x;
 		p0.y = inner_edge_buf[s + 1].y;
 		p1.x = outer_edge_buf[s + 1].x;
 		p1.y = outer_edge_buf[s + 1].y;
-		if ((s + 1) < seg_count) {
-			glEdgeFlag( GL_FALSE );
-			glVertex3d( p1.x, p1.y, z1 );
-			glEdgeFlag( GL_TRUE );
-		}
-		else
-			glVertex3d( p1.x, p1.y, z1 );
-		glVertex3d( p0.x, p0.y, z1 );
+		vert[s3 + 2] = (Vertex){{p1.x, p1.y, z1}, {0, 0, 1}};
+		vert[s3 + 3] = (Vertex){{p0.x, p0.y, z1}, {0, 0, 1}};
+		idx[idx_len++] = s3;
+		idx[idx_len++] = s3 + 1;
+		idx[idx_len++] = s3 + 2;
+		idx[idx_len++] = s3;
+		idx[idx_len++] = s3 + 2;
+		idx[idx_len++] = s3 + 3;
 	}
 
-	glEnd( );
-	glPopName( );
+	g_assert(s2 + (seg_count - 1) * 4 + 3 < vert_cnt);
+	g_assert(idx_len <= vert_cnt * 2);
+
+	static GLuint vbo;
+	if (!vbo)
+		glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vert_cnt, vert, GL_DYNAMIC_DRAW);
+
+	static GLuint ebo;
+	if (!ebo)
+		glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * idx_len, idx, GL_DYNAMIC_DRAW);
+
+	glEnableVertexAttribArray(gl.position_location);
+	glVertexAttribPointer(gl.position_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(Vertex), (void *)offsetof(Vertex, position));
+
+	glEnableVertexAttribArray(gl.normal_location);
+	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
+			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
+	glNormalPointer(GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+
+	glUseProgram(gl.program);
+
+	const RGBcolor *col = NODE_DESC(dnode)->color;
+	glUniform4f(gl.color_location, col->r, col->g, col->b, 1);
+	glUniform1i(gl.lightning_enabled_location, 1);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glDrawElements(GL_TRIANGLES, idx_len, GL_UNSIGNED_SHORT, 0);
+
+	glUseProgram(0);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vert_cnt, NULL, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	xfree(vert);
+	xfree(idx);
 }
 
 
