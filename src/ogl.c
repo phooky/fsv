@@ -280,7 +280,7 @@ setup_projection_matrix( boolean full_reset )
 	glm_frustum(-dx, dx, -dy, dy, camera->near_clip, camera->far_clip, frustum);
 	if (full_reset)
 		glm_mat4_identity(gl.projection);
-	glm_mat4_mul(frustum, gl.projection, gl.projection);
+	glm_mat4_mul(gl.projection, frustum, gl.projection);
 }
 
 
@@ -430,7 +430,7 @@ GLuint
 ogl_select_modern(GLint x, GLint y)
 {
 	gl.render_mode = RENDERMODE_SELECT;
-	setup_projection_matrix(FALSE);
+	setup_projection_matrix(TRUE);
 	setup_modelview_matrix();
 	ogl_upload_matrices(FALSE);
 	// Enable depth test
@@ -464,6 +464,9 @@ ogl_select_modern(GLint x, GLint y)
 	glReadPixels(x, yy, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
 	g_print("ogl_select_modern: Color red %u green %u blue %u alpha %u\n", color[0], color[1], color[2], color[3]);
 	GLuint node_id = color[0] + (color[1] << 8) + (color[2] << 16);
+
+	// Debugging, view pick rendering.
+	//gtk_gl_area_swapbuffers( GTK_GL_AREA(viewport_gl_area_w) );
 
 	/* Leave matrices in a usable state */
 	setup_projection_matrix(TRUE);

@@ -72,8 +72,7 @@ typedef struct VertexPos {
 // which = 0: both modelview and projection matrices
 // which = 1: Only modelview
 // which = 2: Only projection
-#if 0
-static void
+__attribute__((unused)) static void
 debug_print_matrices(int which)
 {
 #ifdef DEBUG
@@ -100,7 +99,6 @@ debug_print_matrices(int which)
 	}
 #endif
 }
-#endif
 
 static const RGBcolor color_black = {0, 0, 0};
 
@@ -885,14 +883,15 @@ mapv_gldraw_node( GNode *node )
 		memcpy(color, NODE_DESC(node)->color, 3 * sizeof(GLfloat));
 	else {
 		GLuint c = NODE_DESC(node)->id;
+		const char *name = NODE_DESC(node)->name;
 		GLuint r = (c & 0x000000FF) >>  0;
 		GLuint g = (c & 0x0000FF00) >>  8;
 		GLuint b = (c & 0x00FF0000) >> 16;
 		color[0] = (GLfloat) r / G_MAXUINT8;
 		color[1] = (GLfloat) g / G_MAXUINT8;
 		color[2] = (GLfloat) b / G_MAXUINT8;
-		g_print("Painting node %u with Color red %f green %f blue %f\n",
-			c, (double)color[0], (double)color[1], (double)color[2]);
+		g_print("Painting node %s id %u with Color red %f green %f blue %f\n",
+			name, c, (double)color[0], (double)color[1], (double)color[2]);
 	}
 
 	Vertex vertex_data[] = {
@@ -954,6 +953,7 @@ mapv_gldraw_node( GNode *node )
 	    12, 13, 14, 14, 13, 15,  // Left face
 	    16, 17, 18, 18, 17, 19   // Top face
 	};
+	//g_print("Matrices with rendermode %d\n", gl.render_mode);
 	//debug_print_matrices(0);
 	static GLuint vbo;
 	if (!vbo)
@@ -981,18 +981,20 @@ mapv_gldraw_node( GNode *node )
 	glUseProgram(gl.program);
 
 	glUniform4fv(gl.color_location, 1, color);
-	glUniform1i(gl.lightning_enabled_location, 1);
+	if (gl.render_mode == RENDERMODE_RENDER)
+		glUniform1i(gl.lightning_enabled_location, 1);
+	else
+		glUniform1i(gl.lightning_enabled_location, 0);
 #if 0
 #ifdef DEBUG
 	mat4 mvp;
 	glm_mat4_mul(gl.projection, gl.modelview, mvp);
 	// Check coords
 	vec3 out;
-	g_print("quad coords:\n");
+	g_print("quad coords with rendermode %d:\n", gl.render_mode);
 	glm_mat4_mulv3(mvp, vertex_data[0].position, 1, out);
 	glmc_vec3_print(out, stdout);
 	glm_mat4_mulv3(mvp, vertex_data[1].position, 1, out);
-	glmc_vec3_print(out, stdout);
 	glmc_vec3_print(out, stdout);
 	glm_mat4_mulv3(mvp, vertex_data[3].position, 1, out);
 	glmc_vec3_print(out, stdout);
