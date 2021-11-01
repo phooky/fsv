@@ -59,55 +59,13 @@ static GNode *
 node_at_location( int x, int y, unsigned int *face_id )
 {
 	// First try the new method
-	// GLuint n_id = ogl_select_modern(x, y);
-	// if (n_id) {
-	// 	g_print("Found node id %u\n", n_id);
-	// 	if (n_id >= node_table_size)
-	// 		g_warning("Got node id %u larger than node table size %zu\n", n_id, node_table_size);
-	// 	else {
-	// 		GNode *node = node_table[n_id];
-	// 		g_print("ogl_select_modern found node %s\n", NODE_DESC(node)->name);
-	// 		return node_table[n_id];
-	// 	}
-	// }
-
-	// Then try the old method
-	const GLuint *hit_records;
-	unsigned int name_count, z1, z2, name1, name2;
-	unsigned int min_z1;
-	unsigned int node_id = 0;
-	int hit_count;
-	int i = 0;
-
-	*face_id = 0;
-
-	hit_count = ogl_select( x, y, &hit_records );
-	if (hit_count > 0) {
-		/* Process selection hit records: find nearest hit
-		 * (i.e. hit with smallest window-coordinate z value) */
-		min_z1 = 4294967295U; /* 2^32 - 1 */
-		while (hit_count > 0) {
-			name_count = hit_records[i++];
-			z1 = hit_records[i++];
-			z2 = hit_records[i++];
-			name1 = hit_records[i++];
-			if (name_count == 2)
-				name2 = hit_records[i++];
-			else
-				name2 = 0; /* default */
-			if (z1 < min_z1) {
-				node_id = name1;
-				*face_id = name2;
-				min_z1 = z1;
-			}
-			z2 = z2; /* z2 not used */
-			--hit_count;
-		}
-
-		if (node_id != 0)
-			return node_table[node_id];
+	GLuint n_id = ogl_select_modern(x, y);
+	if (n_id) {
+		if (n_id >= node_table_size)
+			g_warning("Got node id %u larger than node table size %zu\n", n_id, node_table_size);
+		else
+			return node_table[n_id];
 	}
-
 	return NULL;
 }
 

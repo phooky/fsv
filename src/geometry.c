@@ -883,15 +883,15 @@ mapv_gldraw_node( GNode *node )
 		memcpy(color, NODE_DESC(node)->color, 3 * sizeof(GLfloat));
 	else {
 		GLuint c = NODE_DESC(node)->id;
-		const char *name = NODE_DESC(node)->name;
+		//const char *name = NODE_DESC(node)->name;
 		GLuint r = (c & 0x000000FF) >>  0;
 		GLuint g = (c & 0x0000FF00) >>  8;
 		GLuint b = (c & 0x00FF0000) >> 16;
 		color[0] = (GLfloat) r / G_MAXUINT8;
 		color[1] = (GLfloat) g / G_MAXUINT8;
 		color[2] = (GLfloat) b / G_MAXUINT8;
-		g_print("Painting node %s id %u with Color red %f green %f blue %f\n",
-			name, c, (double)color[0], (double)color[1], (double)color[2]);
+		//g_print("Painting node %s id %u with Color red %f green %f blue %f\n",
+		//	name, c, (double)color[0], (double)color[1], (double)color[2]);
 	}
 
 	Vertex vertex_data[] = {
@@ -3349,6 +3349,7 @@ draw_node( GNode *node )
 void
 geometry_highlight_node( GNode *node, boolean strong )
 {
+	return;  // Temporarily disable
 	static boolean highlight_drawn = FALSE;
 	static boolean highlight_strong = FALSE;
 	static GNode *highlighted_node;

@@ -462,7 +462,7 @@ ogl_select_modern(GLint x, GLint y)
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	GLint yy = viewport[3] - y;
 	glReadPixels(x, yy, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
-	g_print("ogl_select_modern: Color red %u green %u blue %u alpha %u\n", color[0], color[1], color[2], color[3]);
+	//g_print("ogl_select_modern: Color red %u green %u blue %u alpha %u\n", color[0], color[1], color[2], color[3]);
 	GLuint node_id = color[0] + (color[1] << 8) + (color[2] << 16);
 
 	// Debugging, view pick rendering.
@@ -476,45 +476,6 @@ ogl_select_modern(GLint x, GLint y)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	gl.render_mode = RENDERMODE_RENDER;
 	return node_id;
-}
-
-/* This returns an array of names (unsigned ints) of the primitives which
- * occur under the given viewport coordinates (x,y) (where (0,0) indicates
- * the upper left corner). Return value is the number of names (hit records)
- * stored in the select buffer */
-int
-ogl_select( int x, int y, const GLuint **selectbuf_ptr )
-{
-	static GLuint selectbuf[1024];
-	GLint viewport[4];
-	int ogl_y, hit_count;
-
-	glSelectBuffer( 1024, selectbuf );
-	glRenderMode( GL_SELECT );
-
-	/* Set up picking matrix */
-	glGetIntegerv( GL_VIEWPORT, viewport );
-	glMatrixMode( GL_PROJECTION );
-	glLoadIdentity( );
-	ogl_y = viewport[3] - y;
-	gluPickMatrix( (double)x, (double)ogl_y, 1.0, 1.0, viewport );
-
-	/* Draw geometry */
-	setup_projection_matrix( FALSE );
-	setup_modelview_matrix( );
-	ogl_upload_matrices(FALSE);
-	geometry_draw( FALSE );
-
-	/* Get the hits */
-	hit_count = glRenderMode( GL_RENDER );
-	*selectbuf_ptr = selectbuf;
-
-	/* Leave matrices in a usable state */
-	setup_projection_matrix( TRUE );
-	setup_modelview_matrix( );
-	ogl_upload_matrices(FALSE);
-
-	return hit_count;
 }
 
 

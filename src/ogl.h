@@ -99,7 +99,6 @@ void ogl_enable_lightning();
 void ogl_disable_lightning();
 void ogl_draw( void );
 GLuint ogl_select_modern(GLint x, GLint y);
-int ogl_select( int x, int y, const GLuint **selectbuf_ptr );
 #ifdef __GTK_H__
 GtkWidget *ogl_widget_new( void );
 #endif
