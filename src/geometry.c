@@ -31,10 +31,6 @@
  * (input and output are both [0, 1]) */
 #define CURSOR_POS(x)			sin( (0.5 * PI) * (x) )
 
-/* Use this to set the current GL color for a node */
-#define node_glcolor( node ) \
-	glColor3fv( (const float *)NODE_DESC(node)->color )
-
 
 // TODO: Implement this caching strategy with VBO's
 /* Current "drawing stage" for low- and high-detail geometry:
@@ -1085,7 +1081,6 @@ mapv_build_dir( GNode *dnode )
 	node = dnode->children;
 	while (node != NULL) {
 		/* Draw node */
-		node_glcolor( node );
 		mapv_gldraw_node( node );
 		node = node->next;
 	}
@@ -2423,7 +2418,6 @@ treev_build_dir( GNode *dnode, double r0 )
 		for (n = 0; (n < row_node_count) && (node != NULL); n++) {
 			TREEV_GEOM_PARAMS(node)->leaf.theta = pos.theta;
 			TREEV_GEOM_PARAMS(node)->leaf.distance = pos.r - r0;
-			node_glcolor( node );
 			treev_gldraw_leaf( node, r0, !NODE_IS_DIR(node) );
 			pos.theta -= inter_arc_width;
 			node = node->prev;
@@ -2438,7 +2432,6 @@ treev_build_dir( GNode *dnode, double r0 )
 	TREEV_GEOM_PARAMS(dnode)->platform.depth = pos.r - r0;
 
 	/* Draw underlying directory */
-	node_glcolor( dnode );
 	treev_gldraw_platform( dnode, r0 );
 
 #undef edge05
@@ -2514,7 +2507,6 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 			/* Directory is partially deployed, so
 			 * draw/label the shrinking/growing leaf */
 			if (action >= TREEV_DRAW_GEOMETRY) {
-				node_glcolor( dnode );
 				treev_gldraw_leaf( dnode, prev_r0, TRUE );
 				treev_gldraw_folder( dnode, prev_r0 );
 			}
@@ -2553,7 +2545,6 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 		if (dir_collapsed)
 		{
 			/* Leaf form */
-			node_glcolor(dnode);
 			treev_gldraw_leaf(dnode, prev_r0, TRUE);
 			treev_gldraw_folder(dnode, prev_r0);
 		}
@@ -2585,7 +2576,6 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 
 	if (dir_expanded && (action == TREEV_DRAW_GEOMETRY_WITH_BRANCHES)) {
 		/* Draw interconnecting branches (display list B) */
-		glColor3fv((float *)&branch_color);
 		glNormal3d(0.0, 0.0, 1.0);
 		if (NODE_IS_METANODE(dnode))
 		{
