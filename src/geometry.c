@@ -1141,7 +1141,6 @@ mapv_draw_recursive( GNode *dnode, int action )
 
 	if (!dir_collapsed && !dir_expanded) {
 		/* Grow/shrink children heightwise */
-		glEnable( GL_NORMALIZE );
 		glScaled( 1.0, 1.0, dir_ndesc->deployment );
 		glm_scale(gl.modelview, (vec3){1.0f, 1.0f, dir_ndesc->deployment});
 	}
@@ -1190,9 +1189,6 @@ mapv_draw_recursive( GNode *dnode, int action )
 			node = node->next;
 		}
 	}
-
-	if (!dir_collapsed && !dir_expanded)
-		glDisable( GL_NORMALIZE );
 
 	glPopMatrix( );
 	glm_mat4_copy(tmpmat, gl.modelview);
@@ -2519,7 +2515,6 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 
 			/* Platform should shrink to / grow from
 			 * corresponding leaf position */
-			glEnable( GL_NORMALIZE );
 			leaf.r = prev_r0 + dir_gparams->leaf.distance;
 			leaf.theta = dir_gparams->leaf.theta;
 			glRotated( leaf.theta, 0.0, 0.0, 1.0 );
@@ -2626,9 +2621,6 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 
 	/* Update geometry status */
 	dir_ndesc->geom_expanded = !dir_collapsed;
-
-	if (!dir_collapsed && !dir_expanded)
-		glDisable( GL_NORMALIZE );
 
 	glPopMatrix( );
 	if (!dir_collapsed) {
