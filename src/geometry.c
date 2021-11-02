@@ -473,7 +473,7 @@ discv_draw_recursive( GNode *dnode, int action )
 	ogl_upload_matrices(TRUE);
 
 	if (action == DISCV_DRAW_GEOMETRY) {
-		/* Draw folder or leaf nodes (display list A) */
+		/* Draw folder or leaf nodes */
 		if (!dir_collapsed)
 			discv_build_dir(dnode);
 		if (!dir_expanded)
@@ -481,7 +481,7 @@ discv_draw_recursive( GNode *dnode, int action )
 	}
 
 	if (action == DISCV_DRAW_LABELS) {
-		/* Draw name label(s) (display list B) */
+		/* Draw name label(s) */
 
 		/* Label leaf nodes */
 		node = dnode->children;
@@ -2575,7 +2575,7 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 	}
 
 	if (dir_expanded && (action == TREEV_DRAW_GEOMETRY_WITH_BRANCHES)) {
-		/* Draw interconnecting branches (display list B) */
+		/* Draw interconnecting branches */
 		glNormal3d(0.0, 0.0, 1.0);
 		if (NODE_IS_METANODE(dnode))
 		{
