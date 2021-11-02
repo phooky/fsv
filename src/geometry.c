@@ -1085,7 +1085,6 @@ mapv_build_dir( GNode *dnode )
 	node = dnode->children;
 	while (node != NULL) {
 		/* Draw node */
-		glLoadName( NODE_DESC(node)->id );
 		node_glcolor( node );
 		mapv_gldraw_node( node );
 		node = node->next;
@@ -2424,7 +2423,6 @@ treev_build_dir( GNode *dnode, double r0 )
 		for (n = 0; (n < row_node_count) && (node != NULL); n++) {
 			TREEV_GEOM_PARAMS(node)->leaf.theta = pos.theta;
 			TREEV_GEOM_PARAMS(node)->leaf.distance = pos.r - r0;
-			glLoadName( NODE_DESC(node)->id );
 			node_glcolor( node );
 			treev_gldraw_leaf( node, r0, !NODE_IS_DIR(node) );
 			pos.theta -= inter_arc_width;
@@ -2440,7 +2438,6 @@ treev_build_dir( GNode *dnode, double r0 )
 	TREEV_GEOM_PARAMS(dnode)->platform.depth = pos.r - r0;
 
 	/* Draw underlying directory */
-	glLoadName( NODE_DESC(dnode)->id );
 	node_glcolor( dnode );
 	treev_gldraw_platform( dnode, r0 );
 
@@ -2556,7 +2553,6 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 		if (dir_collapsed)
 		{
 			/* Leaf form */
-			glLoadName(NODE_DESC(dnode)->id);
 			node_glcolor(dnode);
 			treev_gldraw_leaf(dnode, prev_r0, TRUE);
 			treev_gldraw_folder(dnode, prev_r0);
@@ -2589,7 +2585,6 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 
 	if (dir_expanded && (action == TREEV_DRAW_GEOMETRY_WITH_BRANCHES)) {
 		/* Draw interconnecting branches (display list B) */
-		glLoadName(NODE_DESC(dnode)->id);
 		glColor3fv((float *)&branch_color);
 		glNormal3d(0.0, 0.0, 1.0);
 		if (NODE_IS_METANODE(dnode))
@@ -3197,10 +3192,6 @@ splash_draw( void )
 void
 geometry_draw( boolean high_detail )
 {
-	/* Initialize name stack */
-	glInitNames( );
-	glPushName( 0 );
-
 	if (about( ABOUT_CHECK )) {
 		/* Currently giving About presentation */
 		if (high_detail)
