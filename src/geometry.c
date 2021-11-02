@@ -100,6 +100,42 @@ debug_print_matrices(int which)
 #endif
 }
 
+
+static unsigned int highlight_node_id;
+
+// Set node color and lightning enabled uniform. GL Program must be in use when
+// calling this.
+static void
+node_set_color(GNode *node)
+{
+	GLfloat color[4];
+	color[3] = 1.0;	 // Alpha
+	if (gl.render_mode == RENDERMODE_RENDER) {
+		memcpy(color, NODE_DESC(node)->color, 3 * sizeof(GLfloat));
+		// Check highlight
+		if (NODE_DESC(node)->id == highlight_node_id) {
+			for (size_t i = 0; i < 3; i++)
+				color[i] *= 1.3f;
+		}
+		glUniform1i(gl.lightning_enabled_location, 1);
+	} else {
+		GLuint c = NODE_DESC(node)->id;
+		// const char *name = NODE_DESC(node)->name;
+		GLuint r = (c & 0x000000FF) >> 0;
+		GLuint g = (c & 0x0000FF00) >> 8;
+		GLuint b = (c & 0x00FF0000) >> 16;
+		color[0] = (GLfloat)r / G_MAXUINT8;
+		color[1] = (GLfloat)g / G_MAXUINT8;
+		color[2] = (GLfloat)b / G_MAXUINT8;
+		// g_print("Painting node %s id %u with Color red %f green %f
+		// blue %f\n", 	name, c, (double)color[0], (double)color[1],
+		//(double)color[2]);
+		glUniform1i(gl.lightning_enabled_location, 0);
+	}
+
+	glUniform4fv(gl.color_location, 1, color);
+}
+
 static const RGBcolor color_black = {0, 0, 0};
 
 // Upload and draw a bunch of VertexPos vertices.
@@ -877,23 +913,6 @@ mapv_gldraw_node( GNode *node )
 
 	gparams = MAPV_GEOM_PARAMS(node);
 
-	GLfloat color[4];
-	color[3] = 1.0; // Alpha
-	if (gl.render_mode == RENDERMODE_RENDER)
-		memcpy(color, NODE_DESC(node)->color, 3 * sizeof(GLfloat));
-	else {
-		GLuint c = NODE_DESC(node)->id;
-		//const char *name = NODE_DESC(node)->name;
-		GLuint r = (c & 0x000000FF) >>  0;
-		GLuint g = (c & 0x0000FF00) >>  8;
-		GLuint b = (c & 0x00FF0000) >> 16;
-		color[0] = (GLfloat) r / G_MAXUINT8;
-		color[1] = (GLfloat) g / G_MAXUINT8;
-		color[2] = (GLfloat) b / G_MAXUINT8;
-		//g_print("Painting node %s id %u with Color red %f green %f blue %f\n",
-		//	name, c, (double)color[0], (double)color[1], (double)color[2]);
-	}
-
 	Vertex vertex_data[] = {
 	    {{gparams->c0.x, gparams->c1.y, 0.0}, /* Rear face */
 	     {0.0, normal.y, normal_z_ny}},
@@ -980,11 +999,7 @@ mapv_gldraw_node( GNode *node )
 
 	glUseProgram(gl.program);
 
-	glUniform4fv(gl.color_location, 1, color);
-	if (gl.render_mode == RENDERMODE_RENDER)
-		glUniform1i(gl.lightning_enabled_location, 1);
-	else
-		glUniform1i(gl.lightning_enabled_location, 0);
+	node_set_color(node);
 #if 0
 #ifdef DEBUG
 	mat4 mvp;
@@ -3298,7 +3313,7 @@ geometry_should_highlight( GNode *node, unsigned int face_id )
 
 
 /* Draws a single node, in its absolute position */
-static void
+__attribute__((unused)) static void
 draw_node( GNode *node )
 {
 	glPushMatrix( );
@@ -3341,173 +3356,20 @@ draw_node( GNode *node )
 }
 
 
-/* Highlights a node. This isn't a draw function per se, as it manipulates
- * the front and back buffers directly to do its work. "strong" flag
- * indicates whether a noticeably heavier highlight should be drawn.
- * Passing NULL/FALSE clears the existing highlight;
- * passing NULL/TRUE resets internal state (ogl_draw( ) only, please) */
+/* Highlights a node. "strong" flag indicates whether a noticeably heavier
+   highlight should be drawn (CURRENTLY NOT USED). Passing NULL as the node
+   argument clears the current highlight. */
 void
 geometry_highlight_node( GNode *node, boolean strong )
 {
-	return;  // Temporarily disable
-	static boolean highlight_drawn = FALSE;
-	static boolean highlight_strong = FALSE;
-	static GNode *highlighted_node;
-	static double prev_proj_matrix[16];
-	static double prev_mview_matrix[16];
-	static int prev_vp_x1, prev_vp_y1;
-	static int prev_vp_x2, prev_vp_y2;
-	GLfloat feedback_buf[1024];
-	GLint viewport[4];
-	int width, height;
-	int vp_x, vp_y;
-	int vp_x1 = INT_MAX, vp_y1 = INT_MAX;
-	int vp_x2 = -1, vp_y2 = -1;
-	int val_count;
-	int i = 0, v;
-
-	if ((node == NULL) && strong) {
-		highlight_drawn = FALSE;
-		return;
+	if (!node)
+		highlight_node_id = 0;
+	else {
+		highlight_node_id = NODE_DESC(node)->id;
+		//g_print("Highlighting node %u %s\n", highlight_node_id, NODE_DESC(node)->name);
+		//draw_node(node);
+		redraw();
 	}
-
-	/* Disable active per-fragment operations
-	 * (for a faster glCopyPixels( )) */
-	glDisable( GL_DITHER );
-	glDisable( GL_DEPTH_TEST );
-	//ogl_disable_lightning();
-
-	if (highlight_drawn) {
-		if ((node != highlighted_node) || (!strong && highlight_strong)) {
-			/* Remove the previously drawn highlight
-			 * (i.e. restore the previously saved portion
-			 * of the screen) */
-			glMatrixMode( GL_PROJECTION );
-			glPushMatrix( );
-			glLoadMatrixd( prev_proj_matrix );
-			glMatrixMode( GL_MODELVIEW );
-			glPushMatrix( );
-			glLoadMatrixd( prev_mview_matrix );
-
-			glReadBuffer( GL_BACK );
-			glDrawBuffer( GL_FRONT );
-			glCopyPixels( prev_vp_x1, prev_vp_y1, prev_vp_x2, prev_vp_y2, GL_COLOR );
-			glDrawBuffer( GL_BACK );
-
-			glMatrixMode( GL_PROJECTION );
-			glPopMatrix( );
-			glMatrixMode( GL_MODELVIEW );
-			glPopMatrix( );
-		}
-		else if (strong == highlight_strong) {
-			/* Desired highlight is already drawn */
-			//ogl_enable_lightning();
-			glEnable( GL_DEPTH_TEST );
-			glEnable( GL_DITHER );
-			return;
-		}
-	}
-
-	if ((node == NULL) && !strong) {
-		/* Highlight has been cleared, we're done */
-		highlight_drawn = FALSE;
-		//ogl_enable_lightning();
-		glEnable( GL_DEPTH_TEST );
-		glEnable( GL_DITHER );
-		glFlush( );
-		return;
-	}
-
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-
-	if (!highlight_drawn || (node != highlighted_node)) {
-		/* Use feedback to determine what portion of the screen
-		 * will need to be saved */
-		glFeedbackBuffer( 1024, GL_2D, feedback_buf );
-		glRenderMode( GL_FEEDBACK );
-		draw_node( node );
-		val_count = glRenderMode( GL_RENDER );
-
-		/* Parse values returned in feedback buffer */
-		while (i < val_count) {
-			i++; /* or: ptype = feedback_buf[i++]; */
-			/* (ptype == GL_LINE_TOKEN or GL_LINE_RESET_TOKEN) */
-			for (v = 0; v < 2; v++) {
-				vp_x = (int)feedback_buf[i++];
-				vp_y = (int)feedback_buf[i++];
-				/* Find corners */
-				vp_x1 = MIN(vp_x, vp_x1);
-				vp_y1 = MIN(vp_y, vp_y1);
-				vp_x2 = MAX(vp_x, vp_x2);
-				vp_y2 = MAX(vp_y, vp_y2);
-			}
-		}
-
-		/* Get viewport dimensions */
-		glGetIntegerv( GL_VIEWPORT, viewport );
-		width = viewport[2];
-		height = viewport[3];
-
-		/* Allow a 4-pixel margin of safety */
-		vp_x1 = MAX(0, vp_x1 - 4);
-		vp_y1 = MAX(0, vp_y1 - 4);
-		vp_x2 = MIN(width - 1, vp_x2 + 4);
-		vp_y2 = MIN(height - 1, vp_y2 + 4);
-
-		/* Copy affected portion of front buffer to back buffer */
-		glMatrixMode( GL_PROJECTION );
-		glPushMatrix( ); /* Save for upcoming highlight draw */
-		glLoadIdentity( );
-		glOrtho( 0.0, (double)width, 0.0, (double)height, -1.0, 1.0 );
-		glGetDoublev( GL_PROJECTION_MATRIX, prev_proj_matrix );
-		glMatrixMode( GL_MODELVIEW );
-		glPushMatrix( ); /* Save for upcoming highlight draw */
-		glLoadIdentity( );
-		glRasterPos2i( vp_x1, vp_y1 );
-		glGetDoublev( GL_MODELVIEW_MATRIX, prev_mview_matrix );
-
-		glReadBuffer( GL_FRONT );
-		glCopyPixels( vp_x1, vp_y1, vp_x2, vp_y2, GL_COLOR );
-
-		prev_vp_x1 = vp_x1;
-		prev_vp_y1 = vp_y1;
-		prev_vp_x2 = vp_x2;
-		prev_vp_y2 = vp_y2;
-
-		/* Restore matrices for upcoming highlight draw */
-		glMatrixMode( GL_PROJECTION );
-		glPopMatrix( );
-		glMatrixMode( GL_MODELVIEW );
-		glPopMatrix( );
-	}
-
-	/* Draw highlight directly to front buffer */
-	glDrawBuffer( GL_FRONT );
-
-	/* Draw highlight */
-	if (strong) {
-		glLineWidth( 7.0 );
-		glColor3f( 1.0, 0.75, 0.0 );
-		draw_node( node );
-		glColor3f( 1.0, 0.5, 0.0 );
-	}
-	else
-		glColor3f( 1.0, 1.0, 1.0 );
-	glLineWidth( 3.0 );
-	draw_node( node );
-	glLineWidth( 1.0 );
-
-	/* Restore normal GL state */
-	glDrawBuffer( GL_BACK );
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	glEnable( GL_DEPTH_TEST );
-	glEnable( GL_DITHER );
-
-	glFlush( );
-
-	highlight_drawn = TRUE;
-	highlight_strong = strong;
-	highlighted_node = node;
 }
 
 

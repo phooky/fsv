@@ -399,7 +399,6 @@ ogl_draw( void )
 	static FsvMode prev_mode = FSV_NONE;
 	int err;
 
-	geometry_highlight_node( NULL, TRUE );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	setup_projection_matrix( TRUE );
