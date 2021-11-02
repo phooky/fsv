@@ -2576,7 +2576,6 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 
 	if (dir_expanded && (action == TREEV_DRAW_GEOMETRY_WITH_BRANCHES)) {
 		/* Draw interconnecting branches */
-		glNormal3d(0.0, 0.0, 1.0);
 		if (NODE_IS_METANODE(dnode))
 		{
 			treev_gldraw_loop(r0);
