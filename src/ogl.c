@@ -176,11 +176,6 @@ ogl_init( void )
 	aboutGL.normal_location = glGetAttribLocation(aboutGL.program, "normal");
 	aboutGL.color_location = glGetAttribLocation(aboutGL.program, "color");
 
-	// Should be eventually switched to glEnableVertexAttribArray once
-	// shaders are taken into use
-	//glEnableClientState(GL_NORMAL_ARRAY);
-	//glEnableClientState(GL_COLOR_ARRAY);
-
 	/* Set viewport size */
 	ogl_resize( );
 
