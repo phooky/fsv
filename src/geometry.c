@@ -1129,8 +1129,6 @@ mapv_draw_recursive( GNode *dnode, int action )
 
 	g_assert( NODE_IS_DIR(dnode) || NODE_IS_METANODE(dnode) );
 
-	glPushMatrix( );
-	glTranslated( 0.0, 0.0, MAPV_GEOM_PARAMS(dnode)->height );
 	mat4 tmpmat;
 	glm_mat4_copy(gl.modelview, tmpmat);
 	glm_translate(gl.modelview, (vec3){0.0f, 0.0f, MAPV_GEOM_PARAMS(dnode)->height});
@@ -1141,7 +1139,6 @@ mapv_draw_recursive( GNode *dnode, int action )
 
 	if (!dir_collapsed && !dir_expanded) {
 		/* Grow/shrink children heightwise */
-		glScaled( 1.0, 1.0, dir_ndesc->deployment );
 		glm_scale(gl.modelview, (vec3){1.0f, 1.0f, dir_ndesc->deployment});
 	}
 
@@ -1190,7 +1187,6 @@ mapv_draw_recursive( GNode *dnode, int action )
 		}
 	}
 
-	glPopMatrix( );
 	glm_mat4_copy(tmpmat, gl.modelview);
 	ogl_upload_matrices(FALSE);
 }
@@ -2490,7 +2486,6 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 	dir_ndesc = DIR_NODE_DESC(dnode);
 	dir_gparams = TREEV_GEOM_PARAMS(dnode);
 
-	glPushMatrix( );
 	mat4 tmpmat;
 	glm_mat4_copy(gl.modelview, tmpmat);
 	//debug_print_matrices(1);
@@ -2517,19 +2512,13 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 			 * corresponding leaf position */
 			leaf.r = prev_r0 + dir_gparams->leaf.distance;
 			leaf.theta = dir_gparams->leaf.theta;
-			glRotated( leaf.theta, 0.0, 0.0, 1.0 );
 			glm_rotate_z(gl.modelview, leaf.theta * M_PI/180.0, gl.modelview);
-			glTranslated( leaf.r, 0.0, 0.0 );
 			glm_translate(gl.modelview, (vec3){leaf.r, 0.0, 0.0});
-			glScaled( dir_ndesc->deployment, dir_ndesc->deployment, dir_ndesc->deployment );
 			glm_scale(gl.modelview, (vec3){dir_ndesc->deployment, dir_ndesc->deployment, dir_ndesc->deployment});
-			glTranslated( - leaf.r, 0.0, 0.0 );
 			glm_translate(gl.modelview, (vec3){-leaf.r, 0.0, 0.0});
-			glRotated( - leaf.theta, 0.0, 0.0, 1.0 );
 			glm_rotate_z(gl.modelview, -leaf.theta * M_PI/180.0, gl.modelview);
 		}
 
-		glRotated( dir_gparams->platform.theta, 0.0, 0.0, 1.0 );
 		glm_rotate_z(gl.modelview, dir_gparams->platform.theta * M_PI / 180.0, gl.modelview);
 		ogl_upload_matrices(TRUE);
 	}
@@ -2622,7 +2611,6 @@ treev_draw_recursive( GNode *dnode, double prev_r0, double r0, int action )
 	/* Update geometry status */
 	dir_ndesc->geom_expanded = !dir_collapsed;
 
-	glPopMatrix( );
 	if (!dir_collapsed) {
 		glm_mat4_copy(tmpmat, gl.modelview);
 		ogl_upload_matrices(FALSE);
@@ -3288,7 +3276,6 @@ geometry_should_highlight( GNode *node, unsigned int face_id )
 __attribute__((unused)) static void
 draw_node( GNode *node )
 {
-	glPushMatrix( );
 	mat4 tmpmat;
 	glm_mat4_copy(gl.modelview, tmpmat);
 
@@ -3298,7 +3285,6 @@ draw_node( GNode *node )
 		break;
 
 		case FSV_MAPV:
-		glTranslated( 0.0, 0.0, geometry_mapv_node_z0( node ) );
 		glm_translate(gl.modelview, (vec3){0.0f, 0.0f, geometry_mapv_node_z0(node)});
 		ogl_upload_matrices(TRUE);
 		mapv_gldraw_node( node );
@@ -3306,13 +3292,11 @@ draw_node( GNode *node )
 
 		case FSV_TREEV:
 		if (geometry_treev_is_leaf( node )) {
-			glRotated( geometry_treev_platform_theta( node->parent ), 0.0, 0.0, 1.0 );
 			glm_rotate_z(gl.modelview, geometry_treev_platform_theta(node->parent) * M_PI/180, gl.modelview);
 			ogl_upload_matrices(TRUE);
 			treev_gldraw_leaf( node, geometry_treev_platform_r0( node->parent ), TRUE );
 		}
 		else {
-			glRotated( geometry_treev_platform_theta( node ), 0.0, 0.0, 1.0 );
 			glm_rotate_z(gl.modelview, geometry_treev_platform_theta(node) * M_PI/180, gl.modelview);
 			ogl_upload_matrices(TRUE);
 			treev_gldraw_platform( node, geometry_treev_platform_r0( node ) );
@@ -3322,7 +3306,6 @@ draw_node( GNode *node )
 		SWITCH_FAIL
 	}
 
-	glPopMatrix( );
 	glm_mat4_copy(tmpmat, gl.modelview);
 	ogl_upload_matrices(FALSE);
 }

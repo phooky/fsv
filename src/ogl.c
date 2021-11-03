@@ -182,12 +182,6 @@ ogl_init( void )
 	/* Create the initial modelview matrix
 	 * (right-handed coordinate system, +z = straight up,
 	 * camera at origin looking in -x direction) */
-	glMatrixMode( GL_MODELVIEW );
-	glLoadIdentity( );
-	glRotated( -90.0, 1.0, 0.0, 0.0 );
-	glRotated( -90.0, 0.0, 0.0, 1.0 );
-	glPushMatrix( ); /* Matrix will stay just below top of MVM stack */
-	// Same but for the modern OpenGL code
 	glm_mat4_identity(gl.modelview);
 	glm_rotate_x(gl.modelview, -M_PI_2, gl.modelview);
 	glm_rotate_z(gl.modelview, -M_PI_2, gl.modelview);
@@ -265,10 +259,6 @@ setup_projection_matrix( boolean full_reset )
 
 	dx = camera->near_clip * tan( 0.5 * RAD(camera->fov) );
 	dy = dx / ogl_aspect_ratio( );
-	glMatrixMode( GL_PROJECTION );
-	if (full_reset)
-		glLoadIdentity( );
-	glFrustum( - dx, dx, - dy, dy, camera->near_clip, camera->far_clip );
 
 	// Modern OpenGL using cglm
 	mat4 frustum;
@@ -283,10 +273,6 @@ setup_projection_matrix( boolean full_reset )
 static void
 setup_modelview_matrix( void )
 {
-	glMatrixMode( GL_MODELVIEW );
-	/* Remember, base matrix lives just below top of stack */
-	glPopMatrix( );
-	glPushMatrix( );
 	glm_mat4_copy(gl.base_modelview, gl.modelview);
 
 	switch (globals.fsv_mode) {
@@ -294,10 +280,6 @@ setup_modelview_matrix( void )
 		break;
 
 		case FSV_DISCV:
-		glTranslated( - camera->distance, 0.0, 0.0 );
-		glRotated( 90.0, 0.0, 1.0, 0.0 );
-		glRotated( 90.0, 0.0, 0.0, 1.0 );
-		glTranslated( - DISCV_CAMERA(camera)->target.x, - DISCV_CAMERA(camera)->target.y, 0.0 );
 		glm_translate(gl.modelview, (vec3){-camera->distance, 0.f, 0.f});
 		glm_rotate_y(gl.modelview, M_PI_2, gl.modelview);
 		glm_rotate_z(gl.modelview, M_PI_2, gl.modelview);
@@ -307,10 +289,6 @@ setup_modelview_matrix( void )
 		break;
 
 		case FSV_MAPV:
-		glTranslated( - camera->distance, 0.0, 0.0 );
-		glRotated( camera->phi, 0.0, 1.0, 0.0 );
-		glRotated( - camera->theta, 0.0, 0.0, 1.0 );
-		glTranslated( - MAPV_CAMERA(camera)->target.x, - MAPV_CAMERA(camera)->target.y, - MAPV_CAMERA(camera)->target.z );
 		glm_translate(gl.modelview, (vec3){-camera->distance, 0.f, 0.f});
 		glm_rotate_y(gl.modelview, camera->phi * M_PI / 180, gl.modelview);
 		glm_rotate_z(gl.modelview, -camera->theta * M_PI / 180, gl.modelview);
@@ -320,11 +298,6 @@ setup_modelview_matrix( void )
 		break;
 
 		case FSV_TREEV:
-		glTranslated( - camera->distance, 0.0, 0.0 );
-		glRotated( camera->phi, 0.0, 1.0, 0.0 );
-		glRotated( - camera->theta, 0.0, 0.0, 1.0 );
-		glTranslated( TREEV_CAMERA(camera)->target.r, 0.0, - TREEV_CAMERA(camera)->target.z );
-		glRotated( 180.0 - TREEV_CAMERA(camera)->target.theta, 0.0, 0.0, 1.0 );
 		glm_translate(gl.modelview, (vec3){-camera->distance, 0.f, 0.f});
 		glm_rotate_y(gl.modelview, camera->phi * M_PI / 180, gl.modelview);
 		glm_rotate_z(gl.modelview, -camera->theta * M_PI / 180, gl.modelview);
