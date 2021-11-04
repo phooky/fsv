@@ -38,7 +38,7 @@ Useful info and screenshots of the original SGI IRIX implementation are availabl
    `meson configure -Dc_args="-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED" builddir`
 2. DONE Update code, still using gtk+-2.0, to build cleanly with
    `meson configure -Dc_args="-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED -DGTK_DISABLE_SINGLE_INCLUDES -DGSEAL_ENABLE" builddir`
-3. Update to 'modern' OpenGL 3.1. GtkGLArea in Gtk+3 supports only core
+3. DONE Update to 'modern' OpenGL 3.1. GtkGLArea in Gtk+3 supports only core
    profile, so modernize the OpenGL code before switching to Gtk+3 and the
    OpenGL core profile.
     1. Build scaffolding to use shaders and VBO's. Bundle shaders using
