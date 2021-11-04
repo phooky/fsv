@@ -165,10 +165,17 @@ drawVertexPos(GLenum mode, VertexPos *vert, size_t vert_cnt, const RGBcolor *col
 }
 
 
-// Similar to above, but draw a Vertex
+// Similar to above, but draw a Vertex.
+// The color is taken either from the color argument, or the node argument.
+// One of these must be NULL and the other non-null.
 static void
-drawVertex(GLenum mode, Vertex *vert, size_t vert_cnt, const RGBcolor *color)
+drawVertex(GLenum mode, Vertex *vert, size_t vert_cnt, const RGBcolor *color, GNode *node)
 {
+	if (color != NULL)
+		g_assert(node == NULL);
+	else
+		g_assert(node != NULL);
+
 	static GLuint vbo;
 	if (!vbo) glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -184,8 +191,11 @@ drawVertex(GLenum mode, Vertex *vert, size_t vert_cnt, const RGBcolor *color)
 			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
 
 	glUseProgram(gl.program);
-	glUniform4f(gl.color_location, color->r, color->g, color->b, 1);
-	glUniform1i(gl.lightning_enabled_location, 1);
+	if (color) {
+		glUniform4f(gl.color_location, color->r, color->g, color->b, 1);
+		glUniform1i(gl.lightning_enabled_location, 1);
+	} else
+		node_set_color(node);
 	glDrawArrays(mode, 0, vert_cnt);
 	glUseProgram(0);
 
@@ -406,7 +416,7 @@ discv_gldraw_node( GNode *node, double dir_deployment )
 		p.y = center.y + gparams->radius * sin( RAD(theta) );
 		vert[s + 1] = (Vertex){{p.x, p.y, 0}, {0, 0, 1}};
 	}
-	drawVertex(GL_TRIANGLE_FAN, vert, vert_cnt, NODE_DESC(node)->color);
+	drawVertex(GL_TRIANGLE_FAN, vert, vert_cnt, NULL, node);
 	xfree(vert);
 }
 
@@ -2033,9 +2043,8 @@ treev_gldraw_platform( GNode *dnode, double r0 )
 
 	glUseProgram(gl.program);
 
-	const RGBcolor *col = NODE_DESC(dnode)->color;
-	glUniform4f(gl.color_location, col->r, col->g, col->b, 1);
-	glUniform1i(gl.lightning_enabled_location, 1);
+	node_set_color(dnode);
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glDrawElements(GL_TRIANGLES, idx_len, GL_UNSIGNED_SHORT, 0);
 
@@ -2116,7 +2125,7 @@ treev_gldraw_leaf( GNode *node, double r0, boolean full_node )
 		{{corners[3].x, corners[3].y, z1}, {0, 0, 1}},
 		{{corners[2].x, corners[2].y, z1}, {0, 0, 1}},
 	};
-	drawVertex(GL_TRIANGLE_STRIP, vert, 4, NODE_DESC(node)->color);
+	drawVertex(GL_TRIANGLE_STRIP, vert, 4, NULL, node);
 
 	if (!full_node) {
 		/* Draw an "X" and we're done */
@@ -2180,9 +2189,8 @@ treev_gldraw_leaf( GNode *node, double r0, boolean full_node )
 
 	glUseProgram(gl.program);
 
-	const RGBcolor *col = NODE_DESC(node)->color;
-	glUniform4f(gl.color_location, col->r, col->g, col->b, 1);
-	glUniform1i(gl.lightning_enabled_location, 1);
+	node_set_color(node);
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	GLsizei cnt = sizeof(elems) / sizeof(GLushort);
 	glDrawElements(GL_TRIANGLES, cnt, GL_UNSIGNED_SHORT, 0);
@@ -2282,7 +2290,7 @@ treev_gldraw_loop( double loop_r )
 		vert[2 * s] = (Vertex){{p0.x, p0.y, 0}, {0, 0, 1}};
 		vert[2 * s + 1] = (Vertex){{p1.x, p1.y, 0}, {0, 0, 1}};
 	}
-	drawVertex(GL_TRIANGLE_STRIP, vert, vert_cnt, &branch_color);
+	drawVertex(GL_TRIANGLE_STRIP, vert, vert_cnt, &branch_color, NULL);
 	xfree(vert);
 }
 
@@ -2308,7 +2316,7 @@ treev_gldraw_inbranch( double r0 )
 		{{c0.x, c1.y, 0}, {0, 0, 1}},
 		{{c1.x, c1.y, 0}, {0, 0, 1}},
 	};
-	drawVertex(GL_TRIANGLE_STRIP, vert, 4, &branch_color);
+	drawVertex(GL_TRIANGLE_STRIP, vert, 4, &branch_color, NULL);
 }
 
 
@@ -2374,7 +2382,7 @@ treev_gldraw_outbranch( double r1, double theta0, double theta1 )
 
 		theta += seg_arc_width;
 	}
-	drawVertex(GL_TRIANGLE_STRIP, vert, vert_cnt, &branch_color);
+	drawVertex(GL_TRIANGLE_STRIP, vert, vert_cnt, &branch_color, NULL);
 	xfree(vert);
 }
 
