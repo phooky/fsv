@@ -15,6 +15,12 @@
 #include <epoxy/gl.h>
 #include <cglm/cglm.h>
 
+#ifdef DEBUG
+#define ogl_error() _ogl_error(__FILE__, __LINE__)
+#else
+#define ogl_error()
+#endif
+
 typedef enum {
 	RENDERMODE_RENDER = 0,  // The usual rendering
 	RENDERMODE_SELECT	// Render with unique colors when selecting (no display)
@@ -98,6 +104,7 @@ void ogl_upload_matrices(gboolean text);
 void ogl_enable_lightning();
 void ogl_disable_lightning();
 void ogl_draw( void );
+void _ogl_error(const char *filename, int line_num);
 GLuint ogl_select_modern(GLint x, GLint y);
 #ifdef __GTK_H__
 GtkWidget *ogl_widget_new( void );

@@ -43,8 +43,6 @@ static int fstree_high_draw_stage;
 
 
 /* Forward declarations */
-static void outline_pre( void );
-static void outline_post( void );
 static void cursor_pre( void );
 static void cursor_hidden_part( void );
 static void cursor_visible_part( void );
@@ -978,7 +976,7 @@ mapv_gldraw_node( GNode *node )
 	    12, 13, 14, 14, 13, 15,  // Left face
 	    16, 17, 18, 18, 17, 19   // Top face
 	};
-	//g_print("Matrices with rendermode %d\n", gl.render_mode);
+	ogl_error();
 	//debug_print_matrices(0);
 	static GLuint vbo;
 	if (!vbo)
@@ -1000,8 +998,8 @@ mapv_gldraw_node( GNode *node )
 	glEnableVertexAttribArray(gl.normal_location);
 	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
 			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
-	glNormalPointer(GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
+	ogl_error();
 
 	glUseProgram(gl.program);
 
@@ -1092,6 +1090,7 @@ mapv_build_dir( GNode *dnode )
 	while (node != NULL) {
 		/* Draw node */
 		mapv_gldraw_node( node );
+		ogl_error();
 		node = node->next;
 	}
 }
@@ -1152,7 +1151,9 @@ mapv_draw_recursive( GNode *dnode, int action )
 		glm_scale(gl.modelview, (vec3){1.0f, 1.0f, dir_ndesc->deployment});
 	}
 
+	ogl_error();
 	ogl_upload_matrices(TRUE);
+	ogl_error();
 
 	if (action == MAPV_DRAW_GEOMETRY) {
 		/* Draw directory face or geometry of children
@@ -1162,6 +1163,7 @@ mapv_draw_recursive( GNode *dnode, int action )
 		else
 			mapv_build_dir(dnode);
 	}
+	ogl_error();
 
 	if (action == MAPV_DRAW_LABELS) {
 		/* Draw name label(s) */
@@ -2039,7 +2041,6 @@ treev_gldraw_platform( GNode *dnode, double r0 )
 	glEnableVertexAttribArray(gl.normal_location);
 	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
 			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
-	glNormalPointer(GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
 	glUseProgram(gl.program);
 
@@ -2185,7 +2186,6 @@ treev_gldraw_leaf( GNode *node, double r0, boolean full_node )
 	glEnableVertexAttribArray(gl.normal_location);
 	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
 			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
-	glNormalPointer(GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
 	glUseProgram(gl.program);
 
@@ -2769,11 +2769,6 @@ treev_draw( boolean high_detail )
 	if (high_detail) {
 		/* Draw additional high-detail stuff */
 
-		/* "Cel lines" */
-		outline_pre();
-		treev_draw_recursive(globals.fstree, NIL, treev_core_radius, TREEV_DRAW_GEOMETRY);
-		outline_post();
-
 		/* Node name labels */
 		text_pre();
 		treev_draw_recursive(globals.fstree, NIL, treev_core_radius, TREEV_DRAW_LABELS);
@@ -2789,24 +2784,6 @@ treev_draw( boolean high_detail )
 
 
 /**** COMMON ROUTINES *****************************************/
-
-
-/* Call before drawing geometry "cel lines" */
-static void
-outline_pre( void )
-{
-	glDisable( GL_CULL_FACE );
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-}
-
-
-/* Call after drawing "cel lines" */
-static void
-outline_post( void )
-{
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	glEnable( GL_CULL_FACE );
-}
 
 
 /* Call before drawing the cursor */

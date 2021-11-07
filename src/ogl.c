@@ -14,7 +14,7 @@
 #include "ogl.h"
 
 #include <gtk/gtk.h>
-#include <gtkgl/gtkglarea.h>
+#include <gtk/gtkglarea.h>
 #include <GL/glu.h> /* gluPickMatrix( ) */
 
 #include "animation.h" /* redraw( ) */
@@ -207,7 +207,7 @@ ogl_init( void )
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	glEnable( GL_CULL_FACE );
 	glEnable( GL_DEPTH_TEST );
-	glDepthFunc( GL_LEQUAL );
+	//glDepthFunc( GL_LEQUAL );
 	glEnable( GL_POLYGON_OFFSET_FILL );
 	glPolygonOffset( 1.0, 1.0 );
 	glClearColor( 0.0, 0.0, 0.0, 0.0 );
@@ -359,35 +359,87 @@ ogl_disable_lightning()
 }
 
 
+void
+_ogl_error(const char* fname, int lnum)
+{
+	gboolean found_err = FALSE;
+	while (TRUE) {
+		GLenum err = glGetError();
+		if (err == GL_NO_ERROR)
+			break;
+		found_err = TRUE;
+		char *estr;
+
+		switch (err) {
+			case GL_INVALID_OPERATION:
+				estr = "INVALID_OPERATION";
+				break;
+			case GL_INVALID_ENUM:
+				estr = "INVALID_ENUM";
+				break;
+			case GL_INVALID_VALUE:
+				estr = "INVALID_VALUE";
+				break;
+			case GL_OUT_OF_MEMORY:
+				estr = "OUT_OF_MEMORY";
+				break;
+			case GL_INVALID_FRAMEBUFFER_OPERATION:
+				estr = "INVALID_FRAMEBUFFER_OPERATION";
+				break;
+		}
+
+		g_warning("%s:%d: GL error: %s\n", fname, lnum, estr);
+	}
+	if (found_err)
+		abort();
+}
+
 /* (Re)draws the viewport
  * NOTE: Don't call this directly! Use redraw( ) */
 void
 ogl_draw( void )
 {
+	gtk_gl_area_queue_render(GTK_GL_AREA(viewport_gl_area_w));
+}
+
+
+static gboolean
+render(GtkGLArea *area, GdkGLContext *context)
+{
+	// inside this function it's safe to use GL; the given
+	// `GdkGLContext` has been made current to the drawable
+	// surface used by the `GtkGLArea` and the viewport has
+	// already been set to be the size of the allocation
+
+	// we can start by clearing the buffer
+	//glClearColor(0, 0, 0, 0);
+	//glClear(GL_COLOR_BUFFER_BIT);
+
+	// draw your object
 	static FsvMode prev_mode = FSV_NONE;
-	int err;
 
+	ogl_error();
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
 	setup_projection_matrix( TRUE );
 	setup_modelview_matrix( );
 	ogl_upload_matrices(FALSE);
 	geometry_draw( TRUE );
 
 	/* Error check */
-	err = glGetError( );
-	if (err != 0)
-		g_warning( "GL error: 0x%X", err );
+	ogl_error();
 
 	/* First frame after a mode switch is not drawn
 	 * (with the exception of splash screen mode) */
 	if (globals.fsv_mode != prev_mode) {
 		prev_mode = globals.fsv_mode;
                 if (globals.fsv_mode != FSV_SPLASH)
-			return;
+			return FALSE;
 	}
 
-	gtk_gl_area_swapbuffers( GTK_GL_AREA(viewport_gl_area_w) );
+	// we completed our drawing; the draw commands will be
+	// flushed at the end of the signal emission chain, and
+	// the buffers will be drawn on the window
+	return TRUE;
 }
 
 
@@ -396,6 +448,10 @@ ogl_draw( void )
 GLuint
 ogl_select_modern(GLint x, GLint y)
 {
+	// As this can be called outside of a render() callback, need to set
+	// the context explicitly.
+	gtk_gl_area_make_current( GTK_GL_AREA(viewport_gl_area_w) );
+
 	gl.render_mode = RENDERMODE_SELECT;
 	setup_projection_matrix(TRUE);
 	setup_modelview_matrix();
@@ -463,21 +519,14 @@ realize_cb( GtkWidget *gl_area_w )
 GtkWidget *
 ogl_widget_new( void )
 {
-	int gl_area_attributes[] = {
-		GDK_GL_RGBA,
-		GDK_GL_RED_SIZE, 1,
-		GDK_GL_GREEN_SIZE, 1,
-		GDK_GL_BLUE_SIZE, 1,
-		GDK_GL_DEPTH_SIZE, 1,
-		GDK_GL_DOUBLEBUFFER,
-		GDK_GL_NONE
-	};
-
 	/* Create the widget */
-	viewport_gl_area_w = gtk_gl_area_new( gl_area_attributes );
+	viewport_gl_area_w = gtk_gl_area_new();
 
 	/* Initialize widget's GL state when realized */
 	g_signal_connect(G_OBJECT(viewport_gl_area_w), "realize", G_CALLBACK(realize_cb), NULL);
+
+	// connect to the "render" signal
+	g_signal_connect(viewport_gl_area_w, "render", G_CALLBACK(render), NULL);
 
 	return viewport_gl_area_w;
 }
