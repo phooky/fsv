@@ -173,7 +173,7 @@ camera_init( FsvMode mode, boolean initial_view )
 			camera->theta = 0.0;
 			camera->phi = 90.0;
 			camera->distance = d;
-			TREEV_CAMERA(camera)->target.r = 0.0;
+			TREEV_CAMERA(camera)->target.r = 0.5 * d;
 			TREEV_CAMERA(camera)->target.theta = 90.0;
 			TREEV_CAMERA(camera)->target.z = 0.0;
 		}
