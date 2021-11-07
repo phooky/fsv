@@ -1207,8 +1207,8 @@ gui_dir_choose( const char *title, GtkWidget *parent, const char *init_dir)
 	GtkWidget *file_dialog = gtk_file_chooser_dialog_new(title,
 		GTK_WINDOW(parent),
 		GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
-		GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-		GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+		"Cancel", GTK_RESPONSE_CANCEL,
+		"Open", GTK_RESPONSE_ACCEPT,
 		NULL);
 	if (init_dir != NULL)
 		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(file_dialog), init_dir);
