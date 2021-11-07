@@ -70,26 +70,13 @@ __attribute__((unused)) static void
 debug_print_matrices(int which)
 {
 #ifdef DEBUG
-	float gl1[16];
 	if (which == 0 || which == 1) {
-		g_print("Modelview matrices. First modern\n");
-		glGetFloatv(GL_MODELVIEW_MATRIX, gl1);
+		g_print("Modelview matrix:\n");
 		glmc_mat4_print(gl.modelview, stdout);
-		for (int ii = 0; ii < 4; ii++) {
-			for (int jj = 0; jj < 4; jj++)
-				g_print("%9.5f ", (double)gl1[jj * 4 + ii]);
-			g_print("\n");
-		}
 	}
 	if (which == 0 || which == 2) {
-		g_print("\nProjection matrices. First modern:\n");
-		glGetFloatv(GL_PROJECTION_MATRIX, gl1);
+		g_print("\nProjection matrix:\n");
 		glmc_mat4_print(gl.projection, stdout);
-		for (int ii = 0; ii < 4; ii++) {
-			for (int jj = 0; jj < 4; jj++)
-				g_print("%9.5f ", (double)gl1[jj * 4 + ii]);
-			g_print("\n");
-		}
 	}
 #endif
 }
