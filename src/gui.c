@@ -1166,8 +1166,8 @@ gui_entry_window( const char *title, const char *init_text, void (*ok_callback)(
 
 	entry_window_w = gui_dialog_window( title, NULL );
 	gtk_container_set_border_width( GTK_CONTAINER(entry_window_w), 5 );
-	width = gdk_screen_width( ) / 2;
-	gtk_widget_set_size_request(entry_window_w, width, 0);
+	width = 500; // TODO: Some better way to determine this
+	gtk_widget_set_size_request(entry_window_w, width, 100);
 	g_object_set_data(G_OBJECT(entry_window_w), "user_callback", (void *)ok_callback);
 	g_object_set_data(G_OBJECT(entry_window_w), "user_callback_data", ok_callback_data);
 
