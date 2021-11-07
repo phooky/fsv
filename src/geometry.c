@@ -1000,8 +1000,6 @@ mapv_gldraw_node( GNode *node )
 	glEnableVertexAttribArray(gl.normal_location);
 	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
 			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
-	glNormalPointer(GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
-
 
 	glUseProgram(gl.program);
 
@@ -2039,7 +2037,6 @@ treev_gldraw_platform( GNode *dnode, double r0 )
 	glEnableVertexAttribArray(gl.normal_location);
 	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
 			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
-	glNormalPointer(GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
 	glUseProgram(gl.program);
 
@@ -2185,7 +2182,6 @@ treev_gldraw_leaf( GNode *node, double r0, boolean full_node )
 	glEnableVertexAttribArray(gl.normal_location);
 	glVertexAttribPointer(gl.normal_location, 3, GL_FLOAT, GL_FALSE,
 			      sizeof(Vertex), (void *)offsetof(Vertex, normal));
-	glNormalPointer(GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
 	glUseProgram(gl.program);
 
