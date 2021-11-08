@@ -4,6 +4,7 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * SPDX-FileCopyrightText: 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * SPDX-License-Identifier:  LGPL-2.1-or-later
  */
@@ -35,9 +36,6 @@ static size_t node_table_size;
 
 /* The currently highlighted (indicated) node */
 static GNode *indicated_node = NULL;
-
-/* Previous mouse pointer coordinates */
-static int prev_x = 0, prev_y = 0;
 
 
 /* Receives a newly created node table from scanfs( ) */
@@ -79,7 +77,9 @@ viewport_cb(GtkWidget *gl_area_w, GdkEvent *event, gpointer user_data)
 	GNode *node;
 	double dx, dy;
 	unsigned int face_id;
-	int x, y;
+	double x, y;
+	/* Previous mouse pointer coordinates */
+	static double prev_x, prev_y;
 	boolean btn1, btn2, btn3;
 	boolean ctrl_key;
 
@@ -110,6 +110,8 @@ viewport_cb(GtkWidget *gl_area_w, GdkEvent *event, gpointer user_data)
 	if (globals.fsv_mode == FSV_SPLASH)
 		return FALSE;
 
+	gint scale; // Scale factor for HiDPI
+
 	/* Mouse-related events */
 	switch (event->type) {
 		case GDK_BUTTON_PRESS:
@@ -118,8 +120,9 @@ viewport_cb(GtkWidget *gl_area_w, GdkEvent *event, gpointer user_data)
 		btn2 = ev_button->button == 2;
 		btn3 = ev_button->button == 3;
 		ctrl_key = ev_button->state & GDK_CONTROL_MASK;
-		x = (int)ev_button->x;
-		y = (int)ev_button->y;
+		scale = gtk_widget_get_scale_factor(gl_area_w);
+		x = ev_button->x * scale;
+		y = ev_button->y * scale;
 		if (camera_moving( )) {
 			/* Yipe! Impatient user */
 			camera_pan_finish( );
@@ -170,8 +173,9 @@ viewport_cb(GtkWidget *gl_area_w, GdkEvent *event, gpointer user_data)
 		btn2 = ev_motion->state & GDK_BUTTON2_MASK;
 		btn3 = ev_motion->state & GDK_BUTTON3_MASK;
 		ctrl_key = ev_motion->state & GDK_CONTROL_MASK;
-		x = (int)ev_motion->x;
-		y = (int)ev_motion->y;
+		scale = gtk_widget_get_scale_factor(gl_area_w);
+		x = ev_motion->x * scale;
+		y = ev_motion->y * scale;
 		if (!camera_moving( ) && !gtk_events_pending( )) {
 			if (btn2) {
 				/* Dolly the camera */
