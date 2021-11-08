@@ -167,6 +167,8 @@ filelist_populate( GNode *dnode )
 void
 filelist_show_entry( GNode *node )
 {
+	if (!node) return;
+
 	GNode *dnode;
 	int row = 0;
 
