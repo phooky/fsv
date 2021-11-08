@@ -3219,12 +3219,11 @@ geometry_colexp_in_progress( GNode *dnode )
 }
 
 
-/* This tells if the specified node should be highlighted when the user
- * points at the specified face */
+/* This tells if the specified node should be highlighted.  */
 boolean
-geometry_should_highlight( GNode *node, unsigned int face_id )
+geometry_should_highlight(GNode *node)
 {
-	if (!NODE_IS_DIR(node) || (face_id != 1))
+	if (!NODE_IS_DIR(node))
 		return TRUE;
 
 	switch (globals.fsv_mode) {

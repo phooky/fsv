@@ -54,7 +54,7 @@ viewport_pass_node_table(GNode **new_node_table, size_t ntsize)
  * (x,y) (where (0,0) indicates the upper-left corner). The ID number of
  * the particular face being pointed at is stored in face_id */
 static GNode *
-node_at_location( int x, int y, unsigned int *face_id )
+node_at_location( int x, int y)
 {
 	// First try the new method
 	GLuint n_id = ogl_select_modern(x, y);
@@ -76,7 +76,6 @@ viewport_cb(GtkWidget *gl_area_w, GdkEvent *event, gpointer user_data)
 	GdkEventMotion *ev_motion;
 	GNode *node;
 	double dx, dy;
-	unsigned int face_id;
 	double x, y;
 	/* Previous mouse pointer coordinates */
 	static double prev_x, prev_y;
@@ -132,13 +131,13 @@ viewport_cb(GtkWidget *gl_area_w, GdkEvent *event, gpointer user_data)
 			if (btn2)
 				indicated_node = NULL;
 			else
-				indicated_node = node_at_location( x, y, &face_id );
+				indicated_node = node_at_location(x, y);
 			if (indicated_node == NULL) {
 				geometry_highlight_node( NULL, FALSE );
 				window_statusbar( SB_RIGHT, "" );
 			}
 			else {
-				if (geometry_should_highlight( indicated_node, face_id ) || btn1)
+				if (geometry_should_highlight(indicated_node) || btn1)
 					geometry_highlight_node( indicated_node, btn1 );
 				else
 					geometry_highlight_node( NULL, FALSE );
@@ -195,20 +194,20 @@ viewport_cb(GtkWidget *gl_area_w, GdkEvent *event, gpointer user_data)
 			else if (!ctrl_key && (btn1 || btn3)) {
 				/* Pointless dragging */
 				if (indicated_node != NULL) {
-					node = node_at_location( x, y, &face_id );
+					node = node_at_location(x, y);
 					if (node != indicated_node)
 						indicated_node = NULL;
 				}
 			}
                         else
-				indicated_node = node_at_location( x, y, &face_id );
+				indicated_node = node_at_location(x, y);
 			/* Update node highlighting */
 			if (indicated_node == NULL) {
 				geometry_highlight_node( NULL, FALSE );
 				window_statusbar( SB_RIGHT, "" );
 			}
 			else {
-				if (geometry_should_highlight( indicated_node, face_id ) || btn1)
+				if (geometry_should_highlight(indicated_node) || btn1)
 					geometry_highlight_node( indicated_node, btn1 );
 				else
 					geometry_highlight_node( NULL, FALSE);

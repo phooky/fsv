@@ -4,6 +4,7 @@
 
 /* fsv - 3D File System Visualizer
  * Copyright (C)1999 Daniel Richard G. <skunk@mit.edu>
+ * SPDX-FileCopyrightText: 2021 Janne Blomqvist <blomqvist.janne@gmail.com>
  *
  * SPDX-License-Identifier:  LGPL-2.1-or-later
  */
@@ -92,7 +93,7 @@ void geometry_draw( boolean high_detail );
 void geometry_camera_pan_finished( void );
 void geometry_colexp_initiated( GNode *dnode );
 void geometry_colexp_in_progress( GNode *dnode );
-boolean geometry_should_highlight( GNode *node, unsigned int face_id );
+boolean geometry_should_highlight(GNode *node);
 void geometry_highlight_node( GNode *node, boolean strong );
 void geometry_free_recursive( GNode *dnode );
 
