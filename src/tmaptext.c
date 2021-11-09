@@ -93,18 +93,18 @@ static GLuint
 text_init_shaders()
 {
 	GBytes *source;
-	GLuint program = 0;
+	GLuint program = 0, vertex = 0, fragment = 0;
 
 	/* load the vertex shader */
 	source = g_resources_lookup_data("/jabl/fsv/fsv-text-vertex.glsl", 0, NULL);
-	GLuint vertex = ogl_create_shader(GL_VERTEX_SHADER, g_bytes_get_data(source, NULL));
+	vertex = ogl_create_shader(GL_VERTEX_SHADER, g_bytes_get_data(source, NULL));
 	g_bytes_unref(source);
 	if (vertex == 0)
 		goto out;
 
 	/* load the fragment shader */
 	source = g_resources_lookup_data("/jabl/fsv/fsv-text-fragment.glsl", 0, NULL);
-	GLuint fragment = ogl_create_shader(GL_FRAGMENT_SHADER, g_bytes_get_data(source, NULL));
+	fragment = ogl_create_shader(GL_FRAGMENT_SHADER, g_bytes_get_data(source, NULL));
 	g_bytes_unref(source);
 	if (fragment == 0)
 		goto out;

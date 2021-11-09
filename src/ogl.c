@@ -63,18 +63,18 @@ static GLuint
 init_shaders(const char* vertex_resource, const char* fragment_resource)
 {
 	GBytes *source;
-	GLuint program = 0;
+	GLuint program = 0, vertex = 0, fragment = 0;
 
 	/* load the vertex shader */
 	source = g_resources_lookup_data(vertex_resource, 0, NULL);
-	GLuint vertex = ogl_create_shader(GL_VERTEX_SHADER, g_bytes_get_data(source, NULL));
+	vertex = ogl_create_shader(GL_VERTEX_SHADER, g_bytes_get_data(source, NULL));
 	g_bytes_unref(source);
 	if (vertex == 0)
 		goto out;
 
 	/* load the fragment shader */
 	source = g_resources_lookup_data(fragment_resource, 0, NULL);
-	GLuint fragment = ogl_create_shader(GL_FRAGMENT_SHADER, g_bytes_get_data(source, NULL));
+	fragment = ogl_create_shader(GL_FRAGMENT_SHADER, g_bytes_get_data(source, NULL));
 	g_bytes_unref(source);
 	if (fragment == 0)
 		goto out;
