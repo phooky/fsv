@@ -1756,6 +1756,8 @@ treev_init_recursive( GNode *dnode )
 		if (NODE_IS_DIR(node)) {
 			size += DIR_NODE_DESC(node)->subtree.size;
 			TREEV_GEOM_PARAMS(node)->platform.height = TREEV_PLATFORM_HEIGHT;
+			TREEV_GEOM_PARAMS(node)->platform.arc_width = TREEV_MIN_ARC_WIDTH;
+			TREEV_GEOM_PARAMS(node)->platform.subtree_arc_width = TREEV_MIN_ARC_WIDTH;
 			treev_init_recursive( node );
 		}
 		TREEV_GEOM_PARAMS(node)->leaf.height = sqrt( (double)size ) * TREEV_LEAF_HEIGHT_MULTIPLIER;
