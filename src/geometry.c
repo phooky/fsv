@@ -409,7 +409,6 @@ discv_gldraw_node( GNode *node, double dir_deployment )
 static void
 discv_gldraw_folder( GNode *node )
 {
-	node = node;
 
 	/* To be written... */
 
@@ -439,7 +438,6 @@ discv_build_dir( GNode *dnode )
 static void
 discv_apply_label( GNode *node )
 {
-	node = node;
 
 }
 
