@@ -227,12 +227,12 @@ discv_scrollbar_move( double value, int axis )
 	switch (axis) {
 		case X_AXIS:
 		/* ????? */
-		value = value;
+		DISCV_CAMERA(camera)->target.x = value;
 		break;
 
 		case Y_AXIS:
 		/* ????? */
-		value = value;
+		DISCV_CAMERA(camera)->target.y = value;
 		break;
 
 		SWITCH_FAIL
