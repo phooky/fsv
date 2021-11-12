@@ -1088,23 +1088,19 @@ gui_widget_packing( GtkWidget *widget, boolean expand, boolean fill, boolean sta
 void
 gui_colorsel_window( const char *title, RGBcolor *init_color, void (*ok_callback)( ), void *ok_callback_data )
 {
-	GtkWidget *colorsel_window_w;
-	GtkColorSelectionDialog *csd;
+	GtkWidget *widget = gtk_color_chooser_dialog_new(title, NULL);
+	GtkColorChooser *chooser = GTK_COLOR_CHOOSER(widget);
+	GdkRGBA gcolor = RGB2GdkRGBA(init_color);
+	gtk_color_chooser_set_rgba(chooser, &gcolor);
 
-	colorsel_window_w = gtk_color_selection_dialog_new( title );
-	csd = GTK_COLOR_SELECTION_DIALOG(colorsel_window_w);
-	GdkColor gcolor = RGB2GdkColor(init_color);
-	gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(gtk_color_selection_dialog_get_color_selection(csd)), &gcolor);
-
-	if (gtk_dialog_run(GTK_DIALOG(csd)) == GTK_RESPONSE_OK) {
-		GtkWidget *colorsel = gtk_color_selection_dialog_get_color_selection(csd);
-		gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(colorsel), &gcolor);
-		RGBcolor color = GdkColor2RGB(&gcolor);
+	if (gtk_dialog_run(GTK_DIALOG(widget)) == GTK_RESPONSE_OK) {
+		gtk_color_chooser_get_rgba(chooser, &gcolor);
+		RGBcolor color = GdkRGBA2RGB(&gcolor);
 		/* Call user callback */
 		(ok_callback)(&color, ok_callback_data);
         }
 
-	gtk_widget_destroy(colorsel_window_w);
+	gtk_widget_destroy(widget);
 }
 
 
