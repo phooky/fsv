@@ -126,7 +126,7 @@ gui_hbox_add( GtkWidget *parent_w, int spacing )
 {
 	GtkWidget *hbox_w;
 
-	hbox_w = gtk_hbox_new( FALSE, spacing );
+	hbox_w = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, spacing);
 	gtk_container_set_border_width( GTK_CONTAINER(hbox_w), spacing );
 	parent_child( parent_w, hbox_w );
 
