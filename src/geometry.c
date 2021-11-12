@@ -3015,11 +3015,24 @@ geometry_gldraw_fsv( void )
 		glUniform1f(aboutGL.fog_start_location, 200.0f);
 		glUniform1f(aboutGL.fog_end_location, 1800.0f);
 
-		GLenum err = glGetError();
-		if (err != GL_NO_ERROR)
-			g_error("GL error %d\n", (int)err);
-
+		ogl_error();
 	}
+#if 0
+	// Useful code snippet for checking vertex coords in NDC
+	for (size_t i = 0; i < vlen; i += (vlen - 1)) {
+		g_print("%zu th vertex in FSV coords:\n", i);
+		vec4 c = (vec4){vert[i].position[0], vert[i].position[1],
+				vert[i].position[2], 1.0f};
+		vec4 cp;
+		glm_mat4_mulv(aboutGL.mvp, c, cp);
+		glmc_vec4_print(c, stdout);
+		glmc_vec4_print(cp, stdout);
+		float w = cp[3];
+		vec3 pd = (vec3){cp[0]/w, cp[1]/w, cp[2]/w};
+		glmc_vec3_print(pd, stdout);
+	}
+	glmc_mat4_print(aboutGL.mvp, stdout);
+#endif
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glEnableVertexAttribArray(aboutGL.position_location);
 	glVertexAttribPointer(aboutGL.position_location, 3, GL_FLOAT, GL_FALSE,
@@ -3039,9 +3052,7 @@ geometry_gldraw_fsv( void )
 	glUseProgram(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	GLenum err = glGetError();
-	if (err != GL_NO_ERROR)
-		g_error("GL error %d\n", (int)err);
+	ogl_error();
 }
 
 
