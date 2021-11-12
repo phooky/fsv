@@ -82,7 +82,7 @@ window_init( FsvMode fsv_mode )
 	gtk_window_set_title( GTK_WINDOW(main_window_w), "fsv" );
 	gtk_window_set_wmclass( GTK_WINDOW(main_window_w), "main", "fsv" );
 	gtk_window_set_resizable(GTK_WINDOW(main_window_w), TRUE);
-	window_width = 3 * gdk_screen_width( ) / 4;
+	window_width = 1920 / 2;
 	window_height = 2584 * window_width / 4181;
 	gtk_widget_set_size_request(main_window_w, window_width, window_height);
 	g_signal_connect(G_OBJECT(main_window_w), "delete_event", G_CALLBACK(gtk_main_quit), NULL);
