@@ -160,7 +160,7 @@ window_init( FsvMode fsv_mode )
 	hpaned_w = gui_hpaned_add( main_vbox_w, window_width / 5 );
 
 	/* Vertical box for everything in the left pane */
-	left_vbox_w = gtk_vbox_new( FALSE, 0 );
+	left_vbox_w = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	gtk_paned_add1( GTK_PANED(hpaned_w), left_vbox_w );
 	gtk_widget_show( left_vbox_w );
 
@@ -205,7 +205,7 @@ window_init( FsvMode fsv_mode )
 	left_statusbar_w = gui_statusbar_add( left_vbox_w );
 
 	/* Vertical box for everything in the right pane */
-	right_vbox_w = gtk_vbox_new( FALSE, 0 );
+	right_vbox_w = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	gtk_paned_add2( GTK_PANED(hpaned_w), right_vbox_w );
 	gtk_widget_show( right_vbox_w );
 

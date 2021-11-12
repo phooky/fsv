@@ -140,7 +140,7 @@ gui_vbox_add( GtkWidget *parent_w, int spacing )
 {
 	GtkWidget *vbox_w;
 
-	vbox_w = gtk_vbox_new( FALSE, spacing );
+	vbox_w = gtk_box_new(GTK_ORIENTATION_VERTICAL, spacing);
 	gtk_container_set_border_width( GTK_CONTAINER(vbox_w), spacing );
 	parent_child( parent_w, vbox_w );
 
