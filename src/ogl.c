@@ -522,6 +522,9 @@ ogl_widget_new( void )
 	/* Create the widget */
 	viewport_gl_area_w = gtk_gl_area_new();
 
+	// Why oh why doesn't GtkGLArea enable the depth buffer by default?
+	gtk_gl_area_set_has_depth_buffer(GTK_GL_AREA(viewport_gl_area_w), TRUE);
+
 	/* Initialize widget's GL state when realized */
 	g_signal_connect(G_OBJECT(viewport_gl_area_w), "realize", G_CALLBACK(realize_cb), NULL);
 
