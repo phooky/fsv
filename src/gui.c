@@ -1275,6 +1275,26 @@ GdkColor RGB2GdkColor(const RGBcolor *src)
 	return dest;
 }
 
+RGBcolor
+GdkRGBA2RGB(const GdkRGBA *color)
+{
+	RGBcolor c;
+	c.r = color->red;
+	c.g = color->green;
+	c.b = color->blue;
+	return c;
+}
+
+GdkRGBA
+RGB2GdkRGBA(const RGBcolor *src)
+{
+	GdkRGBA dest;
+	dest.red = src->r;
+	dest.green = src->g;
+	dest.blue = src->b;
+	dest.alpha = 1.0;
+	return dest;
+}
 
 #if 0
 /* The following is stuff that isn't being used right now (obviously),
