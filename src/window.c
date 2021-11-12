@@ -80,7 +80,6 @@ window_init( FsvMode fsv_mode )
 	/* Main window widget */
 	main_window_w = gtk_window_new( GTK_WINDOW_TOPLEVEL );
 	gtk_window_set_title( GTK_WINDOW(main_window_w), "fsv" );
-	gtk_window_set_wmclass( GTK_WINDOW(main_window_w), "main", "fsv" );
 	gtk_window_set_resizable(GTK_WINDOW(main_window_w), TRUE);
 	window_width = 1920 / 2;
 	window_height = 2584 * window_width / 4181;
