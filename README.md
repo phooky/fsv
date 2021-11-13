@@ -1,7 +1,7 @@
 # FSV
 
 This repo is a fork of [fsv](http://fsv.sourceforge.net/), updated to current environments.
-The original author is [Daniel Richard G.](http://fox.mit.edu/skunk/), a former student of Computer Science at the MIT.
+The original author is [Daniel Richard G.](https://github.com/iskunk), a former student of Computer Science at the MIT.
 
 ## About fsv
 
