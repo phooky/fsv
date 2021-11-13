@@ -818,7 +818,7 @@ gui_hpaned_add( GtkWidget *parent_w, int divider_x_pos )
 {
 	GtkWidget *hpaned_w;
 
-	hpaned_w = gtk_hpaned_new( );
+	hpaned_w = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
 	gtk_paned_set_position( GTK_PANED(hpaned_w), divider_x_pos );
 	parent_child_full( parent_w, hpaned_w, EXPAND, FILL );
 
@@ -832,7 +832,7 @@ gui_vpaned_add( GtkWidget *parent_w, int divider_y_pos )
 {
 	GtkWidget *vpaned_w;
 
-	vpaned_w = gtk_vpaned_new( );
+	vpaned_w = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
 	gtk_paned_set_position( GTK_PANED(vpaned_w), divider_y_pos );
 	parent_child_full( parent_w, vpaned_w, EXPAND, FILL );
 
@@ -943,7 +943,7 @@ gui_hscrollbar_add( GtkWidget *parent_w, GtkAdjustment *adjustment )
 	frame_w = gui_frame_add( NULL, NULL );
 	parent_child( parent_w, frame_w );
 
-	hscrollbar_w = gtk_hscrollbar_new( adjustment );
+	hscrollbar_w = gtk_scrollbar_new(GTK_ORIENTATION_HORIZONTAL, adjustment);
 	gtk_container_add( GTK_CONTAINER(frame_w), hscrollbar_w );
 	gtk_widget_show( hscrollbar_w );
 
@@ -962,7 +962,7 @@ gui_vscrollbar_add( GtkWidget *parent_w, GtkAdjustment *adjustment )
 	frame_w = gui_frame_add( NULL, NULL );
 	parent_child( parent_w, frame_w );
 
-	vscrollbar_w = gtk_vscrollbar_new( adjustment );
+	vscrollbar_w = gtk_scrollbar_new(GTK_ORIENTATION_VERTICAL, adjustment);
 	gtk_container_add( GTK_CONTAINER(frame_w), vscrollbar_w );
 	gtk_widget_show( vscrollbar_w );
 
@@ -982,13 +982,13 @@ gui_separator_add( GtkWidget *parent_w )
 			gtk_menu_shell_append(GTK_MENU_SHELL(parent_w), separator_w);
 		}
 		else {
-			separator_w = gtk_hseparator_new( );
+			separator_w = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
 			gtk_box_pack_start( GTK_BOX(parent_w), separator_w, FALSE, FALSE, 10 );
 		}
 		gtk_widget_show( separator_w );
 	}
 	else
-		separator_w = gtk_hseparator_new( );
+		separator_w = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
 
 	return separator_w;
 }
