@@ -1250,24 +1250,6 @@ gui_window_modalize( GtkWidget *window_w, GtkWidget *parent_window_w )
 }
 
 
-RGBcolor GdkColor2RGB(const GdkColor *color)
-{
-	RGBcolor c;
-	c.r = color->red / G_MAXUINT16;
-	c.g = color->green / G_MAXUINT16;
-	c.b = color->blue / G_MAXUINT16;
-	return c;
-}
-
-GdkColor RGB2GdkColor(const RGBcolor *src)
-{
-	GdkColor dest;
-	dest.red = src->r * G_MAXUINT16;
-	dest.green = src->g * G_MAXUINT16;
-	dest.blue = src->b * G_MAXUINT16;
-	return dest;
-}
-
 RGBcolor
 GdkRGBA2RGB(const GdkRGBA *color)
 {

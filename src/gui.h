@@ -66,7 +66,7 @@ enum
 {
 	DIALOG_WPATTERN_COLOR_COLUMN = 0,
 	DIALOG_WPATTERN_WPATTERN_COLUMN,
-	DIALOG_WPATTERN_COLOR2_COLUMN,  // Hidden, contains *GdkColor
+	DIALOG_WPATTERN_COLOR2_COLUMN,  // Hidden, contains *GdkRGBA
 	DIALOG_WPATTERN_ROWDATA_COLUMN, // Hidden, contains WpListRowData
 	DIALOG_WPATTERN_NUM_COLS
 };
@@ -126,8 +126,6 @@ GtkWidget *gui_entry_window( const char *title, const char *init_text, void (*ok
 gchar *gui_dir_choose(const char *title, GtkWidget *parent, const char *init_dir);
 void gui_window_icon_xpm(GtkWidget *window_w, const char **xpm_data);
 void gui_window_modalize( GtkWidget *window_w, GtkWidget *parent_window_w );
-RGBcolor GdkColor2RGB(const GdkColor *color);
-GdkColor RGB2GdkColor(const RGBcolor *color);
 RGBcolor GdkRGBA2RGB(const GdkRGBA *color);
 GdkRGBA RGB2GdkRGBA(const RGBcolor *color);
 #endif /* __GTK_H__ */
