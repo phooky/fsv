@@ -270,7 +270,6 @@ static void
 csdialog_time_color_picker_set_access( boolean enabled )
 {
 	RGBcolor *color;
-	GdkColor *gcolor;
 
 	gtk_widget_set_sensitive( csdialog.time.old_colorpicker_w, enabled );
 	gtk_widget_set_sensitive( csdialog.time.new_colorpicker_w, enabled );
@@ -278,17 +277,16 @@ csdialog_time_color_picker_set_access( boolean enabled )
 	/* Change the color pickers' colors, as simply enabling/disabling
 	 * them isn't enough to make the state change obvious */
 	if (enabled) {
+		gtk_widget_show(csdialog.time.old_colorpicker_w);
+		gtk_widget_show(csdialog.time.new_colorpicker_w);
 		color = &csdialog.color_config.by_timestamp.old_color;
 		gui_colorpicker_set_color( csdialog.time.old_colorpicker_w, color );
 		color = &csdialog.color_config.by_timestamp.new_color;
 		gui_colorpicker_set_color( csdialog.time.new_colorpicker_w, color );
 	}
 	else {
-		GtkStyle *style = gtk_widget_get_style(csdialog.time.old_colorpicker_w);
-		gcolor = &style->bg[GTK_STATE_NORMAL];
-		RGBcolor disabled_color = GdkColor2RGB(gcolor);
-		gui_colorpicker_set_color( csdialog.time.old_colorpicker_w, &disabled_color );
-		gui_colorpicker_set_color( csdialog.time.new_colorpicker_w, &disabled_color );
+		gtk_widget_hide(csdialog.time.old_colorpicker_w);
+		gtk_widget_hide(csdialog.time.new_colorpicker_w);
 	}
 }
 
