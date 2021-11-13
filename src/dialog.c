@@ -116,7 +116,6 @@ struct WPListRowData {
 	int row_type;
 	struct WPatternGroup *wpgroup;
 	char *wpattern;
-	GtkStyle *style;
 };
 
 static struct ColorSetupDialog {
@@ -334,22 +333,6 @@ csdialog_time_color_picker_cb( RGBcolor *picked_color, RGBcolor *end_color )
 }
 
 
-/* Helper function for csdialog_wpattern_list_populate( ). This
- * generates a GtkStyle to permit setting a cell to a solid color */
-static GtkStyle *
-solid_color_cell_style( GtkWidget *list_w, RGBcolor *color )
-{
-	GtkStyle *style;
-
-	GdkColor gcolor = RGB2GdkColor(color);
-	style = gtk_style_copy(gtk_widget_get_style(list_w));
-	style->base[GTK_STATE_NORMAL] = gcolor; /* struct assign */
-	style->bg[GTK_STATE_SELECTED] = gcolor; /* struct assign */
-
-        return style;
-}
-
-
 /* Helper function for csdialog_wpattern_list_populate( ). This adds a
  * new row to the wildcard pattern list at the given index (replacing a
  * row if one is already there) */
@@ -418,7 +401,6 @@ csdialog_wpattern_list_populate( void )
 {
 	struct WPatternGroup *wpgroup;
 	struct WPListRowData *row_data;
-	GtkStyle *style = NULL;
 	GList *wpgroup_llink, *wp_llink;
 	char *wpattern;
 
@@ -431,7 +413,6 @@ csdialog_wpattern_list_populate( void )
 	wpgroup_llink = csdialog.color_config.by_wpattern.wpgroup_list;
 	while (wpgroup_llink != NULL) {
 		wpgroup = (struct WPatternGroup *)wpgroup_llink->data;
-		style = solid_color_cell_style( csdialog.wpattern.list_w, &wpgroup->color );
 
 		if (!valid) {
 			gtk_list_store_append(store, &iter);
@@ -442,7 +423,6 @@ csdialog_wpattern_list_populate( void )
 		row_data->row_type = WPLIST_HEADER_ROW;
 		row_data->wpgroup = wpgroup;
 		row_data->wpattern = NULL;
-		row_data->style = style;
 		wplist_row(store, &iter, row_data);
 
 		/* Iterate through all the patterns in this group */
@@ -459,7 +439,6 @@ csdialog_wpattern_list_populate( void )
 			row_data->row_type = WPLIST_WPATTERN_ROW;
 			row_data->wpgroup = wpgroup;
 			row_data->wpattern = wpattern;
-			row_data->style = style;
 			wplist_row(store, &iter, row_data);
 
 			wp_llink = wp_llink->next;
@@ -476,14 +455,10 @@ csdialog_wpattern_list_populate( void )
 		row_data->row_type = WPLIST_NEW_WPATTERN_ROW;
 		row_data->wpgroup = wpgroup;
 		row_data->wpattern = NULL;
-		row_data->style = style;
 		wplist_row(store, &iter, row_data);
 
 		wpgroup_llink = wpgroup_llink->next;
 	}
-
-	/* Default color */
-	style = solid_color_cell_style( csdialog.wpattern.list_w, &csdialog.color_config.by_wpattern.default_color );
 
 	/* Add default-color header row */
 	if (valid && csdialog.color_config.by_wpattern.wpgroup_list != NULL)
@@ -494,7 +469,6 @@ csdialog_wpattern_list_populate( void )
 	row_data->row_type = WPLIST_DEFAULT_HEADER_ROW;
 	row_data->wpgroup = NULL;
 	row_data->wpattern = NULL;
-	row_data->style = style;
 	wplist_row(store, &iter, row_data);
 
 	/* Add default-color row */
@@ -505,7 +479,6 @@ csdialog_wpattern_list_populate( void )
 	row_data->row_type = WPLIST_DEFAULT_ROW;
 	row_data->wpgroup = NULL;
 	row_data->wpattern = NULL;
-	row_data->style = style;
 	wplist_row(store, &iter, row_data);
 
 	/* Remove any leftover rows */
