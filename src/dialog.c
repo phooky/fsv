@@ -1434,7 +1434,7 @@ context_menu( GNode *node, GdkEventButton *ev_button )
 		gui_menu_item_add( popup_menu_w, _("Look at"), look_at_cb, node );
 	gui_menu_item_add( popup_menu_w, _("Properties"), properties_cb, node );
 
-	gtk_menu_popup( GTK_MENU(popup_menu_w), NULL, NULL, NULL, NULL, ev_button->button, ev_button->time );
+	gtk_menu_popup_at_pointer(GTK_MENU(popup_menu_w), NULL);
 }
 
 
