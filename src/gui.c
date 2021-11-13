@@ -515,14 +515,15 @@ gui_cursor( GtkWidget *widget, int glyph )
 
 	/* Create new cursor and make it active */
 	if (glyph >= 0)
-		cursor = gdk_cursor_new( (GdkCursorType)glyph );
+		cursor = gdk_cursor_new_for_display(gdk_display_get_default(),
+						    (GdkCursorType)glyph);
 	else
 		cursor = NULL;
 	gdk_window_set_cursor(gtk_widget_get_window(widget), cursor);
 
 	/* Don't need the old cursor anymore */
 	if (prev_cursor != NULL)
-		gdk_cursor_unref(prev_cursor);
+		g_object_unref(prev_cursor);
 
 	if (glyph >= 0) {
 		/* Save new cursor information */
