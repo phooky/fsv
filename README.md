@@ -16,7 +16,7 @@ Useful info and screenshots of the original SGI IRIX implementation are availabl
 ### Install
 
 1. Clone the repository
-2. Install dependencies (Ubuntu): `sudo apt install libgtkgl2.0-dev libgl1-mesa-dev libglu1-mesa-dev libepoxy-dev libcglm-dev`
+2. Install dependencies (Ubuntu): `sudo apt install libgtk-3-dev libgl1-mesa-dev libglu1-mesa-dev libepoxy-dev libcglm-dev`
     1. cglm is available as of Ubuntu 20.10. If cglm is not available
        system-wide, make a subdirectory under the project root and extract
         cglm there under the name cglm:
@@ -32,7 +32,7 @@ Useful info and screenshots of the original SGI IRIX implementation are availabl
 
 ## TODO
 
-### Update to Gtk+3
+### DONE Update to Gtk+3
 
 1. DONE Update code, still using gtk+2, to build cleanly with
    `meson configure -Dc_args="-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED" builddir`
@@ -50,7 +50,7 @@ Useful info and screenshots of the original SGI IRIX implementation are availabl
        http://www.opengl-tutorial.org/miscellaneous/clicking-on-objects/picking-with-an-opengl-hack/
     4. Convert immediate mode OpenGL code to VBO's, including switching from
        GL_QUADS to GL_TRIANGLES.
-4. Switch to Gtk+3
+4. DONE Switch to Gtk+3
 
 ### Setup github actions for CI
 
