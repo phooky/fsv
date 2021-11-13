@@ -384,12 +384,12 @@ wplist_row(GtkListStore *store, GtkTreeIter *iter, struct WPListRowData *row_dat
 		color = &row_data->wpgroup->color;
 	else
 		color = &csdialog.color_config.by_wpattern.default_color;
-	GdkColor *gdk_color = NEW(GdkColor);
-	*gdk_color = RGB2GdkColor(color);
+	GdkRGBA *gdk_rgba = NEW(GdkRGBA);
+	*gdk_rgba = RGB2GdkRGBA(color);
 
 	gtk_list_store_set(store, iter,
 			   DIALOG_WPATTERN_WPATTERN_COLUMN, rowtext,
-			   DIALOG_WPATTERN_COLOR2_COLUMN, gdk_color,
+			   DIALOG_WPATTERN_COLOR2_COLUMN, gdk_rgba,
 			   DIALOG_WPATTERN_ROWDATA_COLUMN, row_data,
 			   -1);
 

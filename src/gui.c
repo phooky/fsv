@@ -252,7 +252,7 @@ gui_wpattern_list_new(GtkWidget *parent_w)
 
 	GtkCellRenderer *renderer_col = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col_col, renderer_col, TRUE);
-	gtk_tree_view_column_add_attribute(col_col, renderer_col, "background-gdk",
+	gtk_tree_view_column_add_attribute(col_col, renderer_col, "background-rgba",
 		DIALOG_WPATTERN_COLOR2_COLUMN);
 
 	GtkTreeViewColumn *col_wp = gtk_tree_view_column_new();
@@ -265,7 +265,7 @@ gui_wpattern_list_new(GtkWidget *parent_w)
 		DIALOG_WPATTERN_WPATTERN_COLUMN);
 
 	GtkListStore *liststore = gtk_list_store_new(DIALOG_WPATTERN_NUM_COLS,
-		G_TYPE_STRING, G_TYPE_STRING, GDK_TYPE_COLOR, G_TYPE_POINTER);
+		G_TYPE_STRING, G_TYPE_STRING, GDK_TYPE_RGBA, G_TYPE_POINTER);
 	GtkTreeModel *model = GTK_TREE_MODEL(liststore);
 
 	gtk_tree_view_set_reorderable(GTK_TREE_VIEW(view), TRUE);
