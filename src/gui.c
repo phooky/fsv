@@ -285,10 +285,10 @@ static void
 color_picker_cb(GtkColorButton *colorpicker_w, gpointer data)
 {
 	void (*user_callback)( RGBcolor *, void * );
-	GdkColor gcolor;
+	GdkRGBA gcolor;
 
-	gtk_color_button_get_color(colorpicker_w, &gcolor);
-	RGBcolor color = GdkColor2RGB(&gcolor);
+	gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(colorpicker_w), &gcolor);
+	RGBcolor color = GdkRGBA2RGB(&gcolor);
 
 	/* Call user callback */
 	user_callback = (void (*)( RGBcolor *, void * ))g_object_get_data(G_OBJECT(colorpicker_w), "user_callback");
@@ -320,13 +320,9 @@ gui_colorpicker_add( GtkWidget *parent_w, RGBcolor *init_color, const char *titl
 void
 gui_colorpicker_set_color( GtkWidget *colorbutton_w, RGBcolor *color )
 {
-	GdkColor gdk_color = {
-		.red	= color->r * sizeof(guint16),
-		.green	= color->g * sizeof(guint16),
-		.blue	= color->b * sizeof(guint16),
-	};
+	GdkRGBA gdk_color = RGB2GdkRGBA(color);
 
-	gtk_color_button_set_color(GTK_COLOR_BUTTON(colorbutton_w), &gdk_color);
+	gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(colorbutton_w), &gdk_color);
 }
 
 
