@@ -1024,16 +1024,17 @@ gui_statusbar_message( GtkWidget *statusbar_w, const char *message )
 GtkWidget *
 gui_table_add( GtkWidget *parent_w, int num_rows, int num_cols, boolean homog, int cell_padding )
 {
-	GtkWidget *table_w;
-	int *cp;
+	GtkWidget *grid_w = gtk_grid_new();
+	GtkGrid *grid = GTK_GRID(grid_w);
+	for (int i = 0; i < num_rows; i++)
+		gtk_grid_insert_row(grid, i);
+	for (int i = 0; i < num_cols; i++)
+		gtk_grid_insert_column(grid, i);
+	gtk_grid_set_column_homogeneous(grid, homog);
+	gtk_grid_set_column_spacing(grid, cell_padding);
+	parent_child_full( parent_w, grid_w, EXPAND, FILL );
 
-	table_w = gtk_table_new( num_rows, num_cols, homog );
-	cp = NEW(int);
-	*cp = cell_padding;
-	g_object_set_data_full(G_OBJECT(table_w), "cell_padding", cp, _xfree);
-	parent_child_full( parent_w, table_w, EXPAND, FILL );
-
-	return table_w;
+	return grid_w;
 }
 
 
@@ -1041,10 +1042,9 @@ gui_table_add( GtkWidget *parent_w, int num_rows, int num_cols, boolean homog, i
 void
 gui_table_attach( GtkWidget *table_w, GtkWidget *widget, int left, int right, int top, int bottom )
 {
-	int cp;
+	GtkGrid *grid = GTK_GRID(table_w);
+	gtk_grid_attach(grid, widget, left, top, right - left, bottom - top);
 
-	cp = *(int *)g_object_get_data(G_OBJECT(table_w), "cell_padding");
-	gtk_table_attach( GTK_TABLE(table_w), widget, left, right, top, bottom, GTK_FILL | GTK_SHRINK, GTK_FILL | GTK_SHRINK, cp, cp );
 	gtk_widget_show( widget );
 }
 
