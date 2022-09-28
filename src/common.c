@@ -452,7 +452,7 @@ get_file_type_desc( const char *filename )
 
 		/* Check for timeout condition */
 		if ((xgettime( ) - t0) > 5.0) {
-			fclose( cmd ); /* Is this allowed? */
+			pclose( cmd );
 			strcpy( cmd_output, _("('file' command timed out)") );
 			return cmd_output;
 		}
