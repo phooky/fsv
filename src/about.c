@@ -134,7 +134,7 @@ draw_text( void )
 	text_draw_straight( "Copyright (C)1999 by Daniel Richard G.", &tpos, &tdims );
 
 	tpos.y = 140.0 * q - 235.0; /* -95 */
-	text_draw_straight( "Copyright (C) 2021 Janne Blomqvist", &tpos, &tdims );
+	text_draw_straight( "Copyright (C) 2022 Janne Blomqvist", &tpos, &tdims );
 
 	/* Finally, fade in the home page URL */
 	if (about_part > 0.75) {
