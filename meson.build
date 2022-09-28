@@ -41,5 +41,6 @@ subdir('debug')
 subdir('lib')
 subdir('src')
 
-rpm = import('rpm')
-rpm.generate_spec_template()
+# This doesn't work with meson 0.61 and python 3.10
+#rpm = import('rpm')
+#rpm.generate_spec_template()
